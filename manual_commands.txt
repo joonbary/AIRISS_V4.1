@@ -1,0 +1,57 @@
+<<<<<<< HEAD
+echo "Step 1: Check status"
+git status
+
+echo "Step 2: Add files"
+git add requirements.txt
+
+echo "Step 3: Commit"
+git commit -m "Fix: Enable OpenAI package for AI analysis"
+
+echo "Step 4: Push to GitHub"
+git push origin main
+
+echo "Deploy completed! Wait 3 minutes for Railway auto-deploy."
+=======
+REM Manual Commands for AIRISS Python Fix
+REM Copy and paste these commands one by one
+
+cd C:\Users\apro\OneDrive\Desktop\AIRISS\airiss_v4
+
+REM Clean old environment
+rmdir /s /q venv_new
+
+REM Create new environment
+python -m venv venv_new
+
+REM Activate environment
+venv_new\Scripts\activate.bat
+
+REM Upgrade pip
+python -m pip install --upgrade pip
+
+REM Install core packages
+pip install fastapi==0.104.1
+pip install uvicorn[standard]==0.24.0
+pip install python-multipart==0.0.6
+pip install jinja2==3.1.2
+
+REM Install data packages  
+pip install pandas>=2.2.0
+pip install numpy>=1.24.0
+pip install openpyxl==3.1.2
+
+REM Install other packages
+pip install aiosqlite==0.19.0
+pip install scikit-learn>=1.3.0
+pip install aiofiles==23.2.1
+pip install python-dotenv==1.0.0
+pip install pydantic>=2.5.0
+pip install websockets==12.0
+
+REM Test imports
+python -c "import fastapi, uvicorn, pandas, numpy"
+
+REM Start server
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8003
+>>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f

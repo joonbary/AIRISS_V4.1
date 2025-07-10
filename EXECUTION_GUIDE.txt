@@ -1,0 +1,54 @@
+===============================================
+AIRISS v5.0 실행 가이드
+===============================================
+
+📁 현재 위치에서 실행하세요:
+   C:\Users\apro\OneDrive\Desktop\AIRISS\airiss_v4\
+
+🎯 실행 방법 (권장 순서):
+
+1. 즉시 실행 (가장 간단)
+   👉 start_now.bat
+   
+2. 환경 점검 후 실행
+   👉 start_airiss_v5_final.bat
+   
+3. 안전한 실행
+   👉 start_airiss_v5_ultra_safe.bat
+
+🧪 테스트 및 디버깅:
+
+1. 환경 점검
+   👉 python debug_environment.py
+   
+2. v5 기능 테스트
+   👉 python test_v5_features.py
+
+🔧 수동 실행 명령어:
+
+1. uvicorn 직접 실행
+   👉 uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
+
+2. Python 모듈 실행
+   👉 python -m uvicorn app.main:app --host 0.0.0.0 --port 8002
+
+🌐 접속 정보:
+   - 로컬 접속: http://localhost:8002
+   - 네트워크 접속: http://0.0.0.0:8002
+
+⚠️ 문제 해결:
+   1. "No module named 'app'" 오류 → start_now.bat 사용
+   2. 포트 충돌 → 다른 포트 사용 (예: 8003)
+   3. 의존성 오류 → pip install -r requirements.txt
+
+✅ 성공 시 로그:
+   - "✅ AIRISS v4.1 Complete 시작"
+   - "🎯 AIRISS v4.1 Complete 서버 준비 완료"
+   - "Application startup complete."
+
+💡 추가 도움:
+   - 로그를 확인하여 오류 원인 파악
+   - 테스트 스크립트로 개별 기능 확인
+   - 환경 변수 설정 확인
+
+===============================================

@@ -1,0 +1,139 @@
+# Python
+__pycache__/
+<<<<<<< HEAD
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+venv_*/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# AWS and Deployment
+.elasticbeanstalk/
+.aws/
+*.pem
+*.key
+
+=======
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+venv/
+venv_*/
+env/
+.env
+.venv
+
+>>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+<<<<<<< HEAD
+logs/
+log/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node modules (if any)
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Pytest
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Backup files
+*.backup
+*_backup*
+backup_*/
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+=======
+pip-log.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+
+# Deployment
+.vercel
+
+# Uploads
+uploads/temp*
+test_data/temp*
+>>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f

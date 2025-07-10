@@ -1,0 +1,91 @@
+# 배포에서 제외할 파일들
+# 개발 환경
+venv/
+venv_*/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# 데이터베이스
+*.db
+*.db.backup*
+*.sqlite
+*.sqlite3
+
+# 로그 파일
+*.log
+logs/
+
+# 백업 파일
+*backup*
+*_backup/
+cleanup_backup/
+
+# 개발 도구
+.git/
+.github/
+node_modules/
+.elasticbeanstalk/
+.ebextensions/
+
+# 테스트 데이터
+test_data/
+uploads/
+static/uploads/
+
+# 문서
+docs/
+*.md
+*.txt
+!requirements.txt
+!requirements_vercel.txt
+
+# 스크립트 파일
+*.bat
+*.ps1
+*.sh
+
+# 환경 파일
+.env
+.env.*
+!.env.example
+
+# 기타 큰 파일들
+*.zip
+*.tar.gz
+*.rar
+alembic/
+frontend/
+airiss-v4-frontend/
+
+# 캐시
+.cache/
+*.cache
+
+# IDE 파일
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 임시 파일
+tmp/
+temp/
+*.tmp
+
+# 서버 관련
+Procfile*
+docker*
+runtime.txt
+
+# 설치 관련 스크립트
+*install*
+*setup*
+*deploy*
+*fix*
+*emergency*
+*diagnostic*

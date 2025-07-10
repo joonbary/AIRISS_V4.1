@@ -1,0 +1,61 @@
+===============================================
+AIRISS v5.0 인코딩 문제 해결 가이드
+===============================================
+
+🔍 인코딩 문제 진단 및 해결 방법
+
+📋 1단계: 문제 진단
+   👉 python diagnose_encoding.py
+
+📋 2단계: 해결 방법 선택
+
+🎯 방법 1: 인코딩 수정 실행 (권장)
+   👉 start_airiss_v5_encoding_fix.bat
+
+🎯 방법 2: PowerShell 실행
+   👉 start_airiss_v5.ps1
+   
+   PowerShell 실행 전 권한 설정:
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+🎯 방법 3: 영어 경로 이동
+   👉 start_airiss_v5_english_path.bat
+
+🎯 방법 4: 수동 해결
+   1. CMD 창에서 실행:
+      chcp 65001
+      set PYTHONIOENCODING=utf-8
+      set PYTHONPATH=%CD%
+      
+   2. AIRISS 실행:
+      uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
+
+⚠️ 주요 인코딩 문제 원인:
+   - 한글 경로 (OneDrive 사용자 폴더)
+   - Windows 기본 코드페이지 (CP949)
+   - Python 인코딩 설정 누락
+   - PowerShell vs CMD 차이
+
+✅ 해결책 우선순위:
+   1. start_airiss_v5_encoding_fix.bat (가장 안전)
+   2. start_airiss_v5.ps1 (PowerShell 선호 시)
+   3. start_airiss_v5_english_path.bat (근본 해결)
+   4. 수동 설정 (고급 사용자)
+
+🔧 환경 변수 설정:
+   PYTHONIOENCODING=utf-8
+   PYTHONPATH=현재디렉토리
+   LANG=ko_KR.UTF-8
+
+💡 추가 팁:
+   - VS Code 터미널보다 CMD 사용 권장
+   - Python 3.7+ 사용 권장
+   - 프로젝트를 C:\AIRISS_v5 같은 영어 경로로 이동
+
+🆘 여전히 문제가 있다면:
+   1. diagnose_encoding.py 결과 확인
+   2. Python 재설치 고려
+   3. 가상환경 재생성
+   4. 관리자 권한으로 실행
+
+===============================================

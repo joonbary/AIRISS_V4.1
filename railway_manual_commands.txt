@@ -1,0 +1,32 @@
+# Railway Deployment Troubleshooting Commands
+
+## 1. Check Railway CLI
+railway --version
+railway whoami
+
+## 2. Get Build Logs (most important)
+railway logs --type build
+
+## 3. Get Deploy Logs  
+railway logs --type deploy
+
+## 4. Get Recent Logs
+railway logs --tail 100
+
+## 5. Check Service Status
+railway status
+
+## 6. Check Variables
+railway variables
+
+## 7. Redeploy
+railway up --detach
+
+## 8. Connect to running container (if available)
+railway shell
+
+## 9. Check Railway domain
+railway domain
+
+## 10. Force redeploy
+railway redeploy

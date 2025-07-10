@@ -1,0 +1,6 @@
+AWS DB KEY
+
+계정
+434740914556
+KMS 키 ID
+alias/aws/rds

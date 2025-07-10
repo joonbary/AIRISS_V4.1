@@ -1,0 +1,47 @@
+# AIRISS v4.1 Railway Emergency Fix - 빌드 실패 대응
+# 가장 간단한 형태로 단순화
+
+# Stage 1: React 프론트엔드 빌드 (간소화)
+FROM node:18-slim as frontend-builder
+
+WORKDIR /app/frontend
+
+# 패키지 설치 및 빌드 (한 번에 실행)
+COPY airiss-v4-frontend/package*.json ./
+RUN npm ci --silent && echo "npm install completed"
+
+COPY airiss-v4-frontend/ ./
+RUN npm run build && echo "React build completed"
+
+# Stage 2: Python FastAPI (간소화)
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# 시스템 의존성 최소화
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# React 빌드 복사
+COPY --from=frontend-builder /app/frontend/build ./static
+
+# Python 의존성 (단순화)
+COPY requirements.txt .
+RUN pip install --no-cache-dir fastapi uvicorn aiofiles && echo "Python packages installed"
+
+# 앱 복사
+COPY app/ ./app/
+COPY railway.json ./
+
+# 디렉토리 생성
+RUN mkdir -p /app/data && echo "Data directory created"
+
+# 환경변수
+ENV PYTHONPATH=/app
+ENV REACT_BUILD_PATH=/app/static
+
+# 간단한 헬스체크
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8002}/health || exit 1
+
+# 시작 명령
+CMD ["sh", "-c", "echo 'Starting AIRISS...' && python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8002}"]

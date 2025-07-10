@@ -1,0 +1,38 @@
+# AIRISS v4.1 Railway 배포용
+# FastAPI + React 혼합 프로젝트 필수 의존성
+
+# FastAPI 핵심
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+jinja2==3.1.2
+pydantic>=2.5.0
+
+# 데이터베이스
+aiosqlite>=0.19.0
+<<<<<<< HEAD
+psycopg2-binary>=2.9.0  # PostgreSQL 드라이버
+asyncpg>=0.28.0  # 비동기 PostgreSQL 드라이버
+=======
+>>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
+
+# 데이터 처리
+pandas>=2.2.0
+numpy>=1.24.0
+
+# 파일 처리
+openpyxl==3.1.2
+
+# 유틸리티
+python-dotenv==1.0.0
+aiofiles==23.2.1
+
+# 추가 의존성
+openai>=1.0.0  # AI 피드백용 (API 키 있을 때만)
+requests>=2.31.0  # 외부 API 호출용
+
+# AI/ML 관련 패키지 (선택적)
+transformers>=4.30.0  # BERT 모델용
+torch>=2.0.0  # PyTorch (CPU 버전)
+scikit-learn>=1.3.0  # 머신러닝
+nltk>=3.8  # 자연어 처리

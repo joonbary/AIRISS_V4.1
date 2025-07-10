@@ -1,0 +1,22 @@
+# Emergency Minimal Dockerfile for Railway
+# Use if main Dockerfile still fails
+
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir fastapi uvicorn python-multipart
+
+# Copy application
+COPY app/ ./app/
+
+# Create minimal health endpoint
+RUN echo 'from fastapi import FastAPI\nfrom fastapi.responses import JSONResponse\nimport os\napp = FastAPI()\n@app.get("/health")\ndef health():\n    return {"status": "healthy", "port": os.getenv("PORT", "unknown")}\n@app.get("/")\ndef root():\n    return {"message": "AIRISS Emergency Mode", "health": "/health"}' > /app/emergency.py
+
+# Railway compatible command with fallback
+CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8002} || python -m uvicorn emergency:app --host 0.0.0.0 --port ${PORT:-8002}"]

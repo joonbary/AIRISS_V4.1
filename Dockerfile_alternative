@@ -1,0 +1,57 @@
+# AIRISS v4.1 Railway 혼합 프로젝트 Dockerfile - 대안 빌드 방식
+# React + FastAPI 완전 통합 버전 (cross-env 우회)
+
+# Stage 1: React 프론트엔드 빌드
+FROM node:18-slim as frontend-builder
+
+# 작업 디렉토리 설정
+WORKDIR /app/frontend
+
+# Node.js 패키지 설치 (모든 의존성 포함)
+COPY airiss-v4-frontend/package*.json ./
+RUN npm ci --silent
+
+# React 소스 복사
+COPY airiss-v4-frontend/ ./
+
+# cross-env 없이 직접 빌드 (대안 방식)
+RUN DISABLE_ESLINT_PLUGIN=true npm run build:win || DISABLE_ESLINT_PLUGIN=true react-scripts build
+
+# Stage 2: Python FastAPI + React 정적 파일
+FROM python:3.9-slim
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# 시스템 패키지 업데이트 및 필수 도구 설치
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# React 빌드 결과물 복사
+COPY --from=frontend-builder /app/frontend/build ./static
+
+# Python 의존성 설치
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 애플리케이션 코드 복사
+COPY . .
+
+# SQLite 데이터베이스 디렉토리 생성
+RUN mkdir -p /app/data
+
+# 환경변수 설정
+ENV PYTHONPATH=/app
+ENV DATABASE_URL=sqlite:///data/airiss.db
+ENV SERVER_HOST=0.0.0.0
+ENV REACT_BUILD_PATH=/app/static
+
+# Railway 헬스체크 (React 정적 파일 포함)
+HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8002}/health || exit 1
+
+# Railway 동적 포트 지원으로 애플리케이션 실행
+CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8002}"]

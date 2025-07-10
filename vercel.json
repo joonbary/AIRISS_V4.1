@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb",
+        "runtime": "python3.9"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.py"
+    }
+  ],
+  "env": {
+    "PYTHONPATH": "$PYTHONPATH:/var/task"
+  },
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "api/**",
+      "excludeFiles": [
+        "**/__pycache__/**",
+        "**/venv/**",
+        "**/node_modules/**",
+        "**/*.db",
+        "**/*.log",
+        "**/test_data/**",
+        "**/docs/**"
+      ]
+    }
+  }
+}
