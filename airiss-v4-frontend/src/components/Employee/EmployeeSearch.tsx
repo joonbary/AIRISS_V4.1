@@ -158,16 +158,6 @@ const EmployeeSearch: React.FC = () => {
   };
 
   const getGradeColor = (grade: string) => {
-<<<<<<< HEAD
-    if (grade === 'S') return '#4caf50'; // 최상
-    if (grade === 'A+') return '#8bc34a';
-    if (grade === 'A') return '#cddc39';
-    if (grade === 'B+') return '#ff9800';
-    if (grade === 'B') return '#ff5722';
-    if (grade === 'C') return '#9e9e9e';
-    if (grade === 'D') return '#757575';
-    return '#bdbdbd';
-=======
     if (grade.includes('★★★')) return '#4caf50';
     if (grade.includes('★★')) return '#8bc34a';
     if (grade.includes('★')) return '#cddc39';
@@ -176,7 +166,6 @@ const EmployeeSearch: React.FC = () => {
     if (grade.includes('B')) return '#f44336';
     if (grade.includes('C')) return '#9e9e9e';
     return '#757575';
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
   };
 
   // 레이더 차트 데이터 준비
@@ -237,15 +226,6 @@ const EmployeeSearch: React.FC = () => {
               <InputLabel>등급 필터</InputLabel>
               <Select value={gradeFilter} onChange={handleGradeFilterChange}>
                 <MenuItem value="">전체</MenuItem>
-<<<<<<< HEAD
-                <MenuItem value="S">S (최상)</MenuItem>
-                <MenuItem value="A+">A+ (우수+)</MenuItem>
-                <MenuItem value="A">A (우수)</MenuItem>
-                <MenuItem value="B+">B+ (양호+)</MenuItem>
-                <MenuItem value="B">B (양호)</MenuItem>
-                <MenuItem value="C">C (보통)</MenuItem>
-                <MenuItem value="D">D (개선필요)</MenuItem>
-=======
                 <MenuItem value="OK★★★">OK★★★ (최우수)</MenuItem>
                 <MenuItem value="OK★★">OK★★ (우수)</MenuItem>
                 <MenuItem value="OK★">OK★ (우수+)</MenuItem>
@@ -254,7 +234,6 @@ const EmployeeSearch: React.FC = () => {
                 <MenuItem value="OK B">OK B (보통)</MenuItem>
                 <MenuItem value="OK C">OK C (개선필요)</MenuItem>
                 <MenuItem value="OK D">OK D (집중개선)</MenuItem>
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
               </Select>
             </FormControl>
           </Grid>
