@@ -10,11 +10,6 @@ pydantic>=2.5.0
 
 # 데이터베이스
 aiosqlite>=0.19.0
-<<<<<<< HEAD
-psycopg2-binary>=2.9.0  # PostgreSQL 드라이버
-asyncpg>=0.28.0  # 비동기 PostgreSQL 드라이버
-=======
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
 
 # 데이터 처리
 pandas>=2.2.0

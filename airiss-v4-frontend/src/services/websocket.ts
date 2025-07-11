@@ -90,13 +90,8 @@ function testWebSocketConnection() {
         
         // Ping 테스트
         ws.send(JSON.stringify({
-<<<<<<< HEAD
-        type: 'ping',
-        timestamp: new Date().toISOString()
-=======
             type: 'ping',
             timestamp: new Date().toISOString()
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
         }));
         
         // 5초 후 연결 종료
@@ -252,11 +247,7 @@ class WebSocketService extends EventEmitter {
 
   send(data: any) {
     this.emit('message', { type: 'sent', data });
-<<<<<<< HEAD
-      return true;
-=======
     return true;
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
   }
 
   forceReconnect() {

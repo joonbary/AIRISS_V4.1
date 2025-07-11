@@ -1,9 +1,5 @@
 import axios, { AxiosError } from 'axios';
 
-<<<<<<< HEAD
-// API 기본 URL을 무조건 8003으로 고정
-const API_BASE_URL = 'http://localhost:8003';
-=======
 // API 기본 URL 설정 (Railway 호환)
 const API_BASE_URL = (() => {
   // Railway 또는 프로덕션 환경에서는 상대 경로 사용
@@ -17,7 +13,6 @@ const API_BASE_URL = (() => {
   // 로컬 개발 환경
   return process.env.REACT_APP_API_URL || 'http://localhost:8002';
 })();
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
 
 // axios 인스턴스 생성
 const api = axios.create({
@@ -208,37 +203,4 @@ export const getDashboardData = async () => {
   }
 };
 
-<<<<<<< HEAD
-// 회원가입
-export const register = async (data: { email: string; name: string; password: string }) => {
-  const response = await api.post('/user/register', data);
-  return response.data;
-};
-
-// 로그인
-export const login = async (data: { email: string; password: string }) => {
-  const response = await api.post('/user/login', data);
-  return response.data;
-};
-
-// 내 정보 조회
-export const getMe = async (token: string) => {
-  const response = await api.get('/user/me', { headers: { Authorization: `Bearer ${token}` } });
-  return response.data;
-};
-
-// 승인 대기 목록 (관리자)
-export const getPendingUsers = async (token: string) => {
-  const response = await api.get('/user/pending', { headers: { Authorization: `Bearer ${token}` } });
-  return response.data;
-};
-
-// 관리자 승인/거부
-export const approveUser = async (user_id: number, approve: boolean, token: string) => {
-  const response = await api.post('/user/approve', { user_id, approve }, { headers: { Authorization: `Bearer ${token}` } });
-  return response.data;
-};
-
-=======
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
 export default api;
