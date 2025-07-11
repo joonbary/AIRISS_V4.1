@@ -88,7 +88,6 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const getGradeColor = (grade: string) => {
-<<<<<<< HEAD
     if (grade === 'S') return '#4caf50'; // 최상
     if (grade === 'A+') return '#8bc34a';
     if (grade === 'A') return '#cddc39';
@@ -97,13 +96,6 @@ const Dashboard: React.FC = () => {
     if (grade === 'C') return '#9e9e9e';
     if (grade === 'D') return '#757575';
     return '#bdbdbd';
-=======
-    if (grade.includes('★')) return '#4caf50';
-    if (grade.includes('A')) return '#ff9800';
-    if (grade.includes('B')) return '#2196f3';
-    if (grade.includes('C')) return '#9e9e9e';
-    return '#757575';
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
   };
 
   // 다운로드 핸들러
@@ -171,7 +163,6 @@ const Dashboard: React.FC = () => {
 
   // 차트 데이터 준비
   const gradeData = [
-<<<<<<< HEAD
     { grade: 'S', count: 45, percentage: 2.4 },
     { grade: 'A+', count: 185, percentage: 10.0 },
     { grade: 'A', count: 320, percentage: 17.3 },
@@ -179,15 +170,6 @@ const Dashboard: React.FC = () => {
     { grade: 'B', count: 420, percentage: 22.7 },
     { grade: 'C', count: 220, percentage: 11.9 },
     { grade: 'D', count: 77, percentage: 4.2 }
-=======
-    { grade: 'OK★★★', count: 45, percentage: 2.4 },
-    { grade: 'OK★★', count: 185, percentage: 10.0 },
-    { grade: 'OK★', count: 320, percentage: 17.3 },
-    { grade: 'OK A', count: 580, percentage: 31.4 },
-    { grade: 'OK B+', count: 420, percentage: 22.7 },
-    { grade: 'OK B', count: 220, percentage: 11.9 },
-    { grade: 'OK C', count: 77, percentage: 4.2 }
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
   ];
 
   return (
