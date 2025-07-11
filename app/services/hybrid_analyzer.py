@@ -1,22 +1,14 @@
 # app/services/hybrid_analyzer.py
 """
-<<<<<<< HEAD
 AIRISS v4.0 하이브리드 분석기 - Python 3.13 완전 호환 버전
 텍스트 + 정량 데이터 통합 분석 + 편향 탐지 + 조건부 영구 저장
-=======
-AIRISS v4.0 하이브리드 분석기
-텍스트 + 정량 데이터 통합 분석 + 편향 탐지
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
 """
 
 import pandas as pd
 from typing import Dict, Any, Optional, List
 import logging
 from datetime import datetime
-<<<<<<< HEAD
 import uuid
-=======
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
 
 from app.services.text_analyzer import AIRISSTextAnalyzer
 from app.services.quantitative_analyzer import QuantitativeAnalyzer
@@ -24,11 +16,7 @@ from app.services.quantitative_analyzer import QuantitativeAnalyzer
 logger = logging.getLogger(__name__)
 
 class AIRISSHybridAnalyzer:
-<<<<<<< HEAD
     """텍스트 + 정량 통합 분석기 with 편향 탐지 + 안전한 영구 저장"""
-=======
-    """텍스트 + 정량 통합 분석기 with 편향 탐지"""
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
     
     def __init__(self):
         self.text_analyzer = AIRISSTextAnalyzer()
@@ -42,7 +30,6 @@ class AIRISSHybridAnalyzer:
             logger.info("✅ 편향 탐지 시스템 로드 완료")
         except ImportError:
             logger.warning("⚠️ 편향 탐지 모듈 없음 - 기본 분석만 수행")
-<<<<<<< HEAD
         except Exception as e:
             logger.warning(f"⚠️ 편향 탐지 시스템 로드 실패: {e}")
         
@@ -68,8 +55,6 @@ class AIRISSHybridAnalyzer:
         except Exception as e:
             logger.warning(f"⚠️ 저장 서비스 초기화 실패 (Python 3.13 호환성): {e}")
             logger.info("📝 메모리 기반 분석만 수행됩니다")
-=======
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
         
         # 통합 가중치
         self.hybrid_weights = {
@@ -77,7 +62,6 @@ class AIRISSHybridAnalyzer:
             'quantitative_analysis': 0.4
         }
         
-<<<<<<< HEAD
         # 분석 결과 저장 (편향 탐지용) - 항상 사용 가능한 메모리 저장소
         self.analysis_history = []
         
@@ -94,15 +78,6 @@ class AIRISSHybridAnalyzer:
                              file_id: Optional[str] = None,
                              filename: Optional[str] = None) -> Dict[str, Any]:
         """종합 분석: 텍스트 + 정량 + 편향 체크 + 안전한 영구 저장"""
-=======
-        # 분석 결과 저장 (편향 탐지용)
-        self.analysis_history = []
-        
-        logger.info("✅ AIRISS v4.0 하이브리드 분석기 초기화 완료")
-    
-    def comprehensive_analysis(self, uid: str, opinion: str, row_data: pd.Series) -> Dict[str, Any]:
-        """종합 분석: 텍스트 + 정량 + 편향 체크"""
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
         
         # 1. 텍스트 분석
         text_results = {}
@@ -164,12 +139,8 @@ class AIRISSHybridAnalyzer:
                     analysis_record[attr] = row_data[attr]
             self.analysis_history.append(analysis_record)
         
-<<<<<<< HEAD
         # 8. 분석 결과 구성
         analysis_result = {
-=======
-        return {
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
             "text_analysis": {
                 "overall_score": text_overall["overall_score"],
                 "grade": text_overall["grade"],
@@ -191,17 +162,12 @@ class AIRISSHybridAnalyzer:
             "explainability": explainability_info,
             "analysis_metadata": {
                 "uid": uid,
-<<<<<<< HEAD
                 "analysis_version": "AIRISS v4.0 - Hybrid Enhanced (Python 3.13 Compatible)",
-=======
-                "analysis_version": "AIRISS v4.0 - Hybrid Enhanced",
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
                 "data_sources": {
                     "text_available": bool(opinion and opinion.strip()),
                     "quantitative_available": bool(quant_data),
                     "quantitative_data_quality": quant_results["data_quality"]
                 },
-<<<<<<< HEAD
                 "bias_detection_available": self.bias_detector is not None,
                 "storage_available": self.storage_available
             }
@@ -328,23 +294,10 @@ class AIRISSHybridAnalyzer:
             return {
                 "grade": "S",
                 "grade_description": "탁월함 (Superb) - 전사 TOP 1%",
-=======
-                "bias_detection_available": self.bias_detector is not None
-            }
-        }
-    
-    def _calculate_hybrid_grade(self, score: float) -> Dict[str, str]:
-        """하이브리드 점수를 OK등급으로 변환"""
-        if score >= 95:
-            return {
-                "grade": "OK★★★",
-                "grade_description": "최우수 등급 (TOP 1%) - v4.0 하이브리드",
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
                 "percentile": "상위 1%"
             }
         elif score >= 90:
             return {
-<<<<<<< HEAD
                 "grade": "A+",
                 "grade_description": "매우 우수 (Excellent) - 전사 TOP 5%",
                 "percentile": "상위 5%"
@@ -378,47 +331,6 @@ class AIRISSHybridAnalyzer:
                 "grade": "D",
                 "grade_description": "집중 관리 필요 (Requires Attention) - 하위 30%",
                 "percentile": "하위 30%"
-=======
-                "grade": "OK★★",
-                "grade_description": "우수 등급 (TOP 5%) - v4.0 하이브리드",
-                "percentile": "상위 5%"
-            }
-        elif score >= 85:
-            return {
-                "grade": "OK★",
-                "grade_description": "우수+ 등급 (TOP 10%) - v4.0 하이브리드",
-                "percentile": "상위 10%"
-            }
-        elif score >= 80:
-            return {
-                "grade": "OK A",
-                "grade_description": "양호 등급 (TOP 20%) - v4.0 하이브리드",
-                "percentile": "상위 20%"
-            }
-        elif score >= 75:
-            return {
-                "grade": "OK B+",
-                "grade_description": "양호- 등급 (TOP 30%) - v4.0 하이브리드",
-                "percentile": "상위 30%"
-            }
-        elif score >= 70:
-            return {
-                "grade": "OK B",
-                "grade_description": "보통 등급 (TOP 40%) - v4.0 하이브리드",
-                "percentile": "상위 40%"
-            }
-        elif score >= 60:
-            return {
-                "grade": "OK C",
-                "grade_description": "개선필요 등급 (TOP 60%) - v4.0 하이브리드",
-                "percentile": "상위 60%"
-            }
-        else:
-            return {
-                "grade": "OK D",
-                "grade_description": "집중개선 등급 (하위 40%) - v4.0 하이브리드",
-                "percentile": "하위 40%"
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
             }
     
     def _generate_explainability(self, 
@@ -513,11 +425,7 @@ class AIRISSHybridAnalyzer:
             return "낮은 신뢰도: 제한된 정보로 인해 추가 데이터 수집을 권장합니다."
     
     def detect_bias_in_batch(self, analysis_results_df: pd.DataFrame) -> Dict[str, Any]:
-<<<<<<< HEAD
         """배치 분석 결과의 편향 탐지 (안전한 처리)"""
-=======
-        """배치 분석 결과의 편향 탐지"""
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
         if not self.bias_detector:
             return {
                 "error": "편향 탐지 시스템이 설치되지 않았습니다.",
@@ -554,13 +462,10 @@ class AIRISSHybridAnalyzer:
                 "50%": round(df['hybrid_score'].quantile(0.50), 1),
                 "75%": round(df['hybrid_score'].quantile(0.75), 1),
                 "max": round(df['hybrid_score'].max(), 1)
-<<<<<<< HEAD
             },
             "storage_info": {
                 "storage_available": self.storage_available,
                 "memory_records": len(self.analysis_history)
-=======
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
             }
         }
         
@@ -570,7 +475,6 @@ class AIRISSHybridAnalyzer:
                 metrics[f'{attr}_averages'] = df.groupby(attr)['hybrid_score'].mean().to_dict()
         
         return metrics
-<<<<<<< HEAD
     
     def get_system_status(self) -> Dict[str, Any]:
         """시스템 상태 조회"""
@@ -586,5 +490,3 @@ class AIRISSHybridAnalyzer:
             "storage_mode": "persistent" if self.storage_available else "memory_only",
             "python_version_compatible": True
         }
-=======
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f

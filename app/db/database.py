@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
@@ -20,7 +19,7 @@ POSTGRES_DATABASE_URL = os.getenv("POSTGRES_DATABASE_URL", "")
 SQLITE_DATABASE_URL = os.getenv("SQLITE_DATABASE_URL", "sqlite:///./airiss_v4.db")
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 
-logger.info(f"Database Configuration:")
+logger.info(f"🔧 Enhanced Database Configuration:")
 logger.info(f"  - Type: {DATABASE_TYPE}")
 logger.info(f"  - SQLite URL: {SQLITE_DATABASE_URL}")
 logger.info(f"  - PostgreSQL Available: {'Yes' if POSTGRES_DATABASE_URL else 'No'}")
@@ -32,32 +31,34 @@ FINAL_DATABASE_URL = ""
 DATABASE_CONNECTION_TYPE = "unknown"
 
 def create_postgresql_engine():
-    """Create PostgreSQL engine with maximum SQLAlchemy compatibility"""
+    """Create PostgreSQL engine with enhanced error handling"""
     global engine, FINAL_DATABASE_URL, DATABASE_CONNECTION_TYPE
     
     try:
         # Determine the best PostgreSQL URL
         if DATABASE_URL and "postgresql" in DATABASE_URL:
             pg_url = DATABASE_URL
-            logger.info("Using DATABASE_URL for PostgreSQL")
+            logger.info("🐘 Using DATABASE_URL for PostgreSQL")
         elif POSTGRES_DATABASE_URL:
             pg_url = POSTGRES_DATABASE_URL
-            logger.info("Using POSTGRES_DATABASE_URL for PostgreSQL")
+            logger.info("🐘 Using POSTGRES_DATABASE_URL for PostgreSQL")
         else:
             raise Exception("No valid PostgreSQL URL found")
         
         FINAL_DATABASE_URL = pg_url
         
-        # Create PostgreSQL engine with minimal parameters for maximum compatibility
+        # Create PostgreSQL engine with optimized settings
         engine = create_engine(
             pg_url,
-            poolclass=NullPool,  # Recommended for Railway/Neon - always compatible
+            poolclass=NullPool,  # Recommended for Railway/Neon
             echo=False,
             connect_args={
                 "sslmode": "require",
                 "connect_timeout": 30,
-            }
-            # Removed pool_timeout and pool_recycle for compatibility
+                "command_timeout": 30,
+            },
+            pool_timeout=30,
+            pool_recycle=3600,  # Recycle connections every hour
         )
         
         # Test the connection immediately
@@ -66,13 +67,13 @@ def create_postgresql_engine():
             test_result = result.fetchone()
             if test_result and test_result[0] == 1:
                 DATABASE_CONNECTION_TYPE = "postgresql"
-                logger.info("PostgreSQL connection successful!")
+                logger.info("✅ PostgreSQL connection successful!")
                 return True
             else:
                 raise Exception("PostgreSQL connection test failed")
                 
     except Exception as e:
-        logger.error(f"PostgreSQL connection failed: {e}")
+        logger.error(f"❌ PostgreSQL connection failed: {e}")
         engine = None
         return False
 
@@ -95,46 +96,46 @@ def create_sqlite_engine():
             result = connection.execute(text("SELECT 1"))
             test_result = result.fetchone()
             if test_result and test_result[0] == 1:
-                logger.info("SQLite connection successful (fallback)")
+                logger.info("✅ SQLite connection successful (fallback)")
                 return True
             else:
                 raise Exception("SQLite connection test failed")
                 
     except Exception as e:
-        logger.error(f"SQLite connection failed: {e}")
+        logger.error(f"❌ SQLite connection failed: {e}")
         return False
 
-# Smart connection logic with PostgreSQL priority and SQLite fallback
+# Enhanced connection logic with smart fallback
 def initialize_database_connection():
     """Initialize database connection with PostgreSQL priority and SQLite fallback"""
     global engine, FINAL_DATABASE_URL, DATABASE_CONNECTION_TYPE
     
-    logger.info("Starting database connection initialization...")
+    logger.info("🔄 Starting enhanced database connection...")
     
     # Priority 1: Try PostgreSQL if configured
     if DATABASE_TYPE.lower() == "postgres" and (POSTGRES_DATABASE_URL or DATABASE_URL):
-        logger.info("Attempting PostgreSQL connection (Priority 1)...")
+        logger.info("🎯 Attempting PostgreSQL connection (Priority 1)...")
         if create_postgresql_engine():
-            logger.info("Successfully connected to PostgreSQL!")
+            logger.info("🎉 Successfully connected to PostgreSQL!")
             return True
         else:
-            logger.warning("PostgreSQL failed, trying SQLite fallback...")
+            logger.warning("⚠️ PostgreSQL failed, trying SQLite fallback...")
     
     # Priority 2: Fallback to SQLite
-    logger.info("Attempting SQLite connection (Fallback)...")
+    logger.info("🔄 Attempting SQLite connection (Fallback)...")
     if create_sqlite_engine():
-        logger.info("Successfully connected to SQLite!")
+        logger.info("✅ Successfully connected to SQLite!")
         return True
     
     # If both fail
-    logger.error("Both PostgreSQL and SQLite connections failed!")
+    logger.error("❌ Both PostgreSQL and SQLite connections failed!")
     return False
 
 # Initialize the connection
 connection_success = initialize_database_connection()
 
 if not connection_success:
-    logger.error("CRITICAL: No database connection available!")
+    logger.error("❌ CRITICAL: No database connection available!")
     # Create a dummy engine to prevent crashes
     engine = create_engine("sqlite:///./emergency_fallback.db")
     FINAL_DATABASE_URL = "sqlite:///./emergency_fallback.db"
@@ -147,31 +148,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 # Dependencies
-=======
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import logging
-
-logger = logging.getLogger(__name__)
-
-# SQLite 데이터베이스 URL
-DATABASE_URL = "sqlite:///./airiss_v4.db"
-
-# 엔진 생성
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
-
-# 세션 생성
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base 클래스 생성
-Base = declarative_base()
-
-# 의존성
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
 def get_db():
     db = SessionLocal()
     try:
@@ -179,34 +155,33 @@ def get_db():
     finally:
         db.close()
 
-<<<<<<< HEAD
-# Table creation with error handling
+# Enhanced table creation with error handling
 def create_tables():
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info(f"Database tables created successfully ({DATABASE_CONNECTION_TYPE})")
+        logger.info(f"✅ Database tables created successfully ({DATABASE_CONNECTION_TYPE})")
         return True
     except Exception as e:
-        logger.error(f"Table creation error: {e}")
+        logger.error(f"❌ Table creation error: {e}")
         return False
 
-# Connection test
+# Enhanced connection test
 def test_connection():
     try:
         with engine.connect() as connection:
             result = connection.execute(text("SELECT 1"))
             row = result.fetchone()
             if row and row[0] == 1:
-                logger.info(f"Database connection test successful ({DATABASE_CONNECTION_TYPE})")
+                logger.info(f"✅ Database connection test successful ({DATABASE_CONNECTION_TYPE})")
                 return True
             else:
-                logger.error(f"Database connection test failed: Invalid result")
+                logger.error(f"❌ Database connection test failed: Invalid result")
                 return False
     except Exception as e:
-        logger.error(f"Database connection test failed: {e}")
+        logger.error(f"❌ Database connection test failed: {e}")
         return False
 
-# Database info
+# Enhanced database info
 def get_database_info():
     return {
         "type": DATABASE_CONNECTION_TYPE,
@@ -222,14 +197,13 @@ def get_database_info():
             "DATABASE_TYPE": DATABASE_TYPE,
             "POSTGRES_URL_SET": bool(POSTGRES_DATABASE_URL),
             "DATABASE_URL_SET": bool(DATABASE_URL)
-        },
-        "sqlalchemy_compatible": True
+        }
     }
 
 # Force PostgreSQL connection (for troubleshooting)
 def force_postgresql_connection():
     """Force attempt to connect to PostgreSQL for debugging"""
-    logger.info("Forcing PostgreSQL connection attempt...")
+    logger.info("🔧 Forcing PostgreSQL connection attempt...")
     
     if not POSTGRES_DATABASE_URL and not DATABASE_URL:
         return {"success": False, "error": "No PostgreSQL URL configured"}
@@ -243,29 +217,29 @@ def force_postgresql_connection():
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-# Database initialization
+# Database initialization with comprehensive testing
 def initialize_database():
     """Complete database initialization and testing"""
     try:
-        logger.info("Starting complete database initialization...")
+        logger.info("🔄 Starting complete database initialization...")
         
         # Test current connection
         if test_connection():
-            logger.info("Database connection verified")
+            logger.info("✅ Database connection verified")
             
             # Create tables
             if create_tables():
-                logger.info("Database tables initialized")
+                logger.info("✅ Database tables initialized")
                 return True
             else:
-                logger.error("Table creation failed")
+                logger.error("❌ Table creation failed")
                 return False
         else:
-            logger.error("Database connection verification failed")
+            logger.error("❌ Database connection verification failed")
             return False
             
     except Exception as e:
-        logger.error(f"Database initialization failed: {e}")
+        logger.error(f"❌ Database initialization failed: {e}")
         return False
 
 # Router for database management
@@ -291,14 +265,14 @@ async def approve_user(request: ApproveRequest):
 
 @router.get("/database/status")
 async def get_database_status():
-    """Database status endpoint"""
+    """Enhanced database status endpoint"""
     try:
         db_info = get_database_info()
         return {
             "status": "success",
             "database": db_info,
             "timestamp": "2025-01-23T00:00:00",
-            "sqlalchemy_compatible": True,
+            "enhanced": True,
             "connection_type": DATABASE_CONNECTION_TYPE
         }
     except Exception as e:
@@ -315,18 +289,8 @@ async def force_postgresql():
         raise HTTPException(status_code=500, detail=result["error"])
 
 # Log final status
-logger.info(f"SQLAlchemy Compatible Database Module Loaded:")
+logger.info(f"🎯 Enhanced Database Module Loaded:")
 logger.info(f"  - Connection Type: {DATABASE_CONNECTION_TYPE}")
 logger.info(f"  - Engine Available: {engine is not None}")
 logger.info(f"  - Tables Ready: {connection_success}")
-logger.info(f"  - SQLAlchemy Compatible: True")
 logger.info(f"  - URL: {FINAL_DATABASE_URL.split('@')[0] + '@***' if '@' in FINAL_DATABASE_URL else FINAL_DATABASE_URL}")
-=======
-# 테이블 생성
-def create_tables():
-    try:
-        Base.metadata.create_all(bind=engine)
-        logger.info("데이터베이스 테이블 생성 완료")
-    except Exception as e:
-        logger.error(f"테이블 생성 오류: {e}")
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f

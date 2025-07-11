@@ -479,11 +479,7 @@ class AIRISSTextAnalyzer:
         }
     
     def calculate_overall_score(self, dimension_scores: Dict[str, float]) -> Dict[str, Any]:
-<<<<<<< HEAD
         """가중평균으로 종합 점수 계산 - 7단계 등급 체계 (S, A+, A, B+, B, C, D)"""
-=======
-        """가중평균으로 종합 점수 계산 - 개선된 등급 체계"""
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
         weighted_sum = 0
         total_weight = 0
         
@@ -495,11 +491,7 @@ class AIRISSTextAnalyzer:
         
         overall_score = weighted_sum / total_weight if total_weight > 0 else 50
         
-<<<<<<< HEAD
         # 7단계 등급 산정 체계 (S, A+, A, B+, B, C, D)
-=======
-        # 개선된 등급 산정 체계
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
         if overall_score >= 95:
             grade = "S"
             grade_desc = "탁월함 (Superb) - 전사 TOP 1%"
@@ -510,7 +502,6 @@ class AIRISSTextAnalyzer:
             grade_desc = "매우 우수 (Excellent) - 전사 TOP 5%"
             percentile = "상위 5%"
             badge = "⭐⭐⭐"
-<<<<<<< HEAD
         elif overall_score >= 80:
             grade = "A"
             grade_desc = "우수 (Outstanding) - 전사 TOP 15%"
@@ -535,37 +526,6 @@ class AIRISSTextAnalyzer:
             grade = "D"
             grade_desc = "집중 관리 필요 (Requires Attention) - 하위 30%"
             percentile = "하위 30%"
-=======
-        elif overall_score >= 85:
-            grade = "A"
-            grade_desc = "우수 (Outstanding) - 전사 TOP 10%"
-            percentile = "상위 10%"
-            badge = "⭐⭐"
-        elif overall_score >= 80:
-            grade = "B+"
-            grade_desc = "양호 (Good) - 전사 TOP 20%"
-            percentile = "상위 20%"
-            badge = "⭐"
-        elif overall_score >= 75:
-            grade = "B"
-            grade_desc = "평균 이상 (Above Average) - 전사 TOP 30%"
-            percentile = "상위 30%"
-            badge = "✨"
-        elif overall_score >= 70:
-            grade = "C+"
-            grade_desc = "평균 (Average) - 전사 TOP 40%"
-            percentile = "상위 40%"
-            badge = "👍"
-        elif overall_score >= 60:
-            grade = "C"
-            grade_desc = "개선 필요 (Needs Improvement) - 전사 TOP 60%"
-            percentile = "상위 60%"
-            badge = "📈"
-        else:
-            grade = "D"
-            grade_desc = "집중 관리 필요 (Requires Attention) - 하위 40%"
-            percentile = "하위 40%"
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
             badge = "🚨"
         
         # 상세 분석 추가

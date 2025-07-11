@@ -1088,15 +1088,6 @@ async def process_analysis_v4(job_id: str, request: AnalysisRequest, db_service,
                         "분석시스템": "AIRISS v4.0 - 기본 분석 모드",
                         "주의사항": "텍스트 의견이 부족하여 기본 분석만 수행됨"
                     }
-<<<<<<< HEAD
-                await db_service.save_analysis_result(job_id, uid, result_record)
-                results.append(result_record)
-                
-                # 진행률 업데이트
-                current_processed = len(results)
-                progress = (current_processed / total_rows) * 100
-                
-=======
 
                 await db_service.save_analysis_result(job_id, uid, result_record)
                 results.append(result_record)
@@ -1105,16 +1096,11 @@ async def process_analysis_v4(job_id: str, request: AnalysisRequest, db_service,
                 current_processed = len(results)
                 progress = (current_processed / total_rows) * 100
 
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
                 await db_service.update_analysis_job(job_id, {
                     "processed_records": current_processed,
                     "progress": min(progress, 100)
                 })
-<<<<<<< HEAD
-                
-=======
 
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
                 await ws_manager.broadcast_to_channel("analysis", {
                     "type": "analysis_progress",
                     "job_id": job_id,
@@ -1125,17 +1111,10 @@ async def process_analysis_v4(job_id: str, request: AnalysisRequest, db_service,
                     "current_score": result_record.get("AIRISS_v4_종합점수", 0),
                     "timestamp": datetime.now().isoformat()
                 })
-<<<<<<< HEAD
-                
-                logger.info(f"📈 진행률: {progress:.1f}% ({current_processed}/{total_rows})")
-                await asyncio.sleep(0.1)
-                
-=======
 
                 logger.info(f"📈 진행률: {progress:.1f}% ({current_processed}/{total_rows})")
                 await asyncio.sleep(0.1)
 
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
             except Exception as e:
                 logger.error(f"❌ 개별 분석 오류 - UID {uid}: {e}")
                 continue
@@ -1532,10 +1511,6 @@ async def download_results(job_id: str, format: str = "excel"):
 async def analysis_health_check():
     """분석 엔진 헬스체크"""
     try:
-<<<<<<< HEAD
-        logger.info("✅ 헬스체크 요청 수신")
-=======
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
         # 간단한 분석 테스트
         test_text = "테스트 텍스트입니다"
         test_result = hybrid_analyzer.text_analyzer.analyze_text(test_text, "업무성과")
@@ -1556,12 +1531,6 @@ async def analysis_health_check():
         logger.error(f"❌ 분석 엔진 헬스체크 오류: {e}")
         return {
             "status": "error",
-<<<<<<< HEAD
-            "message": str(e),
-            "encoding_safe_mode": True,
-            "note": "Windows/OneDrive 인코딩 문제 가능성"
-=======
             "error": str(e),
             "timestamp": datetime.now().isoformat()
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
         }
