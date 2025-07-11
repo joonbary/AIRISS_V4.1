@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-import React from 'react';
-import Auth from './components/Auth';
-
-function App() {
-  return <Auth />;
-=======
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
@@ -12,7 +5,7 @@ import Layout from './components/Layout/Layout';
 import theme from './theme';
 import Dashboard from './components/Dashboard/Dashboard';
 import FileUpload from './components/Upload/FileUpload';
-import { AnalysisView } from './components/Analysis/AnalysisView'; // named import로 변경
+import { AnalysisView } from './components/Analysis/AnalysisView';
 import AdvancedSearch from './components/Search/AdvancedSearch';
 import Reports from './components/Reports/Reports';
 import Settings from './components/Settings/Settings';
@@ -74,7 +67,6 @@ function App() {
       </Router>
     </ThemeProvider>
   );
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
 }
 
 export default App;
