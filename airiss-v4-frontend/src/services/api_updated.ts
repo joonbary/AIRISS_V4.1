@@ -190,14 +190,38 @@ export const getDashboardData = async () => {
 
 // 회원가입
 export const register = async (data: { email: string; name: string; password: string }) => {
-  const response = await api.post('/api/v1/user/register', data);
+  const response = await api.post('/user/register', data);
   return response.data;
 };
 
 // 로그인
 export const login = async (data: { email: string; password: string }) => {
-  const response = await api.post('/api/v1/user/login', data);
+  const response = await api.post('/user/login', data);
   return response.data; // { access_token: string, ... }
+};
+
+// 내 정보 조회
+export const getMe = async (token: string) => {
+  const response = await api.get('/user/me', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+// 승인 대기 목록
+export const getPendingUsers = async (token: string) => {
+  const response = await api.get('/user/pending', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+// 사용자 승인
+export const approveUser = async (user_id: number, approve: boolean, token: string) => {
+  const response = await api.post('/user/approve', { user_id, approve }, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
 };
 
 export default api;

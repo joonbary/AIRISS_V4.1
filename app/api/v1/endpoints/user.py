@@ -128,7 +128,7 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-# 로그인
+# 로그인 (응답 포맷 프론트와 맞춤)
 @router.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
@@ -137,7 +137,18 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     if not db_user.is_approved:
         raise HTTPException(status_code=403, detail="관리자 승인 대기 중입니다.")
     access_token = create_access_token({"sub": db_user.email, "user_id": db_user.id, "is_admin": db_user.is_admin})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_info": {
+            "id": db_user.id,
+            "email": db_user.email,
+            "name": db_user.name,
+            "is_approved": db_user.is_approved,
+            "is_admin": db_user.is_admin,
+            "created_at": db_user.created_at.isoformat() if hasattr(db_user, 'created_at') else None
+        }
+    }
 
 # 내 정보
 @router.get("/me", response_model=UserOut)
