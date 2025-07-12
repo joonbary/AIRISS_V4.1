@@ -80,7 +80,7 @@ class EnhancedWebSocketService extends SimpleEventEmitter {
 
   constructor() {
     super();
-    this.url = process.env.REACT_APP_WS_URL || 'ws://localhost:8002/ws';
+    this.url = process.env.REACT_APP_WS_URL || 'ws://localhost:8003/ws';
     this.clientId = `react-client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 

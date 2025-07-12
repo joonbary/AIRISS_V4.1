@@ -112,7 +112,7 @@ const JobDashboard: React.FC = () => {
 
   const handleDownload = async (jobId: string) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8002'}/analysis/download/${jobId}/excel`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8003'}/analysis/download/${jobId}/excel`);
       if (!response.ok) {
         throw new Error('Download failed');
       }

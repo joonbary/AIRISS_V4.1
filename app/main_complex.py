@@ -288,6 +288,14 @@ try:
 except Exception as e:
     logger.error(f"❌ Employee router error: {e}")
 
+# 🔧 FIXED: User API 직접 등록 (405 에러 해결)
+try:
+    from app.api.v1.endpoints.user import router as user_router
+    app.include_router(user_router, prefix="/api/v1/user", tags=["user"])
+    logger.info("✅ User router registered directly (/api/v1/user)")
+except Exception as e:
+    logger.error(f"❌ User router error: {e}")
+
 # 기존 v1 API 라우터도 시도 (백업)
 try:
     from app.api.v1.api import api_router as v1_api_router

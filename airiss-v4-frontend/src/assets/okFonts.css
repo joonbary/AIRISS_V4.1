@@ -1,0 +1,30 @@
+import hashlib
+from sqlalchemy import create_engine, text
+
+# DB 연결 정보 (settings.py 참고)
+DB_URL = "postgresql+psycopg2://airiss:password@localhost/airiss_db"
+
+# 개발자 계정 정보
+email = "dev@ok.com"
+name = "개발자"
+password = "test1234"
+password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+# SQL 쿼리
+sql = """
+INSERT INTO users (email, name, password_hash, is_approved, is_admin)
+VALUES (:email, :name, :password_hash, true, true)
+ON CONFLICT (email) DO NOTHING;
+"""
+
+# DB 연결 및 실행
+engine = create_engine(DB_URL)
+with engine.connect() as conn:
+    conn.execute(text(sql), {
+        "email": email,
+        "name": name,
+        "password_hash": password_hash
+    })
+    conn.commit()
+
+print("✅ 개발자 계정 추가 완료!") 

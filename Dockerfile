@@ -1,4 +1,4 @@
-# AIRISS v4.1 Railway Multi-stage Dockerfile - Fixed
+# AIRISS v4.1 Railway Multi-stage Dockerfile - Frontend Path Fixed
 # React + FastAPI Complete Integration
 
 # Stage 1: React Frontend Build

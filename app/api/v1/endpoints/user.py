@@ -1,3 +1,51 @@
+import os
+import sys
+from pathlib import Path
+
+print("🔍 === USER.PY 디버깅 시작 ===")
+print(f"🗂️ 현재 작업 디렉토리: {os.getcwd()}")
+print(f"🗂️ Python 경로: {sys.path[:3]}")
+
+# .env 파일 존재 및 내용 확인
+env_file = Path(".env")
+print(f"📄 .env 파일 존재: {env_file.exists()}")
+if env_file.exists():
+    print(f"📄 .env 파일 크기: {env_file.stat().st_size} bytes")
+    with open(env_file, 'r', encoding='utf-8') as f:
+        lines = f.readlines()[:10]
+        print("📄 .env 파일 처음 10줄:")
+        for i, line in enumerate(lines, 1):
+            print(f"   {i}: {line.strip()}")
+
+# 문제가 되는 환경변수들 직접 확인
+problem_vars = [
+    'database_type', 'sqlite_database_url', 'postgres_database_url',
+    'server_host', 'server_port', 'react_app_api_url', 
+    'enable_cloud_storage', 'analysis_retention_days', 
+    'react_build_path', 'environment', 'log_level'
+]
+print("\n🔍 문제 환경변수 직접 확인:")
+for var in problem_vars:
+    lower_val = os.getenv(var.lower())
+    upper_val = os.getenv(var.upper())
+    print(f"   {var}: lower={lower_val}, upper={upper_val}")
+
+print("\n⚙️ Settings import 시작...")
+try:
+    from app.core import config
+    print(f"✅ config 모듈 위치: {config.__file__}")
+    print(f"🔧 Settings 클래스 존재: {hasattr(config, 'Settings')}")
+    print("🎯 Settings 객체 생성 시도...")
+    settings = config.Settings()
+    print("✅ Settings 객체 생성 성공!")
+except Exception as e:
+    print(f"❌ Settings 에러 발생: {e}")
+    print(f"❌ 에러 타입: {type(e)}")
+    import traceback
+    print("❌ 상세 스택 트레이스:")
+    traceback.print_exc()
+print("🔍 === USER.PY 디버깅 완료 ===\n")
+
 from fastapi import APIRouter, HTTPException, Depends, status, Body
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -8,10 +56,24 @@ import hashlib
 
 from app.models.user import User
 from app.core.db.database import get_db
-from app.core.config.settings import Settings
+# 기존 코드 (문제 발생)
+# from app.core.config.settings import Settings
+# settings = Settings()
+# 임시 수정 (하드코딩으로 우회)
+try:
+    from app.core.config.settings import Settings
+    settings = Settings()
+except Exception as e:
+    print(f"Settings 로딩 실패, 기본값 사용: {e}")
+    settings = type('Settings', (), {
+        'jwt_secret_key': 'temp-secret-key',
+        'jwt_algorithm': 'HS256',
+        'jwt_expire_minutes': 30,
+        'admin_email': 'joonbary@naver.com',
+        'admin_auto_create': True
+    })()
 
-router = APIRouter(prefix="/user", tags=["user"])
-settings = Settings()
+router = APIRouter(prefix="", tags=["user"])
 
 # 유틸: 비밀번호 해시
 

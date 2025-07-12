@@ -1,3 +1,51 @@
+/*
+@font-face {
+  font-family: 'OK';
+  src: url('../public/fonts/OKLight.ttf') format('truetype');
+  font-weight: 300;
+}
+@font-face {
+  font-family: 'OK';
+  src: url('../public/fonts/OKMedium.ttf') format('truetype');
+  font-weight: 500;
+}
+@font-face {
+  font-family: 'OK';
+  src: url('../public/fonts/OKBold.ttf') format('truetype');
+  font-weight: 700;
+}
+*/
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', Arial, sans-serif;
+  background: #fff7e6;
+  margin: 0;
+}
+
+/* 모바일 카드 반응형 */
+.MuiCard-root {
+  min-width: 0 !important;
+  width: 90vw !important;
+  max-width: 420px !important;
+}
+@media (min-width: 600px) {
+  .MuiCard-root {
+    width: 400px !important;
+    min-width: 320px !important;
+  }
+}
+@media (min-width: 900px) {
+  .MuiCard-root {
+    width: 420px !important;
+    min-width: 350px !important;
+  }
+}
+
+/* 입력 필드, 버튼 폰트 적용 */
+.MuiInputBase-input, .MuiButton-root, .MuiTabs-root, .MuiTab-root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', Arial, sans-serif !important;
+}
+
 .App {
   text-align: center;
 }

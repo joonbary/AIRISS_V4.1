@@ -2,7 +2,7 @@ import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import NullPool, QueuePool
 import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -30,12 +30,23 @@ engine = None
 FINAL_DATABASE_URL = ""
 DATABASE_CONNECTION_TYPE = "unknown"
 
-def create_postgresql_engine():
-    """Create PostgreSQL engine with enhanced error handling"""
+# PostgreSQL용 엔진 설정 함수 추가
+
+def create_postgresql_engine(database_url: str):
+    return create_engine(
+        database_url,
+        poolclass=QueuePool,
+        pool_size=10,
+        max_overflow=20,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        echo=False
+    )
+
+def create_postgresql_engine_legacy():
+    """(기존 코드와의 호환성을 위해 남겨둠, 실제 사용은 위 함수로 대체)"""
     global engine, FINAL_DATABASE_URL, DATABASE_CONNECTION_TYPE
-    
     try:
-        # Determine the best PostgreSQL URL
         if DATABASE_URL and "postgresql" in DATABASE_URL:
             pg_url = DATABASE_URL
             logger.info("🐘 Using DATABASE_URL for PostgreSQL")
@@ -44,24 +55,8 @@ def create_postgresql_engine():
             logger.info("🐘 Using POSTGRES_DATABASE_URL for PostgreSQL")
         else:
             raise Exception("No valid PostgreSQL URL found")
-        
         FINAL_DATABASE_URL = pg_url
-        
-        # Create PostgreSQL engine with optimized settings
-        engine = create_engine(
-            pg_url,
-            poolclass=NullPool,  # Recommended for Railway/Neon
-            echo=False,
-            connect_args={
-                "sslmode": "require",
-                "connect_timeout": 30,
-                "command_timeout": 30,
-            },
-            pool_timeout=30,
-            pool_recycle=3600,  # Recycle connections every hour
-        )
-        
-        # Test the connection immediately
+        engine = create_postgresql_engine(pg_url)
         with engine.connect() as connection:
             result = connection.execute(text("SELECT 1"))
             test_result = result.fetchone()
@@ -71,7 +66,6 @@ def create_postgresql_engine():
                 return True
             else:
                 raise Exception("PostgreSQL connection test failed")
-                
     except Exception as e:
         logger.error(f"❌ PostgreSQL connection failed: {e}")
         engine = None
@@ -115,7 +109,7 @@ def initialize_database_connection():
     # Priority 1: Try PostgreSQL if configured
     if DATABASE_TYPE.lower() == "postgres" and (POSTGRES_DATABASE_URL or DATABASE_URL):
         logger.info("🎯 Attempting PostgreSQL connection (Priority 1)...")
-        if create_postgresql_engine():
+        if create_postgresql_engine_legacy():
             logger.info("🎉 Successfully connected to PostgreSQL!")
             return True
         else:
@@ -209,7 +203,7 @@ def force_postgresql_connection():
         return {"success": False, "error": "No PostgreSQL URL configured"}
     
     try:
-        result = create_postgresql_engine()
+        result = create_postgresql_engine_legacy()
         if result:
             return {"success": True, "message": "PostgreSQL connection forced successfully"}
         else:

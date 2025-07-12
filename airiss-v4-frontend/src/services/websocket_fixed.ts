@@ -45,7 +45,7 @@ class WebSocketService extends EventEmitter {
 
   constructor() {
     super();
-    this.url = process.env.REACT_APP_WS_URL || 'ws://localhost:8002/ws';
+    this.url = process.env.REACT_APP_WS_URL || 'ws://localhost:8003/ws';
     this.clientId = `react-client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     // EventEmitter 오류 처리 추가
@@ -291,7 +291,7 @@ class WebSocketService extends EventEmitter {
   // 서버 상태 확인
   async checkServerHealth(): Promise<boolean> {
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8002';
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8003';
       const response = await fetch(`${apiUrl}/health`);
       return response.ok;
     } catch {

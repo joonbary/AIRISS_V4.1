@@ -6,6 +6,9 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 import openai
 from app.core.config import settings
+from app.db.database import SessionLocal
+from app.models.user import User
+from passlib.hash import bcrypt
 
 logger = logging.getLogger(__name__)
 
@@ -162,3 +165,28 @@ OK금융그룹 인재상과 AIRISS 8대 영역을 종합하여 실행 가능한 
             "tokens_used": 0,
             "error": error_msg
         }
+
+def create_admin_if_needed():
+    if not settings.ADMIN_AUTO_CREATE or not settings.ADMIN_EMAIL or not settings.ADMIN_PASSWORD:
+        return
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.email == settings.ADMIN_EMAIL).first()
+        if not user:
+            admin = User(
+                email=settings.ADMIN_EMAIL,
+                name="관리자",
+                password_hash=bcrypt.hash(settings.ADMIN_PASSWORD),
+                is_admin=True,
+                is_approved=True
+            )
+            db.add(admin)
+            db.commit()
+            print(f"✅ 관리자 계정 자동 생성: {settings.ADMIN_EMAIL}")
+        else:
+            print("✅ 관리자 계정 이미 존재")
+    finally:
+        db.close()
+
+# FastAPI app 생성 직후에 호출
+create_admin_if_needed()

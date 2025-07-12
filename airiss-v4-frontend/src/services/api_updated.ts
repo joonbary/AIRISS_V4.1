@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 // API 기본 URL 설정 (8002 포트로 수정, /api/v1 제거)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8002';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8003';
 
 // axios 인스턴스 생성
 const api = axios.create({
@@ -186,6 +186,18 @@ export const getDashboardData = async () => {
       timestamp: new Date().toISOString()
     };
   }
+};
+
+// 회원가입
+export const register = async (data: { email: string; name: string; password: string }) => {
+  const response = await api.post('/api/v1/user/register', data);
+  return response.data;
+};
+
+// 로그인
+export const login = async (data: { email: string; password: string }) => {
+  const response = await api.post('/api/v1/user/login', data);
+  return response.data; // { access_token: string, ... }
 };
 
 export default api;
