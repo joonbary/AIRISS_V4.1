@@ -291,8 +291,8 @@ except Exception as e:
 # 🔧 FIXED: User API 직접 등록 (405 에러 해결)
 try:
     from app.api.v1.endpoints.user import router as user_router
-    app.include_router(user_router, prefix="/api/v1/user", tags=["user"])
-    logger.info("✅ User router registered directly (/api/v1/user)")
+    app.include_router(user_router, prefix="/user", tags=["user"])
+    logger.info("✅ User router registered directly (/user)")
 except Exception as e:
     logger.error(f"❌ User router error: {e}")
 
