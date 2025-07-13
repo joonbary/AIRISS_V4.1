@@ -11,6 +11,25 @@ from .analysis import (
     AnalysisResultsResponse,
     EmployeeAnalysisResult
 )
+from pydantic import BaseModel
+from typing import Dict, Any
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user_info: Dict[str, Any]
+    class Config:
+        schema_extra = {
+            "example": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "token_type": "bearer",
+                "user_info": {
+                    "username": "user@example.com",
+                    "name": "홍길동",
+                    "is_admin": False
+                }
+            }
+        }
 
 __all__ = [
     "AnalysisStartRequest",

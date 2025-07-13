@@ -73,6 +73,8 @@ except Exception as e:
         'admin_auto_create': True
     })()
 
+from app.schemas import LoginResponse
+
 router = APIRouter(prefix="", tags=["user"])
 
 # 유틸: 비밀번호 해시
@@ -129,7 +131,7 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
     return db_user
 
 # 로그인 (응답 포맷 프론트와 맞춤)
-@router.post("/login")
+@router.post("/login", response_model=LoginResponse)
 def login(user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
     if not db_user or not verify_password(user.password, db_user.password_hash):
@@ -137,10 +139,10 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     if not db_user.is_approved:
         raise HTTPException(status_code=403, detail="관리자 승인 대기 중입니다.")
     access_token = create_access_token({"sub": db_user.email, "user_id": db_user.id, "is_admin": db_user.is_admin})
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user_info": {
+    return LoginResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user_info={
             "id": db_user.id,
             "email": db_user.email,
             "name": db_user.name,
@@ -148,7 +150,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
             "is_admin": db_user.is_admin,
             "created_at": db_user.created_at.isoformat() if hasattr(db_user, 'created_at') else None
         }
-    }
+    )
 
 # 내 정보
 @router.get("/me", response_model=UserOut)
