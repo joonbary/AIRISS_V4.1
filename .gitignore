@@ -104,3 +104,56 @@ tmp/
 
 # Backup files
 cleanup_backup/
+
+# Test and temporary files
+test_*.py
+test_*.xlsx
+test_*.csv
+test_*.html
+demo_*.py
+simple_*.py
+fix_*.py
+debug_*.py
+check_*.py
+
+# Batch scripts (except critical ones)
+*.bat
+!START_AIRISS_WITH_AI.bat
+!RESTART_FRONTEND.bat
+
+# Archive folders
+.archive/
+.cleanup/
+_archive*/
+
+# Admin scripts
+admin.py
+*_admin.py
+*_user.py
+create_*.py
+approve_*.py
+
+# Documentation (keep only main guides)
+*_GUIDE.md
+*_SUMMARY.md
+*_REPORT.md
+!NEON_DB_SETUP_GUIDE.md
+!QUICK_START.md
+!README.md
+
+# Claude specific
+.claude/
+
+# Pickle files
+*.pkl
+
+# Security reports
+security_report.json
+
+# Alembic migrations
+alembic/versions/
+
+# Other
+nul
+*.backup
+*.old

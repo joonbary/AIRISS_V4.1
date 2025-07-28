@@ -97,7 +97,9 @@ class ConnectionManager:
                 self.connection_stats["total_messages_sent"] += 1
             except Exception as e:
                 logger.error(f"Error sending message to {client_id}: {e}")
-                self.disconnect(client_id)
+                # 연결이 끊어진 경우에만 disconnect 호출
+                if "no close frame received or sent" in str(e) or "connection is closed" in str(e):
+                    self.disconnect(client_id)
     
     async def broadcast(self, message: dict, exclude_client: str = None):
         """모든 연결된 클라이언트에게 메시지 전송"""
@@ -112,7 +114,9 @@ class ConnectionManager:
                 self.connection_stats["total_messages_sent"] += 1
             except Exception as e:
                 logger.error(f"Error broadcasting to {client_id}: {e}")
-                disconnected_clients.append(client_id)
+                # 연결이 끊어진 경우에만 disconnect 호출
+                if "no close frame received or sent" in str(e) or "connection is closed" in str(e):
+                    disconnected_clients.append(client_id)
         
         # 연결이 끊긴 클라이언트 정리
         for client_id in disconnected_clients:
@@ -133,7 +137,9 @@ class ConnectionManager:
                     self.connection_stats["total_messages_sent"] += 1
                 except Exception as e:
                     logger.error(f"Error sending to {client_id} on channel {channel}: {e}")
-                    disconnected_clients.append(client_id)
+                    # 연결이 끊어진 경우에만 disconnect 호출
+                    if "no close frame received or sent" in str(e) or "connection is closed" in str(e):
+                        disconnected_clients.append(client_id)
         
         # 연결이 끊긴 클라이언트 정리
         for client_id in disconnected_clients:
@@ -242,3 +248,7 @@ class ConnectionManager:
             "timestamp": datetime.now().isoformat()
         }
         await self.broadcast_to_channel("dashboard", update_message)
+
+# 전역 WebSocket Manager 인스턴스
+# 순환 참조를 피하기 위해 여기서 생성
+manager = ConnectionManager()

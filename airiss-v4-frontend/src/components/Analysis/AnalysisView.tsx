@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -18,24 +19,35 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  Autocomplete,
   SelectChangeEvent,
   AlertTitle
 } from '@mui/material';
 import { PlayArrow, Stop, Download, Info, CheckCircle, Warning } from '@mui/icons-material';
-import { startAnalysis, getAnalysisStatus, downloadResults } from '../../services/api';
+import { startAnalysis, getAnalysisStatus, downloadResults, checkResultsAvailability, getFiles } from '../../services/api';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { AnalysisResult } from '../../types';
+import DashboardLayout from '../Layout/DashboardLayout';
 
 interface AnalysisViewProps {
-  fileId: string | null;
-  fileName: string;
-  totalRecords: number;
-  columns: string[];
+  fileId?: string | null;
+  fileName?: string;
+  totalRecords?: number;
+  columns?: string[];
+}
+
+interface FileInfo {
+  id: string;
+  filename: string;
+  upload_time: string;
+  total_records: number;
+  columns?: string[];
 }
 
 interface BackendWebSocketMessage {
-  type: 'analysis_progress' | 'analysis_completed' | 'analysis_failed' | 'analysis_started';
+  type: 'analysis_progress' | 'analysis_completed' | 'analysis_failed' | 'analysis_started' | 'alert';
+  level?: string;
+  message?: string;
+  details?: any;
   progress?: number;
   current_uid?: string;
   processed?: number;
@@ -43,15 +55,73 @@ interface BackendWebSocketMessage {
   total_processed?: number;
   average_score?: number;
   error?: string;
-  message?: string;
 }
 
-export const AnalysisView: React.FC<AnalysisViewProps> = ({
-  fileId,
-  fileName,
-  totalRecords,
-  columns = []
+const AnalysisView: React.FC<AnalysisViewProps> = ({
+  fileId: propFileId,
+  fileName: propFileName,
+  totalRecords: propTotalRecords,
+  columns: propColumns = []
 }) => {
+  // URL 파라미터 읽기
+  const [searchParams] = useSearchParams();
+  const urlFileId = searchParams.get('fileId');
+  const urlFileName = searchParams.get('fileName');
+  const urlTotalRecords = searchParams.get('totalRecords');
+  const urlColumns = searchParams.get('columns');
+  
+  // 디버그 로그
+  console.log('🔍 AnalysisView URL params:', {
+    fileId: urlFileId,
+    fileName: urlFileName,
+    totalRecords: urlTotalRecords,
+    columns: urlColumns
+  });
+  
+  // localStorage에서 백업 데이터 확인
+  const lastUploadedFile = localStorage.getItem('lastUploadedFile');
+  let storageFileId = null;
+  let storageFileName = null;
+  let storageTotalRecords = null;
+  let storageColumns = null;
+  
+  if (lastUploadedFile) {
+    try {
+      const parsed = JSON.parse(lastUploadedFile);
+      storageFileId = parsed.fileId;
+      storageFileName = parsed.fileName;
+      storageTotalRecords = parsed.totalRecords;
+      storageColumns = parsed.columns;
+    } catch (e) {
+      console.error('Failed to parse localStorage data:', e);
+    }
+  }
+  
+  // 우선순위: URL 파라미터 > localStorage > props
+  const fileId = urlFileId || storageFileId || propFileId;
+  const fileName = urlFileName || storageFileName || propFileName;
+  const initialTotalRecords = urlTotalRecords ? parseInt(urlTotalRecords) : (storageTotalRecords || propTotalRecords);
+  const initialColumns = urlColumns ? JSON.parse(decodeURIComponent(urlColumns)) : (storageColumns || propColumns);
+  
+  // 디버그 로그
+  console.log('📊 AnalysisView initial values:', {
+    fileId,
+    fileName,
+    initialTotalRecords,
+    initialColumns: initialColumns?.length || 0
+  });
+  
+  // 파일 목록 상태 추가
+  const [files, setFiles] = useState<FileInfo[]>([]);
+  const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(true);
+
+  // 기존 상태들
+  const [currentFileId, setCurrentFileId] = useState<string | null>(fileId || null);
+  const [currentFileName, setCurrentFileName] = useState<string>(fileName || '');
+  const [totalRecords, setTotalRecords] = useState<number>(initialTotalRecords || 0);
+  const [columns, setColumns] = useState<string[]>(initialColumns || []);
+
   // 상태 관리
   const [sampleSize, setSampleSize] = useState<number>(25);
   const [analysisMode, setAnalysisMode] = useState<'text' | 'quantitative' | 'hybrid'>('hybrid');
@@ -70,6 +140,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [analysisCompleted, setAnalysisCompleted] = useState(false);
+  const [downloadVisible, setDownloadVisible] = useState(false);
 
   // WebSocket 연결
   const { 
@@ -83,8 +154,91 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
   const messageHandlerRef = useRef<((event: MessageEvent) => void) | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
+  // 파일 목록 가져오기 (getFiles API 사용)
+  useEffect(() => {
+    const fetchFiles = async () => {
+      try {
+        // URL 파라미터로 fileId가 전달된 경우 (분석 서비스 업로드)
+        if (fileId && fileName && !selectedFile) {
+          console.log('🎯 Using file from URL parameters:', { fileId, fileName });
+          // 가상의 파일 객체 생성
+          const uploadedFile: FileInfo = {
+            id: fileId,
+            filename: fileName,
+            upload_time: new Date().toISOString(),
+            total_records: initialTotalRecords || propTotalRecords || 0,
+            columns: initialColumns || propColumns || []
+          };
+          
+          setFiles([uploadedFile]);
+          setSelectedFile(uploadedFile);
+          setCurrentFileId(uploadedFile.id);
+          setCurrentFileName(uploadedFile.filename);
+          setTotalRecords(initialTotalRecords || uploadedFile.total_records);
+          setColumns(initialColumns || uploadedFile.columns || []);
+          setIsLoadingFiles(false);
+          return;
+        }
+
+        const data = await getFiles(); // data는 항상 배열
+        setFiles(data);
+        
+        // fileId가 있으면 해당 파일 선택
+        if (fileId && data.length > 0) {
+          const targetFile = data.find((f: any) => f.id === fileId);
+          if (targetFile) {
+            setSelectedFile(targetFile);
+            setCurrentFileId(targetFile.id);
+            setCurrentFileName(targetFile.filename);
+            setTotalRecords(targetFile.total_records);
+            setColumns(targetFile.columns || []);
+          }
+        } 
+        // fileId가 없고 propFileId도 없으면 가장 최근 파일 자동 선택
+        else if (data.length > 0 && !propFileId) {
+          const latestFile = data[0];
+          setSelectedFile(latestFile);
+          setCurrentFileId(latestFile.id);
+          setCurrentFileName(latestFile.filename);
+          setTotalRecords(latestFile.total_records);
+          setColumns(latestFile.columns || []);
+        }
+      } catch (error: any) {
+        console.error('Failed to fetch files:', error);
+        setFiles([]);
+        // 에러 타입에 따른 메시지 설정
+        if (error.response?.status === 404) {
+          setError('파일 목록 API를 찾을 수 없습니다. 백엔드 서버를 확인해주세요.');
+        } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+          setError('서버 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.');
+        } else if (!error.response) {
+          setError('백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
+        } else {
+          setError('파일 목록을 불러오는 중 오류가 발생했습니다.');
+        }
+      } finally {
+        setIsLoadingFiles(false);
+      }
+    };
+    fetchFiles();
+  }, [fileId, propFileId, fileName]);
+
+  // 파일 선택 핸들러
+  const handleFileSelect = (event: SelectChangeEvent<string>) => {
+    const file = files.find(f => f.id === event.target.value);
+    if (file) {
+      setSelectedFile(file);
+      setCurrentFileId(file.id);
+      setCurrentFileName(file.filename);
+      setTotalRecords(file.total_records);
+      setColumns(file.columns || []);
+    }
+  };
+
+  const validColumns = useMemo(() => Array.isArray(columns) ? columns : [], [columns]);
+
   // 컬럼 배열 검증
-  const validColumns = Array.isArray(columns) ? columns : [];
+  // const validColumns = Array.isArray(columns) ? columns : []; // This line is now redundant as validColumns is moved
 
   // 컴포넌트 마운트 시 WebSocket 연결
   useEffect(() => {
@@ -148,13 +302,18 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
           case 'analysis_progress':
             setCurrentProgress(data.progress || 0);
             setStatus(`처리 중... ${data.current_uid || ''} (${data.processed || 0}/${data.total || totalRecords})`);
-            break;
+              break;
             
           case 'analysis_completed':
             setIsAnalyzing(false);
             setAnalysisCompleted(true);
             setCurrentProgress(100);
             setStatus('분석 완료!');
+            
+            // 완료 시 파일 존재 여부 확인 후 다운로드 버튼 활성화
+            if (jobId) {
+              checkAndEnableDownload(jobId).catch(console.error);
+            }
             
             // 완료 시 결과 업데이트
             if (data.average_score !== undefined) {
@@ -181,6 +340,39 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
           case 'analysis_started':
             setStatus('분석이 시작되었습니다...');
             setCurrentProgress(0);
+            break;
+            
+          case 'alert':
+            // alert 타입의 메시지 처리
+            if (data.level === 'success' && data.message?.includes('Analysis completed')) {
+              // 분석 완료 처리
+              setIsAnalyzing(false);
+              setAnalysisCompleted(true);
+              setCurrentProgress(100);
+              setStatus('분석 완료!');
+              
+              // job_id 추출
+              const completedJobId = data.details?.job_id || jobId;
+              
+              // 완료 시 파일 존재 여부 확인 후 다운로드 버튼 활성화
+              if (completedJobId) {
+                checkAndEnableDownload(completedJobId).catch(console.error);
+                refreshAnalysisStatus(completedJobId);
+              }
+              
+              // 결과 개수 표시
+              if (data.details?.results_count) {
+                setResults({
+                  total_analyzed: data.details.results_count,
+                  average_score: 0,
+                  processing_time: '처리완료'
+                } as AnalysisResult);
+              }
+            } else if (data.level === 'error') {
+              setError(data.message || '오류 발생');
+              setIsAnalyzing(false);
+              setStatus('분석 실패');
+            }
             break;
         }
       } catch (err) {
@@ -224,13 +416,52 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
         wsRef.current.removeEventListener('message', messageHandlerRef.current);
       }
     };
-  }, [jobId, totalRecords, isAnalyzing]);
+  }, [jobId, totalRecords, isAnalyzing]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 파일 존재 여부 확인 및 다운로드 버튼 활성화
+  const checkAndEnableDownload = async (jobId: string) => {
+    try {
+      console.log('🔍 Checking file availability for job:', jobId);
+      const availability = await checkResultsAvailability(jobId);
+      console.log('📄 File availability check result:', availability);
+      
+      if (availability.available) {
+        setDownloadVisible(true);
+        console.log('✅ Download buttons enabled - files are available');
+        console.log('📊 Available formats:', availability.formats);
+        console.log('📈 Record count:', availability.record_count);
+      } else {
+        console.warn('⚠️ Files not available:', availability.reason);
+        setDownloadVisible(false);
+      }
+    } catch (error) {
+      console.error('❌ File availability check failed:', error);
+      setDownloadVisible(false);
+    }
+  };
 
   // 분석 상태 새로고침
   const refreshAnalysisStatus = async (jobId: string) => {
     try {
       const statusData = await getAnalysisStatus(jobId);
       console.log('🔄 Status refresh:', statusData);
+      
+      // 분석 완료 상태 확인
+      if (statusData.status === 'completed') {
+        console.log('🎯 분석 완료 감지! statusData:', statusData);
+        setAnalysisCompleted(true);
+        setCurrentProgress(100);
+        setStatus('분석 완료!');
+        
+        // 파일 존재 여부 확인 후 다운로드 버튼 활성화
+        await checkAndEnableDownload(jobId);
+        
+        console.log('📌 다운로드 버튼 상태:', {
+          downloadVisible: true,
+          analysisCompleted: true,
+          jobId: jobId
+        });
+      }
       
       if (statusData.average_score !== undefined) {
         setResults({
@@ -268,6 +499,9 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
             setCurrentProgress(100);
             clearInterval(interval);
             
+            // 파일 존재 여부 확인 후 다운로드 버튼 활성화
+            await checkAndEnableDownload(jobId);
+            
             // 결과 설정
             if (statusData.average_score !== undefined) {
               setResults({
@@ -293,8 +527,25 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
 
   // 분석 시작
   const handleStartAnalysis = async () => {
-    if (!fileId) {
-      setError('파일을 먼저 업로드해주세요.');
+    console.log('🎯 handleStartAnalysis called');
+    console.log('Current state:', {
+      currentFileId,
+      selectedFile,
+      totalRecords,
+      columns: columns?.length || 0,
+      sampleSize,
+      analysisMode
+    });
+
+    if (!currentFileId) {
+      setError('파일을 먼저 선택해주세요.');
+      return;
+    }
+
+    // Validate file has records
+    if (totalRecords === 0) {
+      setError('파일에 데이터가 없습니다. 다른 파일을 선택해주세요.');
+      console.error('❌ Cannot analyze file with 0 records');
       return;
     }
 
@@ -303,13 +554,14 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
     setIsAnalyzing(true);
     setAnalysisCompleted(false);
     setCurrentProgress(0);
+    setDownloadVisible(false);  // 다운로드 버튼 숨기기
     setStatus('분석 시작 중...');
     setResults(null);
 
     try {
       // 백엔드 요청 파라미터 (AnalysisRequest 모델과 완벽히 일치)
       const requestParams = {
-        file_id: fileId,
+        file_id: currentFileId,
         sample_size: sampleSize,
         analysis_mode: analysisMode,
         enable_ai_feedback: enableAI,
@@ -319,6 +571,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
       };
 
       console.log('🚀 Starting analysis:', requestParams);
+      console.log('📊 Expected to analyze:', Math.min(sampleSize, totalRecords), 'records out of', totalRecords);
 
       const response = await startAnalysis(requestParams);
       console.log('✅ Analysis started:', response);
@@ -410,7 +663,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
   };
 
   return (
-    <Box>
+    <DashboardLayout>
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h5" gutterBottom>
           AIRISS v4.0 분석 설정
@@ -428,17 +681,75 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
           <Grid item xs={12}>
             <Card variant="outlined">
               <CardContent>
-                <Typography variant="subtitle2" color="text.secondary">
-                  분석 대상 파일
-                </Typography>
-                <Typography variant="h6">{fileName}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  총 {totalRecords.toLocaleString()}개 레코드
-                </Typography>
-                {validColumns.length > 0 && (
-                  <Typography variant="body2" color="text.secondary">
-                    {validColumns.length}개 컬럼 감지됨
-                  </Typography>
+                {isLoadingFiles ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <CircularProgress size={20} />
+                    <Typography>파일 목록을 불러오는 중...</Typography>
+                  </Box>
+                ) : error ? (
+                  <Alert severity="error">
+                    <AlertTitle>오류 발생</AlertTitle>
+                    {error}
+                    <Box sx={{ mt: 2 }}>
+                      <Button 
+                        variant="contained" 
+                        size="small" 
+                        onClick={() => window.location.reload()}
+                      >
+                        페이지 새로고침
+                      </Button>
+                    </Box>
+                  </Alert>
+                ) : files.length === 0 ? (
+                  <Alert severity="warning">
+                    <AlertTitle>파일 없음</AlertTitle>
+                    먼저 파일을 업로드해주세요.
+                    <Box sx={{ mt: 2 }}>
+                      <Button 
+                        variant="contained" 
+                        size="small" 
+                        component={Link} 
+                        to="/upload"
+                      >
+                        파일 업로드하기
+                      </Button>
+                    </Box>
+                  </Alert>
+                ) : (
+                  <>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      분석 대상 파일
+                    </Typography>
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                      <Select
+                        value={currentFileId || ''}
+                        onChange={handleFileSelect}
+                        displayEmpty
+                      >
+                        <MenuItem value="" disabled>
+                          파일을 선택하세요
+                        </MenuItem>
+                        {files.map((file) => (
+                          <MenuItem key={file.id} value={file.id}>
+                            {file.filename} ({file.total_records}개 레코드)
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    {selectedFile && (
+                      <>
+                        <Typography variant="h6">{currentFileName}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          총 {(totalRecords || 0).toLocaleString()}개 레코드
+                        </Typography>
+                        {columns.length > 0 && (
+                          <Typography variant="body2" color="text.secondary">
+                            {columns.length}개 컬럼 감지됨
+                          </Typography>
+                        )}
+                      </>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -485,7 +796,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
                 <MenuItem value={25}>25개 (표준)</MenuItem>
                 <MenuItem value={50}>50개 (상세)</MenuItem>
                 <MenuItem value={100}>100개 (정밀)</MenuItem>
-                <MenuItem value={totalRecords}>전체 데이터 ({totalRecords}개)</MenuItem>
+                <MenuItem value={totalRecords || 0}>전체 데이터 ({(totalRecords || 0).toLocaleString()}개)</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -560,7 +871,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
                 size="large"
                 startIcon={isAnalyzing ? <Stop /> : <PlayArrow />}
                 onClick={handleStartAnalysis}
-                disabled={isAnalyzing || !fileId}
+                disabled={isAnalyzing || !currentFileId}
                 sx={{
                   bgcolor: '#FF5722',
                   '&:hover': { bgcolor: '#E64A19' }
@@ -616,7 +927,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
             />
           </Box>
           <Typography variant="body2" color="text.secondary">
-            {status || '처리 중...'} - {currentProgress.toFixed(0)}% 완료
+            {status || '처리 중...'} - {(currentProgress || 0).toFixed(0)}% 완료
           </Typography>
         </Paper>
       )}
@@ -624,10 +935,11 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
       {/* 결과 */}
       {results && analysisCompleted && (
         <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            분석 완료
-          </Typography>
-          <Grid container spacing={2} sx={{ mb: 3 }}>
+          <>
+            <Typography variant="h6" gutterBottom>
+              분석 완료
+            </Typography>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid item xs={12} sm={4}>
               <Card>
                 <CardContent>
@@ -666,40 +978,47 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
             </Grid>
           </Grid>
           
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <Button
-              variant="contained"
-              startIcon={<Download />}
-              onClick={() => handleDownload('excel')}
-              disabled={!jobId}
-              sx={{
-                bgcolor: '#FF5722',
-                '&:hover': { bgcolor: '#E64A19' }
-              }}
-            >
-              Excel 다운로드
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Download />}
-              onClick={() => handleDownload('csv')}
-              disabled={!jobId}
-              sx={{
-                color: '#FF5722',
-                borderColor: '#FF5722',
-                '&:hover': { 
-                  borderColor: '#E64A19',
-                  bgcolor: 'rgba(255, 87, 34, 0.08)'
-                }
-              }}
-            >
-              CSV 다운로드
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Download />}
-              onClick={() => handleDownload('json')}
-              disabled={!jobId}
+          {console.log('🔍 다운로드 버튼 렌더링 체크:', {
+            downloadVisible,
+            analysisCompleted,
+            jobId,
+            조건결과: (downloadVisible || analysisCompleted) && jobId
+          })}
+          {(downloadVisible || analysisCompleted) && jobId && (
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Button
+                variant="contained"
+                startIcon={<Download />}
+                onClick={() => handleDownload('excel')}
+                disabled={!jobId}
+                sx={{
+                  bgcolor: '#FF5722',
+                  '&:hover': { bgcolor: '#E64A19' }
+                }}
+              >
+                Excel 다운로드
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<Download />}
+                onClick={() => handleDownload('csv')}
+                disabled={!jobId}
+                sx={{
+                  color: '#FF5722',
+                  borderColor: '#FF5722',
+                  '&:hover': { 
+                    borderColor: '#E64A19',
+                    bgcolor: 'rgba(255, 87, 34, 0.08)'
+                  }
+                }}
+              >
+                CSV 다운로드
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<Download />}
+                onClick={() => handleDownload('json')}
+                disabled={!jobId}
               sx={{
                 color: '#FF5722',
                 borderColor: '#FF5722',
@@ -711,9 +1030,13 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
             >
               JSON 다운로드
             </Button>
-          </Box>
+            </Box>
+          )}
+          </>
         </Paper>
       )}
-    </Box>
+    </DashboardLayout>
   );
 }
+
+export default AnalysisView;

@@ -9,11 +9,27 @@ from typing import Dict, Any, Optional, List
 import logging
 from datetime import datetime
 import uuid
+import numpy as np
 
 from app.services.text_analyzer import AIRISSTextAnalyzer
 from app.services.quantitative_analyzer import QuantitativeAnalyzer
 
 logger = logging.getLogger(__name__)
+
+def safe_convert_numpy_types(value):
+    """numpy 타입을 Python 기본 타입으로 안전하게 변환"""
+    if isinstance(value, np.integer):
+        return int(value)
+    elif isinstance(value, np.floating):
+        return float(value)
+    elif isinstance(value, np.ndarray):
+        return value.tolist()
+    elif isinstance(value, dict):
+        return {k: safe_convert_numpy_types(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [safe_convert_numpy_types(item) for item in value]
+    else:
+        return value
 
 class AIRISSHybridAnalyzer:
     """텍스트 + 정량 통합 분석기 with 편향 탐지 + 안전한 영구 저장"""
@@ -70,13 +86,17 @@ class AIRISSHybridAnalyzer:
         logger.info(f"   📊 편향 탐지: {'활성화' if self.bias_detector else '비활성화'}")
         logger.info(f"   💾 영구 저장: {'활성화' if self.storage_available else '비활성화 (메모리만)'}")
     
-    def comprehensive_analysis(self, 
+    async def comprehensive_analysis(self, 
                              uid: str, 
                              opinion: str, 
                              row_data: pd.Series,
                              save_to_storage: bool = True,
                              file_id: Optional[str] = None,
-                             filename: Optional[str] = None) -> Dict[str, Any]:
+                             filename: Optional[str] = None,
+                             enable_ai: bool = False,
+                             openai_api_key: Optional[str] = None,
+                             openai_model: str = "gpt-3.5-turbo",
+                             max_tokens: int = 1200) -> Dict[str, Any]:
         """종합 분석: 텍스트 + 정량 + 편향 체크 + 안전한 영구 저장"""
         
         # 1. 텍스트 분석
@@ -133,33 +153,65 @@ class AIRISSHybridAnalyzer:
                 'hybrid_score': hybrid_score,
                 'timestamp': datetime.now()
             }
-            # 보호 속성 추가 (있는 경우)
+            # 보호 속성 추가 (있는 경우) - pandas Series를 Python 네이티브 타입으로 변환
             for attr in ['성별', '연령대', '부서', '직급']:
                 if attr in row_data:
-                    analysis_record[attr] = row_data[attr]
+                    value = row_data[attr]
+                    # pandas Series나 numpy 타입을 Python 네이티브 타입으로 변환
+                    if hasattr(value, 'item'):  # numpy scalar
+                        analysis_record[attr] = value.item()
+                    elif hasattr(value, 'tolist'):  # pandas Series/array
+                        analysis_record[attr] = value.tolist() if hasattr(value, '__len__') and len(value) > 1 else value.iloc[0] if hasattr(value, 'iloc') else str(value)
+                    else:
+                        analysis_record[attr] = value
             self.analysis_history.append(analysis_record)
         
-        # 8. 분석 결과 구성
+        # 8. AI 피드백 생성 (비동기 지원)
+        ai_feedback_result = {
+            "ai_strengths": "",
+            "ai_weaknesses": "",
+            "ai_feedback": "",
+            "ai_recommendations": [],
+            "error": None
+        }
+        if enable_ai and openai_api_key:
+            try:
+                logger.info(f"AI 피드백 생성 시작 - UID: {uid}, AI 활성화: {enable_ai}")
+                ai_feedback_result = await self.text_analyzer.generate_ai_feedback(
+                    uid=uid,
+                    opinion=opinion,
+                    api_key=openai_api_key,
+                    model=openai_model,
+                    max_tokens=max_tokens
+                )
+                logger.info(f"AI 피드백 생성 완료 - UID: {uid}")
+                logger.debug(f"AI 피드백 내용: {ai_feedback_result}")
+            except Exception as e:
+                logger.error(f"AI 피드백 생성 오류: {e}")
+                ai_feedback_result["error"] = str(e)
+        
+        # 9. 분석 결과 구성 (numpy 타입 안전 변환)
         analysis_result = {
             "text_analysis": {
-                "overall_score": text_overall["overall_score"],
+                "overall_score": safe_convert_numpy_types(text_overall["overall_score"]),
                 "grade": text_overall["grade"],
-                "dimension_scores": {dim: result["score"] for dim, result in text_results.items()},
-                "dimension_details": text_results
+                "dimension_scores": {dim: safe_convert_numpy_types(result["score"]) for dim, result in text_results.items()},
+                "dimension_details": safe_convert_numpy_types(text_results)
             },
-            "quantitative_analysis": quant_results,
+            "quantitative_analysis": safe_convert_numpy_types(quant_results),
             "hybrid_analysis": {
-                "overall_score": round(hybrid_score, 1),
+                "overall_score": safe_convert_numpy_types(round(hybrid_score, 1)),
                 "grade": hybrid_grade_info["grade"],
                 "grade_description": hybrid_grade_info["grade_description"],
                 "percentile": hybrid_grade_info["percentile"],
-                "confidence": round(hybrid_confidence, 1),
+                "confidence": safe_convert_numpy_types(round(hybrid_confidence, 1)),
                 "analysis_composition": {
-                    "text_weight": round(text_weight * 100, 1),
-                    "quantitative_weight": round(quant_weight * 100, 1)
+                    "text_weight": safe_convert_numpy_types(round(text_weight * 100, 1)),
+                    "quantitative_weight": safe_convert_numpy_types(round(quant_weight * 100, 1))
                 }
             },
-            "explainability": explainability_info,
+            "explainability": safe_convert_numpy_types(explainability_info),
+            "ai_feedback": ai_feedback_result,  # AI 피드백 결과 추가
             "analysis_metadata": {
                 "uid": uid,
                 "analysis_version": "AIRISS v4.0 - Hybrid Enhanced (Python 3.13 Compatible)",
@@ -177,14 +229,16 @@ class AIRISSHybridAnalyzer:
         if save_to_storage:
             storage_result = self._safe_save_to_storage(
                 uid, file_id, filename, opinion, hybrid_score, 
-                text_overall, quant_results, hybrid_grade_info, hybrid_confidence, text_results
+                text_overall, quant_results, hybrid_grade_info, hybrid_confidence, text_results,
+                ai_feedback_result
             )
             analysis_result["storage_info"] = storage_result
         
         return analysis_result
     
     def _safe_save_to_storage(self, uid, file_id, filename, opinion, hybrid_score,
-                            text_overall, quant_results, hybrid_grade_info, hybrid_confidence, text_results):
+                            text_overall, quant_results, hybrid_grade_info, hybrid_confidence, text_results,
+                            ai_feedback_result=None):
         """안전한 저장 처리 (Python 3.13 호환)"""
         
         if not self.storage_available or not self.storage_service:
@@ -200,16 +254,25 @@ class AIRISSHybridAnalyzer:
                 "file_id": file_id or str(uuid.uuid4()),
                 "filename": filename or "unknown",
                 "opinion": opinion,
-                "hybrid_score": hybrid_score,
-                "text_score": text_overall["overall_score"],
-                "quantitative_score": quant_results["quantitative_score"],
+                "hybrid_score": safe_convert_numpy_types(hybrid_score),
+                "text_score": safe_convert_numpy_types(text_overall["overall_score"]),
+                "quantitative_score": safe_convert_numpy_types(quant_results["quantitative_score"]),
                 "ok_grade": hybrid_grade_info["grade"],
                 "grade_description": hybrid_grade_info["grade_description"],
-                "confidence": hybrid_confidence,
-                "dimension_scores": {dim: result["score"] for dim, result in text_results.items()},
+                "confidence": safe_convert_numpy_types(hybrid_confidence),
+                "dimension_scores": {dim: safe_convert_numpy_types(result["score"]) for dim, result in text_results.items()},
                 "analysis_mode": "hybrid",
                 "version": "4.0"
             }
+            # AI 피드백 컬럼 추가
+            if ai_feedback_result:
+                storage_data.update({
+                    "ai_strengths": ai_feedback_result.get("ai_strengths", ""),
+                    "ai_weaknesses": ai_feedback_result.get("ai_weaknesses", ""),
+                    "ai_feedback": ai_feedback_result.get("ai_feedback", ""),
+                    "ai_recommendations": ai_feedback_result.get("ai_recommendations", []),
+                    "ai_error": ai_feedback_result.get("error", None)
+                })
             
             analysis_id = self.storage_service.save_analysis_result(storage_data)
             
