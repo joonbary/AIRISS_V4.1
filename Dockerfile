@@ -37,10 +37,13 @@ RUN apt-get update && apt-get install -y \
 # Copy React build results
 COPY --from=frontend-builder /app/frontend/build ./static
 
+# Upgrade pip first
+RUN pip install --upgrade pip
+
 # Install Python dependencies
 COPY requirements.txt .
-# Install PyTorch CPU version first
-RUN pip install --no-cache-dir torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cpu
+# Install PyTorch CPU version first (Railway에서 가장 안정적인 버전)
+RUN pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
 # Install other dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
