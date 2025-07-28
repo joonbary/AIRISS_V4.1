@@ -61,9 +61,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # API Routes
-@app.get("/")
-async def root():
+@app.get("/api")
+async def api_root():
     return {
         "message": "AIRISS v4.0 API Server - Public Access",
         "status": "running",
@@ -266,6 +267,46 @@ async def upload_file_compat(file: UploadFile = File(...)):
 # Import additional modules
 from datetime import datetime
 from fastapi import Form
+
+# Serve React static files in production (after all API routes)
+if os.getenv("ENVIRONMENT") == "production" or os.getenv("REACT_BUILD_PATH"):
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+    
+    react_build_path = os.getenv("REACT_BUILD_PATH", "/app/static")
+    if os.path.exists(react_build_path):
+        # Mount static files
+        app.mount("/static", StaticFiles(directory=react_build_path), name="static")
+        
+        # Serve index.html for all non-API routes (catch-all must be last)
+        @app.get("/{full_path:path}")
+        async def serve_react_app(full_path: str):
+            """Serve React app for all non-API routes"""
+            # Handle root path
+            if full_path == "":
+                index_path = os.path.join(react_build_path, "index.html")
+                if os.path.exists(index_path):
+                    return FileResponse(index_path)
+                
+            # Skip API routes
+            if full_path.startswith("api/") or full_path.startswith("ws") or full_path == "docs" or full_path == "openapi.json" or full_path == "health":
+                raise HTTPException(status_code=404, detail="Not found")
+            
+            # Check if it's a static file
+            static_file_path = os.path.join(react_build_path, full_path)
+            if os.path.exists(static_file_path) and os.path.isfile(static_file_path):
+                return FileResponse(static_file_path)
+            
+            # Serve index.html for React routing
+            index_path = os.path.join(react_build_path, "index.html")
+            if os.path.exists(index_path):
+                return FileResponse(index_path)
+            else:
+                raise HTTPException(status_code=404, detail="React app not found")
+        
+        logger.info(f"✅ Serving React static files from: {react_build_path}")
+    else:
+        logger.warning(f"⚠️ React build path not found: {react_build_path}")
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8006))
