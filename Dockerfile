@@ -59,5 +59,10 @@ ENV DISABLE_ESLINT_PLUGIN=true
 HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8002}/health || exit 1
 
+# Make startup script executable
+COPY startup.sh .
+RUN chmod +x startup.sh
+
 # Railway dynamic port support
-CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8002}"]
+EXPOSE 8002
+CMD ["./startup.sh"]
