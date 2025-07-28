@@ -39,6 +39,9 @@ COPY --from=frontend-builder /app/frontend/build ./static
 
 # Install Python dependencies
 COPY requirements.txt .
+# Install PyTorch CPU version first
+RUN pip install --no-cache-dir torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cpu
+# Install other dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code

@@ -8,7 +8,7 @@ fastapi==0.104.1
 itsdangerous>=2.0.0
 jinja2==3.1.2
 sqlalchemy>=2.0.0
-# nltk>=3.8  # 자연어 처리 (uncomment for NLP features)
+nltk>=3.8  # 자연어 처리
 numpy>=1.24.0
 openai>=1.0.0  # AI 피드백용 (API 키 있을 때만)
 openpyxl==3.1.2
@@ -17,8 +17,7 @@ pydantic>=2.5.0
 python-dotenv==1.0.0
 python-multipart==0.0.6
 requests>=2.31.0  # 외부 API 호출용
-# AI/ML dependencies commented out for Railway deployment
-# torch>=2.0.0  # PyTorch (uncomment for AI features)
-# transformers>=4.30.0  # BERT 모델용 (uncomment for AI features)
-# scikit-learn>=1.3.0  # 머신러닝 (uncomment for ML features)
+scikit-learn>=1.3.0  # 머신러닝
+# PyTorch는 Dockerfile에서 별도 설치
+transformers>=4.30.0  # BERT 모델용
 uvicorn[standard]==0.24.0
