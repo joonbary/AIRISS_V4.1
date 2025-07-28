@@ -1,0 +1,44 @@
+{
+  "timestamp": "2025-07-20T21:40:40.411745",
+  "total_tests": 7,
+  "passed": 7,
+  "failed": 0,
+  "success_rate": "100.0%",
+  "details": [
+    {
+      "test": "스키마 존재",
+      "passed": true,
+      "detail": "111개 레코드"
+    },
+    {
+      "test": "데이터 저장",
+      "passed": true,
+      "detail": "6cae09f4-252f-4923-82ae-2dbbe05ae267"
+    },
+    {
+      "test": "데이터 조회",
+      "passed": true,
+      "detail": "2개"
+    },
+    {
+      "test": "AI 분석 저장",
+      "passed": true,
+      "detail": "AI 피드백 포함"
+    },
+    {
+      "test": "다운로드 형식",
+      "passed": true,
+      "detail": "필드 완전"
+    },
+    {
+      "test": "results_view",
+      "passed": true,
+      "detail": "113개"
+    },
+    {
+      "test": "analysis_results_view",
+      "passed": true,
+      "detail": "113개"
+    }
+  ]
+}

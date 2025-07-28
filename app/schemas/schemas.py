@@ -49,6 +49,7 @@ class FileInfoResponse(BaseModel):
     airiss_ready: bool = Field(..., description="AIRISS 분석 가능 여부")
     hybrid_ready: bool = Field(..., description="하이브리드 분석 가능 여부")
     data_quality: DataQuality = Field(..., description="데이터 품질 정보")
+    file_data: Optional[Any] = Field(None, description="(옵션) 파일 데이터")
 
 # ============================================================================
 # 분석 관련 스키마  

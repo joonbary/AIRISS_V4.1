@@ -1,99 +1,94 @@
-# app/api/v1/endpoints/websocket.py
 """
-WebSocket 엔드포인트 - 실시간 분석 진행률 스트리밍
+WebSocket API
+실시간 통신을 위한 WebSocket 엔드포인트
 """
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
-from typing import Optional
-import logging
-import json
-from datetime import datetime
 
-from app.core.websocket_manager import manager
-from app.db.database import SessionLocal
-from app.models.job import Job
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from typing import Dict, Set
+import json
+import logging
+
+# 중앙 WebSocket Manager 사용
+from app.core.websocket_manager import manager, ConnectionManager
 
 logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, job_id: Optional[str] = Query(None)):
-    """
-    WebSocket 연결 엔드포인트
+@router.websocket("/connect")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    """WebSocket 연결 엔드포인트"""
+    # 채널 리스트 설정 (기본적으로 분석 채널 구독)
+    channels = ["analysis", "alerts"]
     
-    Query Parameters:
-    - job_id: 특정 작업 구독 (선택사항)
-    
-    메시지 형식:
-    {
-        "type": "progress_update" | "analysis_complete" | "error",
-        "job_id": "작업ID",
-        "status": "processing" | "completed" | "failed",
-        "processed": 10,
-        "total": 100,
-        "progress": 10.0,
-        "current_employee": "EMP001",
-        "timestamp": "2024-01-01T12:00:00"
-    }
-    """
-    await manager.connect(websocket, job_id)
+    await manager.connect(websocket, client_id, channels)
     
     try:
-        # 연결 성공 메시지
-        await websocket.send_text(json.dumps({
-            "type": "connection_established",
-            "message": f"AIRISS v4.0 실시간 연결 성공",
-            "job_id": job_id
-        }))
+        # Send welcome message
+        await manager.send_personal_message({
+            "type": "connection",
+            "status": "connected",
+            "message": "Successfully connected to AIRISS WebSocket",
+            "channels": channels
+        }, client_id)
         
-        # job_id가 제공된 경우 현재 상태 전송
-        if job_id:
-            db = SessionLocal()
-            try:
-                job = db.query(Job).filter(Job.id == job_id).first()
-                if job:
-                    await websocket.send_text(json.dumps({
-                        "type": "current_status",
-                        "job_id": job_id,
-                        "status": job.status,
-                        "processed": job.processed,
-                        "total": job.total,
-                        "progress": round((job.processed / job.total * 100) if job.total > 0 else 0, 1)
-                    }))
-            finally:
-                db.close()
-        
-        # 연결 유지 및 메시지 수신
+        # Listen for messages
         while True:
-            data = await websocket.receive_text()
+            data = await websocket.receive_json()
             
-            # 클라이언트에서 오는 메시지 처리 (ping/pong 등)
-            message = json.loads(data)
+            # Handle different message types
+            message_type = data.get("type", "")
             
-            if message.get("type") == "ping":
-                await websocket.send_text(json.dumps({
+            if message_type == "ping":
+                await manager.send_personal_message({
                     "type": "pong",
-                    "timestamp": datetime.now().isoformat()
-                }))
+                    "timestamp": data.get("timestamp")
+                }, client_id)
             
-            elif message.get("type") == "subscribe" and message.get("job_id"):
-                # 새로운 job 구독
-                new_job_id = message["job_id"]
-                if job_id != new_job_id:
-                    manager.disconnect(websocket, job_id)
-                    job_id = new_job_id
-                    await manager.connect(websocket, job_id)
-                    
-                    await websocket.send_text(json.dumps({
-                        "type": "subscription_changed",
-                        "job_id": job_id,
-                        "message": f"Job {job_id} 구독 시작"
-                    }))
-                    
+            elif message_type == "subscribe":
+                # Subscribe to specific channels
+                new_channels = data.get("channels", [])
+                for channel in new_channels:
+                    if channel in manager.channel_subscribers and client_id not in manager.channel_subscribers[channel]:
+                        manager.channel_subscribers[channel].append(client_id)
+                
+                await manager.send_personal_message({
+                    "type": "subscription_confirmed",
+                    "channels": new_channels
+                }, client_id)
+            
+            elif message_type == "analysis_update":
+                # Forward analysis updates to analysis channel
+                await manager.send_analysis_progress(
+                    data.get("job_id", ""),
+                    data.get("data", {})
+                )
+            
+            else:
+                # Echo back for unknown message types
+                await manager.send_personal_message({
+                    "type": "echo",
+                    "original": data
+                }, client_id)
+            
     except WebSocketDisconnect:
-        manager.disconnect(websocket, job_id)
-        logger.info(f"WebSocket 정상 종료 - Job ID: {job_id}")
-        
+        manager.disconnect(client_id)
+        logger.info(f"Client {client_id} disconnected")
     except Exception as e:
-        manager.disconnect(websocket, job_id)
-        logger.error(f"WebSocket 오류: {e}")
+        logger.error(f"WebSocket error for {client_id}: {e}")
+        manager.disconnect(client_id)
+
+
+@router.websocket("/ws")
+async def websocket_endpoint_alt(websocket: WebSocket):
+    """Alternative WebSocket endpoint for compatibility"""
+    import uuid
+    client_id = str(uuid.uuid4())
+    await websocket_endpoint(websocket, client_id)
+
+
+@router.get("/connections")
+async def get_active_connections():
+    """현재 활성 연결 목록"""
+    return manager.get_connection_info()

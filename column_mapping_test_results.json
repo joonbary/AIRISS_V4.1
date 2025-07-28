@@ -1,0 +1,53 @@
+{
+  "test_date": "2025-07-27T12:20:15.273062",
+  "total_tests": 5,
+  "successful_tests": 5,
+  "success_rate": "100.0%",
+  "details": [
+    {
+      "filename": "test_uppercase_uid.xlsx",
+      "original_columns": [
+        "UID",
+        "이름",
+        "평가의견"
+      ],
+      "success": true
+    },
+    {
+      "filename": "test_korean_columns.xlsx",
+      "original_columns": [
+        "사번",
+        "성명",
+        "의견"
+      ],
+      "success": true
+    },
+    {
+      "filename": "test_mixed_case.xlsx",
+      "original_columns": [
+        "employee_id",
+        "Name",
+        "Opinion"
+      ],
+      "success": true
+    },
+    {
+      "filename": "test_korean_variations.xlsx",
+      "original_columns": [
+        "피평가자ID",
+        "피평가자명",
+        "평가피드백"
+      ],
+      "success": true
+    },
+    {
+      "filename": "test_english_variations.xlsx",
+      "original_columns": [
+        "empId",
+        "emp_name",
+        "feedback"
+      ],
+      "success": true
+    }
+  ]
+}

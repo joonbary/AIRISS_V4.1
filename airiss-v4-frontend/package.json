@@ -46,7 +46,7 @@
     "type-check": "tsc --noEmit",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:8003",
+  "proxy": "http://localhost:8006",
   "eslintConfig": {
     "extends": [
       "react-app",

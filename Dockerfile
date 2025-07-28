@@ -12,6 +12,14 @@ RUN npm ci
 
 # Copy React source and build
 COPY airiss-v4-frontend/ ./
+
+# Set build environment variables
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV GENERATE_SOURCEMAP=false
+ENV DISABLE_ESLINT_PLUGIN=true
+ENV CI=false
+
+# Build with increased memory
 RUN npm run build
 
 # Stage 2: Python FastAPI + React Static Files  

@@ -45,11 +45,7 @@ class AnalysisJob(Base):
     
     # 메타데이터
     created_by = Column(String(100))
-<<<<<<< HEAD
     job_metadata = Column(JSON)  # metadata -> job_metadata로 변경
-=======
-    metadata = Column(JSON)
->>>>>>> ba15bf7c5cb2c6c504d1d788a00099bd2357256f
     error_message = Column(Text)
     
     # 평균 점수

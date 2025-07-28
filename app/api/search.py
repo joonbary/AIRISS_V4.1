@@ -14,17 +14,13 @@ import numpy as np
 import asyncio
 from collections import Counter
 import re
+from app.db import db_service
 
 # 로깅 설정
 logger = logging.getLogger(__name__)
 
 # 라우터 생성
 router = APIRouter(prefix="/search", tags=["search"])
-
-def get_db_service():
-    """DB 서비스 가져오기 - 항상 새 인스턴스 반환"""
-    from app.db.sqlite_service import SQLiteService
-    return SQLiteService()
 
 # 🆕 검색 요청 모델
 class SearchRequest(BaseModel):
@@ -66,7 +62,6 @@ async def search_analysis_results(request: SearchRequest):
     try:
         logger.info(f"🔍 고급 검색 요청: {request}")
         
-        db_service = get_db_service()
         await db_service.init_database()
         
         # SQL 쿼리 빌드
@@ -275,7 +270,6 @@ async def get_autocomplete_suggestions(request: AutocompleteRequest):
     try:
         logger.info(f"🔤 자동완성 요청: {request}")
         
-        db_service = get_db_service()
         await db_service.init_database()
         
         suggestions = []
@@ -357,7 +351,6 @@ async def get_employee_history(
     try:
         logger.info(f"👤 직원 히스토리 조회: {uid}")
         
-        db_service = get_db_service()
         await db_service.init_database()
         
         query = """
@@ -507,7 +500,6 @@ async def compare_employees(request: CompareRequest):
         if len(request.uids) > 10:
             raise HTTPException(status_code=400, detail="한 번에 최대 10명까지만 비교할 수 있습니다")
         
-        db_service = get_db_service()
         await db_service.init_database()
         
         # 🔥 핵심 수정: 단일 커넥션으로 모든 직원 데이터 조회
@@ -707,7 +699,6 @@ async def get_team_summary(
     try:
         logger.info(f"🏢 팀 요약 조회: 부서={department}")
         
-        db_service = get_db_service()
         await db_service.init_database()
         
         # 기본 쿼리
@@ -922,7 +913,6 @@ async def get_favorites(
         # 상세 정보 포함 여부에 따라 분기
         if include_details:
             # 🔥 단일 커넥션으로 모든 즐겨찾기 분석 결과 조회
-            db_service = get_db_service()
             await db_service.init_database()
             
             detailed_favorites = []
@@ -1071,7 +1061,6 @@ async def save_search_history(search_term: str):
 async def search_health_check():
     """검색 API 헬스체크"""
     try:
-        db_service = get_db_service()
         db_status = "connected" if db_service else "disconnected"
         
         return {

@@ -6,6 +6,7 @@ class UploadResponse(BaseModel):
     filename: str
     total_records: int
     column_count: int
+    columns: List[str]
     uid_columns: List[str]
     opinion_columns: List[str]
     quantitative_columns: List[str]

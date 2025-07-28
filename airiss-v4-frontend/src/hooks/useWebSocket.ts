@@ -1,172 +1,201 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import webSocketService, { AnalysisProgress, AnalysisResult, WebSocketMessage } from '../services/websocket';
+import wsService, { WebSocketMessage } from '../services/websocket_v4';
+
+interface ProgressData {
+  progress: number;
+  processed: number;
+  total: number;
+  current_uid?: string;
+  average_score?: number;
+  estimated_remaining?: number;
+  processing_speed?: number;
+}
 
 export interface UseWebSocketReturn {
   isConnected: boolean;
   connectionStatus: string;
-  progress: AnalysisProgress | null;
-  results: AnalysisResult[];
-  alerts: any[];
-  notifications: any[];
-  connect: (channels?: string[]) => void;
+  progress: { [jobId: string]: ProgressData };
+  lastMessage: WebSocketMessage | null;
+  error: Error | null;
+  connect: (channels?: string[]) => Promise<void>;
   disconnect: () => void;
-  sendMessage: (data: any) => boolean;
-  clearResults: () => void;
-  clearAlerts: () => void;
-  clearNotifications: () => void;
+  sendMessage: (data: any) => void;
+  subscribeToJob: (jobId: string) => () => void;
+  getJobProgress: (jobId: string) => ProgressData | null;
+  clearError: () => void;
 }
 
-export const useWebSocket = (): UseWebSocketReturn => {
+interface UseWebSocketOptions {
+  baseUrl?: string;
+  autoConnect?: boolean;
+  channels?: string[];
+}
+
+export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketReturn => {
+  const {
+    baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8006',
+    autoConnect = false,
+    channels = ['analysis', 'alerts']
+  } = options;
+
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
-  const [progress, setProgress] = useState<AnalysisProgress | null>(null);
-  const [results, setResults] = useState<AnalysisResult[]>([]);
-  const [alerts, setAlerts] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [progress, setProgress] = useState<{ [jobId: string]: ProgressData }>({});
+  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   
-  const isInitialized = useRef(false);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const mountedRef = useRef(true);
 
-  // 이벤트 핸들러들
-  const handleConnected = useCallback(() => {
-    console.log('🎉 WebSocket connected via hook');
-    setIsConnected(true);
-    setConnectionStatus('connected');
-  }, []);
-
-  const handleDisconnected = useCallback(() => {
-    console.log('💔 WebSocket disconnected via hook');
-    setIsConnected(false);
-    setConnectionStatus('disconnected');
-  }, []);
-
-  const handleProgress = useCallback((progressData: AnalysisProgress) => {
-    console.log('📊 Progress update:', progressData);
-    setProgress(progressData);
-  }, []);
-
-  const handleResult = useCallback((result: AnalysisResult) => {
-    console.log('🎯 New result:', result);
-    setResults(prev => [...prev, result]);
-  }, []);
-
-  const handleComplete = useCallback((data: any) => {
-    console.log('✅ Analysis complete:', data);
-    setProgress((prev: AnalysisProgress | null) => prev ? { ...prev, status: 'completed', progress: 100 } : null);
-  }, []);
-
-  const handleError = useCallback((error: any) => {
-    // error가 객체/문자열/undefined 모두 안전하게 처리
-    let errorMsg = '알 수 없는 WebSocket 오류';
-    if (error) {
-      if (typeof error === 'string') errorMsg = error;
-      else if (error.message) errorMsg = error.message;
-      else errorMsg = JSON.stringify(error);
-    }
-    console.error('❌ WebSocket error via hook:', errorMsg, error);
-    setProgress((prev: AnalysisProgress | null) => prev ? { ...prev, status: 'failed', error: errorMsg } : null);
-  }, []);
-
-  const handleAlert = useCallback((alert: any) => {
-    console.log('🚨 Alert received:', alert);
-    setAlerts(prev => [{ ...alert, timestamp: new Date().toISOString() }, ...prev]);
-  }, []);
-
-  const handleNotification = useCallback((notification: any) => {
-    console.log('🔔 Notification received:', notification);
-    setNotifications(prev => [{ ...notification, timestamp: new Date().toISOString() }, ...prev]);
-  }, []);
-
+  // WebSocket message handler
   const handleMessage = useCallback((message: WebSocketMessage) => {
-    console.log('📬 Generic message received:', message);
+    if (!mountedRef.current) return;
+    
+    setLastMessage(message);
+
+    // Update progress for specific job
+    if (message.job_id && message.type === 'analysis_progress') {
+      setProgress(prev => {
+        const newProgress = { ...prev };
+        const jobProgress = newProgress[message.job_id!] || {
+          progress: 0,
+          processed: 0,
+          total: 0
+        };
+
+        // Calculate processing speed and estimated time
+        const now = Date.now();
+        const timeKey = `${message.job_id}_time`;
+        const lastTime = (window as any)[timeKey] || now;
+        const timeDiff = (now - lastTime) / 1000; // seconds
+        
+        if (message.processed && message.total) {
+          const processedDiff = (message.processed || 0) - jobProgress.processed;
+          const processingSpeed = timeDiff > 0 ? processedDiff / timeDiff : 0;
+          const remaining = (message.total || 0) - (message.processed || 0);
+          const estimatedRemaining = processingSpeed > 0 ? remaining / processingSpeed : 0;
+
+          newProgress[message.job_id!] = {
+            progress: message.progress || 0,
+            processed: message.processed || 0,
+            total: message.total || 0,
+            current_uid: message.current_uid,
+            average_score: message.average_score,
+            processing_speed: processingSpeed,
+            estimated_remaining: estimatedRemaining
+          };
+
+          (window as any)[timeKey] = now;
+        }
+
+        return newProgress;
+      });
+    }
+
+    // Clear progress when analysis completes
+    if (message.job_id && (message.type === 'analysis_completed' || message.type === 'analysis_failed')) {
+      setProgress(prev => {
+        const newProgress = { ...prev };
+        delete newProgress[message.job_id!];
+        return newProgress;
+      });
+    }
   }, []);
 
-  // WebSocket 연결 및 이벤트 리스너 설정
-  useEffect(() => {
-    if (isInitialized.current) return;
-    isInitialized.current = true;
-
-    // 이벤트 리스너 등록
-    webSocketService.on('connected', handleConnected);
-    webSocketService.on('disconnected', handleDisconnected);
-    webSocketService.on('progress', handleProgress);
-    webSocketService.on('result', handleResult);
-    webSocketService.on('complete', handleComplete);
-    webSocketService.on('error', handleError);
-    webSocketService.on('alert', handleAlert);
-    webSocketService.on('notification', handleNotification);
-    webSocketService.on('message', handleMessage);
-
-    // 초기 연결 상태 설정
-    setIsConnected(webSocketService.isConnected());
-    setConnectionStatus(webSocketService.getConnectionStatus());
-
-    // 클린업 함수
-    return () => {
-      webSocketService.removeListener('connected', handleConnected);
-      webSocketService.removeListener('disconnected', handleDisconnected);
-      webSocketService.removeListener('progress', handleProgress);
-      webSocketService.removeListener('result', handleResult);
-      webSocketService.removeListener('complete', handleComplete);
-      webSocketService.removeListener('error', handleError);
-      webSocketService.removeListener('alert', handleAlert);
-      webSocketService.removeListener('notification', handleNotification);
-      webSocketService.removeListener('message', handleMessage);
-    };
-  }, [
-    handleConnected,
-    handleDisconnected,
-    handleProgress,
-    handleResult,
-    handleComplete,
-    handleError,
-    handleAlert,
-    handleNotification,
-    handleMessage
-  ]);
-
-  // 연결 함수
-  const connect = useCallback((channels: string[] = ['analysis', 'alerts']) => {
-    console.log('🔌 Connecting with channels:', channels);
-    webSocketService.connect(channels);
+  // Update connection state
+  const updateConnectionState = useCallback(() => {
+    if (mountedRef.current) {
+      setIsConnected(wsService.isConnected);
+      setConnectionStatus(wsService.connectionState);
+    }
   }, []);
 
-  // 연결 해제 함수
+  // Connect to WebSocket
+  const connect = useCallback(async (connectChannels?: string[]) => {
+    try {
+      setError(null);
+      
+      await wsService.connect();
+      
+      // Subscribe to all messages
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+      
+      unsubscribeRef.current = wsService.addMessageHandler(handleMessage);
+      
+      updateConnectionState();
+    } catch (error) {
+      console.error('WebSocket connection failed:', error);
+      setError(error as Error);
+    }
+  }, [handleMessage, updateConnectionState]);
+
+  // Disconnect from WebSocket
   const disconnect = useCallback(() => {
-    console.log('🔌 Disconnecting...');
-    webSocketService.disconnect();
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
+    }
+    
+    wsService.disconnect();
+    updateConnectionState();
+  }, [updateConnectionState]);
+
+  // Auto-connect on mount
+  useEffect(() => {
+    mountedRef.current = true;
+    
+    if (autoConnect) {
+      connect();
+    }
+
+    // Monitor connection state changes
+    const interval = setInterval(updateConnectionState, 1000);
+
+    // Cleanup on unmount
+    return () => {
+      mountedRef.current = false;
+      clearInterval(interval);
+      disconnect();
+    };
+  }, [autoConnect, connect, disconnect, updateConnectionState]);
+
+  // Subscribe to specific job
+  const subscribeToJob = useCallback((jobId: string) => {
+    wsService.subscribeToAnalysis(jobId);
+    
+    // Return a no-op unsubscribe function for API compatibility
+    return () => {};
   }, []);
 
-  // 메시지 전송 함수
-  const sendMessage = useCallback((data: any): boolean => {
-    return webSocketService.send(data);
+  // Send message
+  const sendMessage = useCallback((message: any) => {
+    return wsService.send(message);
   }, []);
 
-  // 상태 초기화 함수들
-  const clearResults = useCallback(() => {
-    setResults([]);
-  }, []);
+  // Get job progress
+  const getJobProgress = useCallback((jobId: string) => {
+    return progress[jobId] || null;
+  }, [progress]);
 
-  const clearAlerts = useCallback(() => {
-    setAlerts([]);
-  }, []);
-
-  const clearNotifications = useCallback(() => {
-    setNotifications([]);
+  // Clear error
+  const clearError = useCallback(() => {
+    setError(null);
   }, []);
 
   return {
     isConnected,
     connectionStatus,
     progress,
-    results,
-    alerts,
-    notifications,
+    lastMessage,
+    error,
     connect,
     disconnect,
     sendMessage,
-    clearResults,
-    clearAlerts,
-    clearNotifications
+    subscribeToJob,
+    getJobProgress,
+    clearError
   };
 };
 

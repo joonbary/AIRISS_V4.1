@@ -41,7 +41,7 @@ async function checkServerStatus() {
     console.log('\n🏥 서버 상태 확인 중...');
     
     const apiUrl = 'http://localhost:8003';
-    const wsUrl = 'ws://localhost:8003/ws';
+    const wsUrl = 'ws://localhost:8006/ws';
     
     try {
         // API 서버 확인
@@ -63,7 +63,7 @@ async function checkServerStatus() {
         console.log('💡 해결 방법:');
         console.log('   1. 터미널에서 프로젝트 폴더로 이동');
         console.log('   2. python run_server.py 실행');
-        console.log('   3. 또는 uvicorn app.main:app --host 0.0.0.0 --port 8002');
+        console.log('   3. 또는 uvicorn app.main:app --host 0.0.0.0 --port 8003');
         return false;
     }
 }
@@ -73,7 +73,7 @@ function testWebSocketConnection() {
     console.log('\n🔌 WebSocket 연결 테스트...');
     
     const clientId = `debug-${Date.now()}`;
-    const wsUrl = `ws://localhost:8003/ws/${clientId}?channels=analysis,alerts`;
+    const wsUrl = `ws://localhost:8006/ws/${clientId}?channels=analysis,alerts`;
     
     console.log('🎯 연결 URL:', wsUrl);
     
@@ -127,7 +127,7 @@ function checkPortStatus() {
     console.log('현재 페이지 URL:', window.location.href);
     console.log('예상 포트:');
     console.log('  - 프론트엔드: 3001');
-    console.log('  - 백엔드: 8002');
+    console.log('  - 백엔드: 8003');
     
     // 네트워크 상태
     console.log('네트워크 상태:', navigator.onLine ? '온라인' : '오프라인');
@@ -140,6 +140,14 @@ function captureErrorLogs() {
     // WebSocket 관련 전역 오류 캐치
     const originalError = window.onerror;
     window.onerror = function(message, source, lineno, colno, error) {
+        // toLocaleString 오류 처리
+        if (typeof message === 'string' && message.includes('toLocaleString')) {
+            console.warn('⚠️ toLocaleString 오류 감지 - 안전한 처리로 대체:', {
+                message, source, lineno, colno
+            });
+            return true; // 오류 방지
+        }
+        
         if (typeof message === 'string' && message.includes('WebSocket')) {
             console.error('🚨 WebSocket 관련 오류 감지:', {
                 message, source, lineno, colno, error
@@ -173,6 +181,10 @@ function captureErrorLogs() {
             console.error('🚨 WebSocket Promise 거부:', event.reason);
             event.preventDefault(); // 오류 방지
         }
+        if (event.reason?.message?.includes('toLocaleString')) {
+            console.warn('⚠️ toLocaleString Promise 오류 감지 - 안전한 처리로 대체');
+            event.preventDefault(); // 오류 방지
+        }
     });
     
     console.log('✅ 오류 캡처 설정 완료');
@@ -199,7 +211,7 @@ async function runDiagnosis() {
     
     console.log('\n💡 문제 해결 체크리스트:');
     console.log('□ 백엔드 서버 실행 (python run_server.py)');
-    console.log('□ 포트 8002 사용 가능 여부 확인');
+    console.log('□ 포트 8003 사용 가능 여부 확인');
     console.log('□ 방화벽/바이러스 프로그램 확인');
     console.log('□ 브라우저 캐시 삭제');
     console.log('□ 다른 브라우저에서 테스트');

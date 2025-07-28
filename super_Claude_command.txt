@@ -1,0 +1,63 @@
+[슈퍼클로드 명령어]  
+AIRISS 서비스 레이어 에러처리 리팩터링 v1.0
+
+🎯 목적  
+- 서비스 레이어에서의 에러 발생 시, 반드시 Exception을 raise  
+- FastAPI 엔드포인트에서 이 Exception을 받아 HTTP status code와 메시지로 변환  
+- 빈 파일, 필수컬럼 미존재 등 모든 예외상황에 적용  
+- 에러 발생 시에도 로그는 남기고, response는 표준화(HTTP 4xx)
+
+🔧 작업 범위  
+1. 서비스 레이어 공통 Exception 정의  
+2. 서비스 함수 내부에서 dict 대신 Exception raise  
+3. FastAPI 엔드포인트에서 try-except로 예외 캐치 후 HTTPException 반환  
+4. 모든 에러케이스(빈 파일, 컬럼없음, 파일 미존재 등) 커버  
+5. 단위테스트/통합테스트용 에러 발생 시나리오 추가
+
+📝 작업 절차
+
+# 1. 서비스 레이어에 Custom Exception 정의 (예시: app/exceptions.py)
+class AnalysisError(Exception):
+    def __init__(self, message, status_code=400):
+        self.message = message
+        self.status_code = status_code
+        super().__init__(message)
+
+# 2. 서비스 함수 내부에서 dict 대신 raise AnalysisError 사용 (예시)
+if df.shape[0] == 0:
+    logger.error("분석불가: 데이터 없음")
+    raise AnalysisError("파일에 데이터가 없습니다.", status_code=422)
+if 'uid' not in df.columns or 'opinion' not in df.columns:
+    logger.error("필수 컬럼 누락: uid/opinion")
+    raise AnalysisError("필수 컬럼이 없습니다: uid/opinion", status_code=422)
+
+# 3. FastAPI 엔드포인트(app/api/v1/endpoints/analysis.py 등)에서 try-except
+from fastapi import HTTPException
+from app.exceptions import AnalysisError
+
+@router.post("/analyze/{file_id}")
+async def analyze(file_id: str, ...):
+    try:
+        result = analysis_service.analyze(file_id)
+        return result
+    except AnalysisError as e:
+        logger.error(f"AnalysisError: {e.message}")
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        logger.error(f"UnexpectedError: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# 4. (선택) 에러 response 포맷 일관성 보장 (FastAPI 전역 exception handler 도입 가능)
+
+# 5. 테스트: 빈 파일, 컬럼 없는 파일 등 업로드 시 422/400 에러와 메시지 리턴 확인
+
+🚦 결과  
+- dict 기반 에러 리턴 제거
+- 모든 서비스 오류는 Exception → HTTPException → 4xx 코드로 일관성 있게 처리
+- 프론트엔드는 status code/에러메시지에 따라 명확하게 예외처리 가능
+- 진단 및 유지보수성 대폭 향상
+
+[완료시 체크리스트]  
+☑️ 서비스 레이어 dict 리턴 없이 모두 Exception 처리  
+☑️ HTTP status code와 detail 메시지로 클린하게 반환  
+☑️ 로그/테스트/프론트 모두 예외상황 정상 작동  

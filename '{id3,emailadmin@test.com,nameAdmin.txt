@@ -1,0 +1,5 @@
+'{"id":3,"email":"admin@test.com","name":"Admin User","is_approved":true,"is_admin":true,"created_at":"2025-07-15T04:40:32.358254+00:00"}'
+
+
+uvicorn app.main_complex:app --reload --host 0.0.0.0 --port 8003
+

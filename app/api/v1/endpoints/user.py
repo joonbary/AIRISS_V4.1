@@ -1,107 +1,78 @@
-import os
-import sys
-from pathlib import Path
+"""
+user.py - 사용자 인증 및 관리 엔드포인트
+"""
 
-print("🔍 === USER.PY 디버깅 시작 ===")
-print(f"🗂️ 현재 작업 디렉토리: {os.getcwd()}")
-print(f"🗂️ Python 경로: {sys.path[:3]}")
-
-# .env 파일 존재 및 내용 확인
-env_file = Path(".env")
-print(f"📄 .env 파일 존재: {env_file.exists()}")
-if env_file.exists():
-    print(f"📄 .env 파일 크기: {env_file.stat().st_size} bytes")
-    with open(env_file, 'r', encoding='utf-8') as f:
-        lines = f.readlines()[:10]
-        print("📄 .env 파일 처음 10줄:")
-        for i, line in enumerate(lines, 1):
-            print(f"   {i}: {line.strip()}")
-
-# 문제가 되는 환경변수들 직접 확인
-problem_vars = [
-    'database_type', 'sqlite_database_url', 'postgres_database_url',
-    'server_host', 'server_port', 'react_app_api_url', 
-    'enable_cloud_storage', 'analysis_retention_days', 
-    'react_build_path', 'environment', 'log_level'
-]
-print("\n🔍 문제 환경변수 직접 확인:")
-for var in problem_vars:
-    lower_val = os.getenv(var.lower())
-    upper_val = os.getenv(var.upper())
-    print(f"   {var}: lower={lower_val}, upper={upper_val}")
-
-print("\n⚙️ Settings import 시작...")
-try:
-    from app.core import config
-    print(f"✅ config 모듈 위치: {config.__file__}")
-    print(f"🔧 Settings 클래스 존재: {hasattr(config, 'Settings')}")
-    print("🎯 Settings 객체 생성 시도...")
-    settings = config.Settings()
-    print("✅ Settings 객체 생성 성공!")
-except Exception as e:
-    print(f"❌ Settings 에러 발생: {e}")
-    print(f"❌ 에러 타입: {type(e)}")
-    import traceback
-    print("❌ 상세 스택 트레이스:")
-    traceback.print_exc()
-print("🔍 === USER.PY 디버깅 완료 ===\n")
+from datetime import datetime, timedelta
+from typing import Optional, List
+import hashlib
+import jwt
+import bcrypt
 
 from fastapi import APIRouter, HTTPException, Depends, status, Body
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
-from typing import Optional, List
-import jwt
-import hashlib
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError
 
 from app.models.user import User
 from app.core.db.database import get_db
-# 기존 코드 (문제 발생)
-# from app.core.config.settings import Settings
-# settings = Settings()
-# 임시 수정 (하드코딩으로 우회)
+from app.schemas import LoginResponse
+
 try:
     from app.core.config.settings import Settings
     settings = Settings()
-except Exception as e:
-    print(f"Settings 로딩 실패, 기본값 사용: {e}")
+except Exception as exc:
+    # Settings 로딩 실패 시 기본값 사용
+    print(f"Settings 로딩 실패, 기본값 사용: {exc}")
     settings = type('Settings', (), {
         'jwt_secret_key': 'temp-secret-key',
         'jwt_algorithm': 'HS256',
         'jwt_expire_minutes': 30,
         'admin_email': 'joonbary@naver.com',
-        'admin_auto_create': True
+        'admin_auto_create': True,
+        'ACCESS_TOKEN_EXPIRE_MINUTES': 30,
+        'SECRET_KEY': 'temp-secret-key',
+        'ALGORITHM': 'HS256',
     })()
-
-from app.schemas import LoginResponse
 
 router = APIRouter(prefix="", tags=["user"])
 
-# 유틸: 비밀번호 해시
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/login")
+
 
 def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
+    """bcrypt로 비밀번호 해싱"""
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
 
 def verify_password(password: str, hash_: str) -> bool:
-    return hash_password(password) == hash_
+    """bcrypt로 비밀번호와 해시값 비교"""
+    return bcrypt.checkpw(password.encode(), hash_.encode())
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """JWT 액세스 토큰 생성"""
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
-# Pydantic 스키마
+
 class UserRegister(BaseModel):
+    """회원가입 요청 스키마"""
     email: str
     name: str
     password: str
 
+
 class UserLogin(BaseModel):
+    """로그인 요청 스키마"""
     email: str
     password: str
 
+
 class UserOut(BaseModel):
+    """사용자 정보 응답 스키마"""
     id: int
     email: str
     name: str
@@ -109,13 +80,21 @@ class UserOut(BaseModel):
     is_admin: bool
     created_at: datetime
 
+
 class UserApprove(BaseModel):
+    """사용자 승인/거부 요청 스키마"""
     user_id: int
     approve: bool
 
-# 회원가입
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+
 @router.post("/register", response_model=UserOut)
 def register(user: UserRegister, db: Session = Depends(get_db)):
+    """회원가입 엔드포인트"""
     if db.query(User).filter(User.email == user.email).first():
         raise HTTPException(status_code=400, detail="이미 가입된 이메일입니다.")
     db_user = User(
@@ -130,15 +109,24 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-# 로그인 (응답 포맷 프론트와 맞춤)
+
 @router.post("/login", response_model=LoginResponse)
-def login(user: UserLogin, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.email == user.email).first()
-    if not db_user or not verify_password(user.password, db_user.password_hash):
-        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다.")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """OAuth2 표준 폼 기반 로그인 엔드포인트 (username에 email 입력)"""
+    db_user = db.query(User).filter(User.email == form_data.username).first()
+    if not db_user or not verify_password(form_data.password, db_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if not db_user.is_approved:
         raise HTTPException(status_code=403, detail="관리자 승인 대기 중입니다.")
-    access_token = create_access_token({"sub": db_user.email, "user_id": db_user.id, "is_admin": db_user.is_admin})
+    access_token = create_access_token({
+        "sub": db_user.email,
+        "user_id": db_user.id,
+        "is_admin": db_user.is_admin
+    })
     return LoginResponse(
         access_token=access_token,
         token_type="bearer",
@@ -152,35 +140,34 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         }
     )
 
-# 내 정보
+
 @router.get("/me", response_model=UserOut)
-def get_me(db: Session = Depends(get_db), token: str = Depends(lambda: None)):
-    # 실제 구현에서는 OAuth2PasswordBearer 등으로 토큰 파싱 필요
-    # 여기서는 간단히 토큰에서 이메일 추출
+def get_me(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    """내 정보 조회 엔드포인트 (토큰 필요)"""
     if not token:
         raise HTTPException(status_code=401, detail="토큰이 필요합니다.")
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email = payload.get("sub")
-    except Exception:
-        raise HTTPException(status_code=401, detail="유효하지 않은 토큰입니다.")
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="유효하지 않은 토큰입니다.") from exc
     db_user = db.query(User).filter(User.email == email).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
     return db_user
 
-# 관리자: 승인/거부
+
 @router.post("/approve")
-def approve_user(data: UserApprove, db: Session = Depends(get_db), token: str = Depends(lambda: None)):
-    # 실제 구현에서는 토큰에서 is_admin 체크 필요
+def approve_user(data: UserApprove, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    """관리자: 사용자 승인/거부 엔드포인트 (토큰 필요)"""
     if not token:
         raise HTTPException(status_code=401, detail="토큰이 필요합니다.")
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         if not payload.get("is_admin"):
             raise HTTPException(status_code=403, detail="관리자만 승인할 수 있습니다.")
-    except Exception:
-        raise HTTPException(status_code=401, detail="유효하지 않은 토큰입니다.")
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="유효하지 않은 토큰입니다.") from exc
     db_user = db.query(User).filter(User.id == data.user_id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
@@ -188,17 +175,58 @@ def approve_user(data: UserApprove, db: Session = Depends(get_db), token: str = 
     db.commit()
     return {"user_id": db_user.id, "is_approved": db_user.is_approved}
 
-# 승인 대기 목록
+
 @router.get("/pending", response_model=List[UserOut])
-def get_pending_users(db: Session = Depends(get_db), token: str = Depends(lambda: None)):
-    # 실제 구현에서는 토큰에서 is_admin 체크 필요
+def get_pending_users(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    """관리자: 승인 대기 사용자 목록 조회 (토큰 필요)"""
     if not token:
         raise HTTPException(status_code=401, detail="토큰이 필요합니다.")
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         if not payload.get("is_admin"):
             raise HTTPException(status_code=403, detail="관리자만 조회할 수 있습니다.")
-    except Exception:
-        raise HTTPException(status_code=401, detail="유효하지 않은 토큰입니다.")
-    users = db.query(User).filter(User.is_approved == False).all()
-    return users 
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="유효하지 않은 토큰입니다.") from exc
+    users = db.query(User).filter(User.is_approved.is_(False)).all()
+    return users
+
+
+@router.put("/change-password")
+def change_password(
+    password_data: PasswordChange,
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
+):
+    """사용자 비밀번호 변경"""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id = payload.get("user_id")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="유효하지 않은 토큰입니다"
+            )
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="사용자를 찾을 수 없습니다"
+            )
+        password_field = getattr(user, 'password_hash', None) or getattr(user, 'hashed_password', None)
+        if not verify_password(password_data.current_password, password_field):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="현재 비밀번호가 일치하지 않습니다"
+            )
+        new_hash = hash_password(password_data.new_password)
+        if hasattr(user, 'password_hash'):
+            user.password_hash = new_hash
+        else:
+            user.hashed_password = new_hash
+        db.commit()
+        return {"message": "비밀번호가 성공적으로 변경되었습니다"}
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="유효하지 않은 토큰입니다"
+        ) 

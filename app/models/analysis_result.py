@@ -32,6 +32,9 @@ class AnalysisResultModel(Base):
     
     # AI 피드백 (옵션)
     ai_feedback = Column(JSON)
+    ai_strengths = Column(Text, nullable=True)
+    ai_weaknesses = Column(Text, nullable=True)
+    ai_recommendations = Column(JSON, nullable=True)
     
     # 메타데이터
     analysis_mode = Column(String(20), default="hybrid")

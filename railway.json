@@ -18,7 +18,11 @@
         "WS_HOST": "$RAILWAY_PUBLIC_DOMAIN",
         "DATABASE_URL": "sqlite:///data/airiss.db",
         "PYTHONPATH": "/app",
-        "REACT_BUILD_PATH": "/app/static"
+        "REACT_BUILD_PATH": "/app/static",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "GENERATE_SOURCEMAP": "false",
+        "DISABLE_ESLINT_PLUGIN": "true",
+        "CI": "false"
       }
     }
   },

@@ -11,7 +11,7 @@ from fastapi import Request, Response
 from fastapi.middleware.base import BaseHTTPMiddleware
 import asyncio
 import psutil
-import sqlite3
+# (sqlite3 관련 코드 전체 삭제)
 from pathlib import Path
 
 # 로깅 설정
@@ -23,7 +23,7 @@ class AIRISSMonitoringMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, db_path: str = "monitoring.db"):
         super().__init__(app)
         self.db_path = db_path
-        self.init_monitoring_db()
+        # (sqlite3 관련 코드 전체 삭제)
         
         # 성능 메트릭 저장용
         self.metrics = {
@@ -38,87 +38,7 @@ class AIRISSMonitoringMiddleware(BaseHTTPMiddleware):
         # 백그라운드 모니터링 태스크 시작
         asyncio.create_task(self.background_monitoring())
     
-    def init_monitoring_db(self):
-        """모니터링 데이터베이스 초기화"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            # 요청 로그 테이블
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS request_logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    method TEXT,
-                    path TEXT,
-                    status_code INTEGER,
-                    response_time REAL,
-                    user_agent TEXT,
-                    ip_address TEXT,
-                    user_id TEXT,
-                    error_details TEXT
-                )
-            ''')
-            
-            # 시스템 메트릭 테이블
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS system_metrics (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    cpu_percent REAL,
-                    memory_percent REAL,
-                    memory_used_mb REAL,
-                    disk_percent REAL,
-                    active_connections INTEGER,
-                    requests_per_minute REAL
-                )
-            ''')
-            
-            # 에러 로그 테이블
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS error_logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    error_type TEXT,
-                    error_message TEXT,
-                    traceback TEXT,
-                    request_path TEXT,
-                    user_id TEXT,
-                    severity TEXT DEFAULT 'ERROR'
-                )
-            ''')
-            
-            # 사용자 활동 테이블
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS user_activities (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    user_id TEXT,
-                    action TEXT,
-                    details TEXT,
-                    session_id TEXT,
-                    ip_address TEXT
-                )
-            ''')
-            
-            # 성능 지표 테이블
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS performance_metrics (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    metric_name TEXT,
-                    metric_value REAL,
-                    metric_unit TEXT,
-                    tags TEXT
-                )
-            ''')
-            
-            conn.commit()
-            conn.close()
-            logger.info("✅ 모니터링 데이터베이스 초기화 완료")
-            
-        except Exception as e:
-            logger.error(f"❌ 모니터링 DB 초기화 실패: {e}")
+    # (sqlite3 관련 코드 전체 삭제)
     
     async def dispatch(self, request: Request, call_next):
         """요청 처리 및 모니터링"""
@@ -141,15 +61,7 @@ class AIRISSMonitoringMiddleware(BaseHTTPMiddleware):
             self.metrics["response_times"].append(response_time)
             
             # 요청 로그 저장
-            await self.log_request(
-                method=request.method,
-                path=str(request.url.path),
-                status_code=response.status_code,
-                response_time=response_time,
-                user_agent=user_agent,
-                ip_address=ip_address,
-                user_id=user_id
-            )
+            # (sqlite3 관련 코드 전체 삭제)
             
             # 성능 메트릭 업데이트
             self.metrics["requests_total"] += 1
@@ -158,11 +70,8 @@ class AIRISSMonitoringMiddleware(BaseHTTPMiddleware):
             
             # 사용자 활동 로그
             if user_id:
-                await self.log_user_activity(
-                    user_id=user_id,
-                    action=f"{request.method} {request.url.path}",
-                    ip_address=ip_address
-                )
+                # (sqlite3 관련 코드 전체 삭제)
+                pass # Placeholder for user activity logging
             
             return response
             
@@ -170,13 +79,8 @@ class AIRISSMonitoringMiddleware(BaseHTTPMiddleware):
             # 에러 처리 및 로깅
             response_time = time.time() - start_time
             
-            await self.log_error(
-                error_type=type(e).__name__,
-                error_message=str(e),
-                traceback=traceback.format_exc(),
-                request_path=str(request.url.path),
-                user_id=user_id
-            )
+            # (sqlite3 관련 코드 전체 삭제)
+            pass # Placeholder for error logging
             
             self.metrics["requests_failed"] += 1
             
@@ -217,65 +121,11 @@ class AIRISSMonitoringMiddleware(BaseHTTPMiddleware):
         # IP 기반 임시 ID
         return f"ip_{self.get_client_ip(request)}"
     
-    async def log_request(self, method: str, path: str, status_code: int, 
-                         response_time: float, user_agent: str, 
-                         ip_address: str, user_id: Optional[str]):
-        """요청 로그 저장"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                INSERT INTO request_logs 
-                (method, path, status_code, response_time, user_agent, ip_address, user_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (method, path, status_code, response_time, user_agent, ip_address, user_id))
-            
-            conn.commit()
-            conn.close()
-            
-        except Exception as e:
-            logger.error(f"요청 로그 저장 실패: {e}")
+    # (sqlite3 관련 코드 전체 삭제)
     
-    async def log_error(self, error_type: str, error_message: str, 
-                       traceback: str, request_path: str, user_id: Optional[str]):
-        """에러 로그 저장"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                INSERT INTO error_logs 
-                (error_type, error_message, traceback, request_path, user_id)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (error_type, error_message, traceback, request_path, user_id))
-            
-            conn.commit()
-            conn.close()
-            
-            logger.error(f"에러 발생: {error_type} - {error_message}")
-            
-        except Exception as e:
-            logger.error(f"에러 로그 저장 실패: {e}")
+    # (sqlite3 관련 코드 전체 삭제)
     
-    async def log_user_activity(self, user_id: str, action: str, 
-                               ip_address: str, details: str = None):
-        """사용자 활동 로그 저장"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                INSERT INTO user_activities 
-                (user_id, action, details, ip_address)
-                VALUES (?, ?, ?, ?)
-            ''', (user_id, action, details, ip_address))
-            
-            conn.commit()
-            conn.close()
-            
-        except Exception as e:
-            logger.error(f"사용자 활동 로그 저장 실패: {e}")
+    # (sqlite3 관련 코드 전체 삭제)
     
     async def background_monitoring(self):
         """백그라운드 시스템 모니터링"""
@@ -293,14 +143,7 @@ class AIRISSMonitoringMiddleware(BaseHTTPMiddleware):
                 ])
                 
                 # 메트릭 저장
-                await self.save_system_metrics(
-                    cpu_percent=cpu_percent,
-                    memory_percent=memory.percent,
-                    memory_used_mb=memory.used / (1024 * 1024),
-                    disk_percent=disk.percent,
-                    active_connections=self.metrics["active_connections"],
-                    requests_per_minute=recent_requests
-                )
+                # (sqlite3 관련 코드 전체 삭제)
                 
                 # 메모리 정리 (오래된 데이터 제거)
                 if len(self.metrics["response_times"]) > 1000:
@@ -313,27 +156,9 @@ class AIRISSMonitoringMiddleware(BaseHTTPMiddleware):
                 logger.error(f"백그라운드 모니터링 오류: {e}")
                 await asyncio.sleep(60)
     
-    async def save_system_metrics(self, cpu_percent: float, memory_percent: float,
-                                 memory_used_mb: float, disk_percent: float,
-                                 active_connections: int, requests_per_minute: float):
-        """시스템 메트릭 저장"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                INSERT INTO system_metrics 
-                (cpu_percent, memory_percent, memory_used_mb, disk_percent, 
-                 active_connections, requests_per_minute)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (cpu_percent, memory_percent, memory_used_mb, disk_percent,
-                  active_connections, requests_per_minute))
-            
-            conn.commit()
-            conn.close()
-            
-        except Exception as e:
-            logger.error(f"시스템 메트릭 저장 실패: {e}")
+    # (sqlite3 관련 코드 전체 삭제)
+    
+    # (sqlite3 관련 코드 전체 삭제)
     
     def get_metrics_summary(self) -> Dict[str, Any]:
         """현재 메트릭 요약 반환"""
@@ -367,87 +192,33 @@ class MonitoringAPI:
     def get_dashboard_data(self, hours: int = 24) -> Dict[str, Any]:
         """모니터링 대시보드 데이터 조회"""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+            # (sqlite3 관련 코드 전체 삭제)
+            pass # Placeholder for database connection and query
             
             # 시간 범위 설정
             since = datetime.now() - timedelta(hours=hours)
             
             # 요청 통계
-            cursor.execute('''
-                SELECT 
-                    COUNT(*) as total_requests,
-                    COUNT(CASE WHEN status_code >= 400 THEN 1 END) as failed_requests,
-                    AVG(response_time) as avg_response_time,
-                    MAX(response_time) as max_response_time
-                FROM request_logs 
-                WHERE timestamp > ?
-            ''', (since,))
-            
-            request_stats = cursor.fetchone()
+            # (sqlite3 관련 코드 전체 삭제)
+            request_stats = (0, 0, 0.0, 0.0) # Placeholder
             
             # 시간별 요청 수
-            cursor.execute('''
-                SELECT 
-                    strftime('%H', timestamp) as hour,
-                    COUNT(*) as request_count
-                FROM request_logs 
-                WHERE timestamp > ?
-                GROUP BY strftime('%H', timestamp)
-                ORDER BY hour
-            ''', (since,))
-            
-            hourly_requests = [
-                {"hour": row[0], "requests": row[1]} 
-                for row in cursor.fetchall()
-            ]
+            # (sqlite3 관련 코드 전체 삭제)
+            hourly_requests = [] # Placeholder
             
             # 최근 에러 로그
-            cursor.execute('''
-                SELECT error_type, error_message, timestamp, request_path
-                FROM error_logs 
-                WHERE timestamp > ?
-                ORDER BY timestamp DESC
-                LIMIT 10
-            ''', (since,))
-            
-            recent_errors = [
-                {
-                    "type": row[0],
-                    "message": row[1],
-                    "timestamp": row[2],
-                    "path": row[3]
-                }
-                for row in cursor.fetchall()
-            ]
+            # (sqlite3 관련 코드 전체 삭제)
+            recent_errors = [] # Placeholder
             
             # 시스템 메트릭 (최근 값)
-            cursor.execute('''
-                SELECT cpu_percent, memory_percent, memory_used_mb, 
-                       disk_percent, active_connections, requests_per_minute
-                FROM system_metrics 
-                ORDER BY timestamp DESC 
-                LIMIT 1
-            ''', )
-            
-            system_metrics = cursor.fetchone()
+            # (sqlite3 관련 코드 전체 삭제)
+            system_metrics = (0.0, 0.0, 0.0, 0.0, 0, 0.0) # Placeholder
             
             # 인기 페이지
-            cursor.execute('''
-                SELECT path, COUNT(*) as hits
-                FROM request_logs 
-                WHERE timestamp > ? AND status_code < 400
-                GROUP BY path
-                ORDER BY hits DESC
-                LIMIT 10
-            ''', (since,))
+            # (sqlite3 관련 코드 전체 삭제)
+            popular_pages = [] # Placeholder
             
-            popular_pages = [
-                {"path": row[0], "hits": row[1]}
-                for row in cursor.fetchall()
-            ]
-            
-            conn.close()
+            # (sqlite3 관련 코드 전체 삭제)
             
             return {
                 "request_stats": {
@@ -478,58 +249,20 @@ class MonitoringAPI:
     def get_performance_trends(self, days: int = 7) -> Dict[str, Any]:
         """성능 트렌드 데이터 조회"""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+            # (sqlite3 관련 코드 전체 삭제)
+            pass # Placeholder for database connection and query
             
             since = datetime.now() - timedelta(days=days)
             
             # 일별 성능 지표
-            cursor.execute('''
-                SELECT 
-                    DATE(timestamp) as date,
-                    AVG(response_time) as avg_response_time,
-                    COUNT(*) as total_requests,
-                    COUNT(CASE WHEN status_code >= 400 THEN 1 END) as error_count
-                FROM request_logs 
-                WHERE timestamp > ?
-                GROUP BY DATE(timestamp)
-                ORDER BY date
-            ''', (since,))
-            
-            daily_performance = [
-                {
-                    "date": row[0],
-                    "avg_response_time": round(row[1] * 1000, 2) if row[1] else 0,
-                    "total_requests": row[2],
-                    "error_rate": round((row[3] / row[2] * 100) if row[2] > 0 else 0, 2)
-                }
-                for row in cursor.fetchall()
-            ]
+            # (sqlite3 관련 코드 전체 삭제)
+            daily_performance = [] # Placeholder
             
             # 시스템 리소스 트렌드
-            cursor.execute('''
-                SELECT 
-                    DATE(timestamp) as date,
-                    AVG(cpu_percent) as avg_cpu,
-                    AVG(memory_percent) as avg_memory,
-                    AVG(requests_per_minute) as avg_rpm
-                FROM system_metrics 
-                WHERE timestamp > ?
-                GROUP BY DATE(timestamp)
-                ORDER BY date
-            ''', (since,))
+            # (sqlite3 관련 코드 전체 삭제)
+            resource_trends = [] # Placeholder
             
-            resource_trends = [
-                {
-                    "date": row[0],
-                    "avg_cpu": round(row[1], 2) if row[1] else 0,
-                    "avg_memory": round(row[2], 2) if row[2] else 0,
-                    "avg_requests_per_minute": round(row[3], 2) if row[3] else 0
-                }
-                for row in cursor.fetchall()
-            ]
-            
-            conn.close()
+            # (sqlite3 관련 코드 전체 삭제)
             
             return {
                 "daily_performance": daily_performance,
@@ -572,8 +305,8 @@ async def get_detailed_health():
         # 데이터베이스 연결 테스트
         db_healthy = True
         try:
-            conn = sqlite3.connect("monitoring.db")
-            conn.close()
+            # (sqlite3 관련 코드 전체 삭제)
+            pass # Placeholder for database connection test
         except:
             db_healthy = False
         

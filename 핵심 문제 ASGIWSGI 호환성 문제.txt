@@ -1,0 +1,5 @@
+핵심 문제: ASGI/WSGI 호환성 문제
+
+FastAPI = ASGI 애플리케이션 (비동기)
+Gunicorn 기본 = WSGI 서버 (동기)
+현재 Procfile: gunicorn application:application ← 이것이 문제!

@@ -8,7 +8,7 @@ import json
 
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func, and_, or_
-from app.db.database import SessionLocal, get_database_info, DATABASE_CONNECTION_TYPE
+from app.db.database import SessionLocal
 from app.models.analysis_result import AnalysisResultModel, AnalysisJobModel, AnalysisStatsModel
 
 logger = logging.getLogger(__name__)
@@ -18,13 +18,9 @@ class PostgreSQLAnalysisStorageService:
     
     def __init__(self):
         self.db_session_factory = SessionLocal
-        self.connection_type = DATABASE_CONNECTION_TYPE
-        
-        # Verify PostgreSQL connection
-        if self.connection_type != "postgresql":
-            logger.warning(f"Expected PostgreSQL but got: {self.connection_type}")
+        self.connection_type = "postgresql"  # Default to PostgreSQL
             
-        logger.info(f"PostgreSQL Analysis Storage Service initialized: {self.connection_type}")
+        logger.info(f"PostgreSQL Analysis Storage Service initialized")
     
     def _get_db_session(self) -> Session:
         """Get database session"""
@@ -35,17 +31,20 @@ class PostgreSQLAnalysisStorageService:
         db = self._get_db_session()
         
         try:
+            # AnalysisResultModel에 없는 키 자동 제거
+            model_keys = set(c.name for c in AnalysisResultModel.__table__.columns)
+            filtered_data = {k: v for k, v in analysis_data.items() if k in model_keys}
             # Check for existing result (prevent duplicates)
             existing = db.query(AnalysisResultModel).filter(
                 and_(
-                    AnalysisResultModel.uid == analysis_data.get('uid'),
-                    AnalysisResultModel.file_id == analysis_data.get('file_id')
+                    AnalysisResultModel.uid == filtered_data.get('uid'),
+                    AnalysisResultModel.file_id == filtered_data.get('file_id')
                 )
             ).first()
             
             if existing:
                 # Update existing result
-                for key, value in analysis_data.items():
+                for key, value in filtered_data.items():
                     if hasattr(existing, key) and key not in ['id', 'analysis_id', 'created_at']:
                         setattr(existing, key, value)
                 existing.updated_at = datetime.now()
@@ -56,11 +55,16 @@ class PostgreSQLAnalysisStorageService:
             else:
                 # Create new result
                 # Ensure analysis_id exists
-                if 'analysis_id' not in analysis_data:
+                if 'analysis_id' not in filtered_data:
                     import uuid
-                    analysis_data['analysis_id'] = str(uuid.uuid4())
+                    filtered_data['analysis_id'] = str(uuid.uuid4())
                 
-                new_result = AnalysisResultModel(**analysis_data)
+                # AI 피드백 컬럼 누락 방지: 기본값 보장
+                for k in ["ai_strengths", "ai_weaknesses", "ai_feedback", "ai_recommendations"]:
+                    if k not in filtered_data:
+                        filtered_data[k] = None
+                
+                new_result = AnalysisResultModel(**filtered_data)
                 db.add(new_result)
                 db.commit()
                 db.refresh(new_result)

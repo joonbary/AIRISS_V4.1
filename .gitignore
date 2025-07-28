@@ -143,6 +143,9 @@ approve_*.py
 
 # Claude specific
 .claude/
+claude_desktop_config.json
+python -m app.main.txt
+python airiss_v5_ultimate_integrate.txt
 
 # Pickle files
 *.pkl

@@ -160,8 +160,12 @@ class AIRISSTextAnalyzer:
             self.openai = openai
             self.openai_available = True
             logger.info("✅ OpenAI 모듈 로드 성공")
-        except ImportError:
-            logger.warning("⚠️ OpenAI 모듈 없음 - 고급 AI 분석 제한됨")
+        except ImportError as e:
+            logger.warning(f"⚠️ OpenAI 모듈 없음 - 고급 AI 분석 제한됨: {e}")
+            self.openai_available = False
+        except Exception as e:
+            logger.error(f"OpenAI 모듈 로드 중 예외 발생: {e}")
+            self.openai_available = False
         
         # 한국어 BERT 모델 초기화 시도
         try:
@@ -179,7 +183,12 @@ class AIRISSTextAnalyzer:
             logger.warning("⚠️ BERT 모델 로드 실패 - 향상된 키워드 분석 사용")
         
         # 편향 탐지기 초기화
-        self.bias_detector = BiasDetector()
+        try:
+            from app.services.bias_detection.bias_detector import BiasDetector
+            self.bias_detector = BiasDetector()
+        except ImportError:
+            logger.warning("⚠️ 편향 탐지기 모듈 없음")
+            self.bias_detector = None
     
     def analyze_text(self, text: str, dimension: str) -> Dict[str, Any]:
         """향상된 텍스트 분석 - 딥러닝 + 키워드 하이브리드"""
@@ -593,6 +602,7 @@ class AIRISSTextAnalyzer:
         """OpenAI를 사용한 고급 AI 피드백 생성"""
         
         if not self.openai_available:
+            logger.error("OpenAI 모듈이 설치되지 않았습니다.")
             return {
                 "ai_strengths": "OpenAI 모듈이 설치되지 않았습니다.",
                 "ai_weaknesses": "pip install openai로 설치해주세요.",
@@ -602,6 +612,7 @@ class AIRISSTextAnalyzer:
             }
         
         if not api_key:
+            logger.error("OpenAI API 키가 제공되지 않았습니다.")
             return {
                 "ai_strengths": "API 키가 제공되지 않았습니다.",
                 "ai_weaknesses": "OpenAI API 키를 입력해주세요.",
@@ -612,7 +623,6 @@ class AIRISSTextAnalyzer:
         
         try:
             client = self.openai.OpenAI(api_key=api_key)
-            
             # 개선된 프롬프트
             prompt = f"""
 직원 {uid}의 평가 의견을 AIRISS 8대 영역 기반으로 심층 분석하세요:
@@ -651,7 +661,6 @@ class AIRISSTextAnalyzer:
 2. 중기(3개월): 구체적 목표
 3. 장기(6개월): 기대 성과
 """
-            
             response = await asyncio.to_thread(
                 client.chat.completions.create,
                 model=model,
@@ -665,9 +674,7 @@ class AIRISSTextAnalyzer:
                 max_tokens=max_tokens,
                 temperature=0.7
             )
-            
             feedback = response.choices[0].message.content
-            
             # 응답 파싱 개선
             sections = {
                 "strengths": "",
@@ -675,23 +682,18 @@ class AIRISSTextAnalyzer:
                 "overall": "",
                 "action_plan": []
             }
-            
             if "[핵심 강점]" in feedback:
                 parts = feedback.split("[핵심 강점]")[1].split("[개선 필요사항]")
                 sections["strengths"] = parts[0].strip() if len(parts) > 0 else ""
-                
                 if len(parts) > 1:
                     parts2 = parts[1].split("[종합 피드백]")
                     sections["weaknesses"] = parts2[0].strip() if len(parts2) > 0 else ""
-                    
                     if len(parts2) > 1:
                         parts3 = parts2[1].split("[구체적 실행 계획]")
                         sections["overall"] = parts3[0].strip() if len(parts3) > 0 else ""
-                        
                         if len(parts3) > 1:
                             action_items = parts3[1].strip().split('\n')
                             sections["action_plan"] = [item.strip() for item in action_items if item.strip()]
-            
             return {
                 "ai_strengths": sections["strengths"],
                 "ai_weaknesses": sections["weaknesses"],
@@ -699,9 +701,8 @@ class AIRISSTextAnalyzer:
                 "ai_recommendations": sections["action_plan"],
                 "error": None
             }
-            
         except Exception as e:
-            logger.error(f"OpenAI API 오류: {e}")
+            logger.error(f"OpenAI API 오류: {e}", exc_info=True)
             return {
                 "ai_strengths": f"AI 분석 오류: {str(e)}",
                 "ai_weaknesses": "AI 분석을 완료할 수 없습니다.",

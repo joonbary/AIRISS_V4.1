@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 
-// API 기본 URL 설정 (8002 포트로 수정, /api/v1 제거)
+// API 기본 URL 설정 (8003 포트로 수정, /api/v1 제거)
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8003';
 
 // axios 인스턴스 생성

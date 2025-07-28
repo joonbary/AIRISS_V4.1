@@ -1,92 +1,50 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Auth from './components/Auth';
 import Dashboard from './components/Dashboard/Dashboard';
-
-// PendingApproval 컴포넌트 임시 구현
-function PendingApproval() {
-  return <div style={{textAlign:'center',marginTop:80}}><h2>승인 대기 중입니다</h2><p>관리자의 승인을 기다려주세요.</p></div>;
-}
-
-// User 타입 예시
-interface User {
-  email: string;
-  name: string;
-  isApproved: boolean;
-}
-
-interface AuthState {
-  isAuthenticated: boolean;
-  isApproved: boolean;
-  user: User | null;
-  loading: boolean;
-}
-
-const AuthContext = createContext<{
-  state: AuthState;
-  setState: React.Dispatch<React.SetStateAction<AuthState>>;
-}>({
-  state: { isAuthenticated: false, isApproved: false, user: null, loading: true },
-  setState: () => {},
-});
-
-function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AuthState>({
-    isAuthenticated: false,
-    isApproved: false,
-    user: null,
-    loading: true,
-  });
-
-  useEffect(() => {
-    // 토큰/유저정보 로드(예시: localStorage)
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        setState({
-          isAuthenticated: true,
-          isApproved: !!user.isApproved,
-          user,
-          loading: false,
-        });
-      } catch {
-        setState(s => ({ ...s, loading: false }));
-      }
-    } else {
-      setState(s => ({ ...s, loading: false }));
-    }
-  }, []);
-
-  return <AuthContext.Provider value={{ state, setState }}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
-}
-
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { state } = useAuth();
-  if (state.loading) return <div>로딩 중...</div>;
-  if (!state.isAuthenticated) return <Navigate to="/login" replace />;
-  if (!state.isApproved) return <Navigate to="/pending-approval" replace />;
-  return <>{children}</>;
-}
+import AdminDashboard from './components/AdminDashboard';
+import Profile from './components/Profile';
+import FileUpload from './components/Upload/FileUpload';
+import AnalysisView from './components/Analysis/AnalysisView';
+import AdvancedSearch from './components/Search/AdvancedSearch';
+import History from './components/History/History';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter future={{ v7_startTransition: true }}>
-        <Routes>
-          <Route path="/login" element={<Auth />} />
-          <Route path="/pending-approval" element={<PendingApproval />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <BrowserRouter future={{ v7_startTransition: true }}>
+      <Routes>
+        {/* 모든 라우트 Public Access - 인증 불필요 */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/upload" element={<FileUpload />} />
+        <Route path="/analysis" element={<AnalysisView />} />
+        <Route path="/search" element={<AdvancedSearch />} />
+        <Route path="/history" element={<History />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        {/* 루트 경로는 대시보드로 */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* 모든 경로를 대시보드로 리다이렉트 */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
+}
+
+// 더미 useAuth (컴파일 에러 방지용)
+export function useAuth() {
+  return {
+    state: {
+      isAuthenticated: true,
+      isApproved: true,
+      user: {
+        email: 'public@airiss.com',
+        name: 'Public User',
+        is_approved: true,
+        is_admin: true
+      },
+      loading: false
+    },
+    setState: () => {}
+  };
 }
 
 export default App;

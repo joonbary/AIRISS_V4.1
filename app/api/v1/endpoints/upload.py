@@ -9,7 +9,7 @@ import logging
 import os
 
 from app.db.database import get_db
-from app.models.file import FileRecord
+from app.models.file import File as FileModel
 from app.schemas.upload import UploadResponse
 
 logger = logging.getLogger(__name__)
@@ -77,25 +77,28 @@ async def upload_file(
         
         # 데이터베이스에 저장
         file_id = str(uuid.uuid4())
-        file_record = FileRecord(
+        import json
+        
+        file_record = FileModel(
             id=file_id,
             filename=file.filename,
             upload_time=datetime.utcnow(),
             total_records=len(df),
-            column_count=len(all_columns),
-            status="uploaded",
-            file_metadata={  # metadata -> file_metadata로 변경
-                "uid_columns": uid_columns,
-                "opinion_columns": opinion_columns,
-                "quantitative_columns": quantitative_columns
-            }
+            columns=json.dumps(all_columns),  # JSON string으로 저장
+            uid_columns=json.dumps(uid_columns),  # JSON string으로 저장
+            opinion_columns=json.dumps(opinion_columns),  # JSON string으로 저장
+            quantitative_columns=json.dumps(quantitative_columns),  # JSON string으로 저장
+            airiss_ready=len(uid_columns) > 0 and len(opinion_columns) > 0,
+            hybrid_ready=len(quantitative_columns) > 0,
+            dataframe_path=f'temp_data/{file_id}.pkl'
         )
         db.add(file_record)
         db.commit()
         
         # DataFrame을 임시 파일로 저장
         os.makedirs('temp_data', exist_ok=True)
-        df.to_pickle(f'temp_data/{file_id}.pkl')
+        file_path = f'temp_data/{file_id}.pkl'
+        df.to_pickle(file_path)
         
         logger.info(f"파일 저장 완료: {file_id}")
         
@@ -104,6 +107,7 @@ async def upload_file(
             "filename": file.filename,
             "total_records": len(df),
             "column_count": len(all_columns),
+            "columns": all_columns,
             "uid_columns": uid_columns,
             "opinion_columns": opinion_columns,
             "quantitative_columns": quantitative_columns,

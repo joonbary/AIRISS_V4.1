@@ -32,6 +32,10 @@ import { useNavigate } from 'react-router-dom';
 import { getDashboardData, downloadResults } from '../../services/api';
 import { DashboardStats } from '../../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import DashboardLayout from '../Layout/DashboardLayout';
+import UserInfo from '../UserInfo';
+import LogoutButton from '../LogoutButton';
+import { Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -131,34 +135,12 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // 실제 데이터가 없거나 적을 경우에만 더미 데이터 사용
-  const mockData: DashboardStats = (dashboardData && dashboardData.total_analyses > 0) ? dashboardData : {
-    total_analyses: 152,
-    total_employees: 1847,
-    average_score: 73.5,
-    recent_analyses: [
-      {
-        job_id: '1',
-        filename: 'Q4_2024_평가.xlsx',
-        processed: 250,
-        average_score: 76.3,
-        created_at: '2024-01-15T10:30:00'
-      },
-      {
-        job_id: '2',
-        filename: '영업팀_성과평가.csv',
-        processed: 85,
-        average_score: 81.2,
-        created_at: '2024-01-14T15:20:00'
-      },
-      {
-        job_id: '3',
-        filename: '본부_리더십평가.xlsx',
-        processed: 142,
-        average_score: 79.8,
-        created_at: '2024-01-13T09:15:00'
-      }
-    ]
+  // 더미 데이터 완전 비활성화: 실제 데이터만 사용, 없으면 빈 값만 표시
+  const safeData: DashboardStats = dashboardData || {
+    total_analyses: 0,
+    total_employees: 0,
+    average_score: 0,
+    recent_analyses: []
   };
 
   // 차트 데이터 준비
@@ -172,9 +154,19 @@ const Dashboard: React.FC = () => {
     { grade: 'D', count: 77, percentage: 4.2 }
   ];
 
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const isAdmin = user?.is_admin;
+
   return (
-    <Box>
-      {/* 헤더 */}
+    <DashboardLayout>
+      {/* 상단 헤더 */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <UserInfo />
+        <LogoutButton />
+      </Box>
+
+      {/* 기존 대시보드 콘텐츠 */}
       <Box mb={4}>
         <Typography variant="h4" fontWeight="bold" gutterBottom>
           AIRISS v4.0 대시보드
@@ -183,6 +175,18 @@ const Dashboard: React.FC = () => {
           AI 기반 직원 성과 분석 시스템의 전체 현황을 확인하세요
         </Typography>
       </Box>
+
+      {isAdmin && (
+        <Button 
+          component={Link} 
+          to="/admin" 
+          variant="contained" 
+          color="secondary"
+          sx={{ mb: 2 }}
+        >
+          관리자 대시보드
+        </Button>
+      )}
 
       {/* 주요 지표 카드 */}
       <Grid container spacing={3} mb={4}>
@@ -195,10 +199,10 @@ const Dashboard: React.FC = () => {
                     총 분석 건수
                   </Typography>
                   <Typography variant="h4" fontWeight="bold">
-                    {mockData.total_analyses.toLocaleString()}
+                    {(safeData.total_analyses || 0).toLocaleString()}
                   </Typography>
                   <Typography variant="body2" color="success.main">
-                    +12.5% 전월 대비
+                    {/* 실제 데이터 기반 증감률 등은 추후 구현 */}
                   </Typography>
                 </Box>
                 <Assessment sx={{ fontSize: 40, color: 'primary.main', opacity: 0.3 }} />
@@ -216,10 +220,10 @@ const Dashboard: React.FC = () => {
                     분석 직원 수
                   </Typography>
                   <Typography variant="h4" fontWeight="bold">
-                    {mockData.total_employees.toLocaleString()}
+                    {(safeData.total_employees || 0).toLocaleString()}
                   </Typography>
                   <Typography variant="body2" color="info.main">
-                    전체 직원의 85%
+                    {/* 실제 데이터 기반 */}
                   </Typography>
                 </Box>
                 <People sx={{ fontSize: 40, color: 'secondary.main', opacity: 0.3 }} />
@@ -237,10 +241,10 @@ const Dashboard: React.FC = () => {
                     평균 종합점수
                   </Typography>
                   <Typography variant="h4" fontWeight="bold">
-                    {mockData.average_score.toFixed(1)}
+                    {(safeData.average_score || 0).toFixed(1)}
                   </Typography>
                   <Typography variant="body2" color="warning.main">
-                    +2.3점 향상
+                    {/* 실제 데이터 기반 */}
                   </Typography>
                 </Box>
                 <TrendingUp sx={{ fontSize: 40, color: 'success.main', opacity: 0.3 }} />
@@ -364,7 +368,7 @@ const Dashboard: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {mockData.recent_analyses.length === 0 ? (
+              {safeData.recent_analyses.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                     <Typography variant="body1" color="text.secondary">
@@ -373,7 +377,7 @@ const Dashboard: React.FC = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                mockData.recent_analyses.map((analysis) => (
+                safeData.recent_analyses.map((analysis) => (
                   <TableRow key={analysis.job_id}>
                     <TableCell>{analysis.filename}</TableCell>
                     <TableCell align="center">
@@ -412,7 +416,7 @@ const Dashboard: React.FC = () => {
           </Table>
         </TableContainer>
       </Paper>
-    </Box>
+    </DashboardLayout>
   );
 };
 

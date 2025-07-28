@@ -1,18 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 // API 기본 URL 설정 (Railway 호환)
-const API_BASE_URL = (() => {
-  // Railway 또는 프로덕션 환경에서는 상대 경로 사용
-  if (process.env.NODE_ENV === 'production' || 
-      window.location.hostname.includes('railway.app') ||
-      window.location.hostname.includes('herokuapp.com') ||
-      window.location.hostname.includes('vercel.app')) {
-    return ''; // 상대 경로 사용 (같은 도메인)
-  }
-  
-  // 로컬 개발 환경
-  return process.env.REACT_APP_API_URL || 'http://localhost:8003';
-})();
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8006';
 
 // axios 인스턴스 생성
 const api = axios.create({
@@ -23,7 +12,7 @@ const api = axios.create({
   timeout: parseInt(process.env.REACT_APP_API_TIMEOUT || '30000'),
 });
 
-// 요청 인터셉터
+// 요청 인터셉터 - 인증 없음
 api.interceptors.request.use(
   (config) => {
     console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
@@ -67,22 +56,41 @@ export const healthCheck = async () => {
   return response.data;
 };
 
-// 파일 업로드 (백엔드 경로와 일치)
+// 파일 업로드 (분석 서비스 업로드 엔드포인트 사용)
 export const uploadFile = async (file: File) => {
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const response = await api.post('/api/upload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-    onUploadProgress: (progressEvent) => {
-      const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
-      console.log(`📤 Upload Progress: ${percentCompleted}%`);
-    },
+  console.log('📤 Uploading file:', {
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    lastModified: new Date(file.lastModified).toISOString()
   });
 
-  return response.data;
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  try {
+    // 분석 서비스의 전용 업로드 엔드포인트 사용
+    const response = await api.post('/api/v1/analysis/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    
+    console.log('✅ Upload response:', response.data);
+    
+    // Validate response
+    if (!response.data.file_id) {
+      console.error('❌ No file_id in response:', response.data);
+      throw new Error('Upload response missing file_id');
+    }
+    
+    if (response.data.total_records === 0) {
+      console.warn('⚠️ File uploaded but has 0 records:', response.data);
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('❌ Upload failed:', error);
+    throw error;
+  }
 };
 
 // 분석 시작 (백엔드 경로와 일치)
@@ -95,6 +103,8 @@ export const startAnalysis = async (params: {
   openai_model?: string;
   max_tokens?: number;
 }) => {
+  console.log('🔍 Starting analysis with params:', params);
+  
   // 백엔드 AnalysisRequest 모델과 일치하는 파라미터만 전송
   const requestParams = {
     file_id: params.file_id,
@@ -107,8 +117,21 @@ export const startAnalysis = async (params: {
   };
   
   console.log('🚀 Sending analysis request:', requestParams);
-  const response = await api.post('/analysis/start', requestParams);
-  return response.data;
+  
+  try {
+    const response = await api.post('/api/v1/analysis/analyze/' + params.file_id, requestParams);
+    console.log('✅ Analysis started:', response.data);
+    
+    if (!response.data.job_id) {
+      console.error('❌ No job_id in response:', response.data);
+      throw new Error('Analysis response missing job_id');
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('❌ Analysis start failed:', error);
+    throw error;
+  }
 };
 
 // 분석 작업 목록 조회
@@ -119,19 +142,25 @@ export const getAnalysisJobs = async () => {
 
 // 분석 상태 확인
 export const getAnalysisStatus = async (jobId: string) => {
-  const response = await api.get(`/analysis/status/${jobId}`);
+  const response = await api.get(`/api/v1/analysis/status/${jobId}`);
   return response.data;
 };
 
 // 분석 결과 조회
 export const getAnalysisResults = async (jobId: string) => {
-  const response = await api.get(`/analysis/results/${jobId}`);
+  const response = await api.get(`/api/v1/analysis/results/${jobId}`);
+  return response.data;
+};
+
+// 분석 결과 파일 존재 여부 확인
+export const checkResultsAvailability = async (jobId: string) => {
+  const response = await api.get(`/api/v1/analysis/check-results/${jobId}`);
   return response.data;
 };
 
 // 결과 다운로드 (백엔드 경로와 완벽히 일치)
 export const downloadResults = async (jobId: string, format: string = 'excel'): Promise<Blob> => {
-  const response = await api.get(`/analysis/download/${jobId}/${format}`, {
+  const response = await api.get(`/api/v1/analysis/download/${jobId}/${format}`, {
     responseType: 'blob',
   });
   return response.data;
@@ -203,40 +232,89 @@ export const getDashboardData = async () => {
   }
 };
 
-// 회원가입
-export const register = async (data: { email: string; name: string; password: string }) => {
-  const response = await api.post('/user/register', data);
-  return response.data;
+// 파일 목록 조회
+export const getFiles = async () => {
+  try {
+    const response = await api.get('/api/v1/files/list');
+    // 백엔드에서 반환하는 배열 직접 사용
+    const files = Array.isArray(response.data) ? response.data : (response.data.files || []);
+    return files.map((file: any) => ({
+      id: file.id,
+      filename: file.filename,
+      upload_time: file.upload_time,
+      total_records: file.total_records,
+      size: file.size || 0,
+      user_id: file.user_id,
+      session_id: file.session_id,
+      columns: file.columns || []
+    }));
+  } catch (error: any) {
+    console.error('❌ 파일 목록 조회 실패:', error);
+    // 인증 제거됨 - 401 에러 무시
+    return [];
+  }
 };
 
-// 로그인
-export const login = async (data: { email: string; password: string }) => {
-  const response = await api.post('/user/login', data);
-  return response.data; // { access_token: string, ... }
+// 인증 기능 제거됨 - 로그인/회원가입 불필요
+// Public access enabled
+
+// 더미 함수들 (컴파일 에러 방지용)
+export const register = async (data: any) => {
+  console.warn('인증이 비활성화되었습니다. 회원가입이 필요하지 않습니다.');
+  return { message: 'Authentication disabled' };
+};
+
+export const login = async (data: any) => {
+  console.warn('인증이 비활성화되었습니다. 로그인이 필요하지 않습니다.');
+  return { message: 'Authentication disabled' };
 };
 
 // 내 정보 조회
-export const getMe = async (token: string) => {
-  const response = await api.get('/user/me', {
-    headers: { Authorization: `Bearer ${token}` }
+export const getMe = async () => {
+  // 인증 없이 기본 사용자 정보 반환
+  return {
+    email: 'test@airiss.com',
+    name: 'Test User',
+    is_approved: true,
+    is_admin: true
+  };
+};
+
+// 승인 대기 사용자 목록 조회
+export const getPendingUsers = async () => {
+  const response = await api.get('/user/pending');
+  return response.data;
+};
+
+// 사용자 승인/거부
+export const approveUser = async (userId: number, isApproved: boolean) => {
+  const response = await api.post('/user/approve', {
+    user_id: userId,
+    approve: isApproved
   });
   return response.data;
 };
 
-// 승인 대기 목록
-export const getPendingUsers = async (token: string) => {
-  const response = await api.get('/user/pending', {
-    headers: { Authorization: `Bearer ${token}` }
+// 로그아웃 기능 제거됨 - Public access
+export const logout = () => {
+  console.warn('인증이 비활성화되었습니다. 로그아웃이 필요하지 않습니다.');
+};
+
+// 현재 사용자 정보 조회
+export const getCurrentUser = async () => {
+  const response = await api.get('/user/me');
+  return response.data;
+};
+
+// 비밀번호 변경
+export const changePassword = async (currentPassword: string, newPassword: string) => {
+  const response = await api.put('/user/change-password', {
+    current_password: currentPassword,
+    new_password: newPassword
   });
   return response.data;
 };
 
-// 사용자 승인
-export const approveUser = async (user_id: number, approve: boolean, token: string) => {
-  const response = await api.post('/user/approve', { user_id, approve }, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  return response.data;
-};
+// 인증 기능 완전히 제거됨 - 모든 API Public access
 
 export default api;

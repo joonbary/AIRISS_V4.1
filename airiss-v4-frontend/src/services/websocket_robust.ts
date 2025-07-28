@@ -56,7 +56,7 @@ class RobustWebSocketService extends EventEmitter {
     // 환경별 WebSocket URL 설정
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.hostname;
-    const wsPort = process.env.REACT_APP_WS_PORT || '8002';
+    const wsPort = process.env.REACT_APP_WS_PORT || '8003';
     
     // 개발/운영 환경 자동 감지
     if (host === 'localhost' || host === '127.0.0.1') {
