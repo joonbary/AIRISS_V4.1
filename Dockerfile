@@ -42,10 +42,8 @@ RUN pip install --upgrade pip
 
 # Install Python dependencies
 COPY requirements.txt .
-# Install PyTorch CPU version first (Railway에서 가장 안정적인 버전)
-RUN pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
-# Install other dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install all dependencies including PyTorch
+RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Copy application code
 COPY . .
