@@ -22,7 +22,6 @@ import {
 import { useDropzone } from 'react-dropzone';
 import { uploadFile } from '../../services/api';
 import { FileUploadResponse } from '../../types';
-import DashboardLayout from '../Layout/DashboardLayout';
 
 interface FileUploadProps {
   onUploadSuccess?: (data: {
@@ -169,14 +168,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
     }
   };
 
-  let content: React.ReactNode;
-  try {
-    content = (
-      <DashboardLayout>
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h5" gutterBottom>
-            파일 업로드
-          </Typography>
+  return (
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h5" gutterBottom>
+        파일 업로드
+      </Typography>
 
           <Box
             {...getRootProps()}
@@ -313,18 +309,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
               />
             </ListItem>
           </List>
-        </Paper>
-      </DashboardLayout>
-    );
-  } catch (error) {
-    console.error('FileUpload rendering error:', error);
-    content = (
-      <div className="file-upload-error">
-        파일 업로드 컴포넌트 로드 중 오류가 발생했습니다.
-      </div>
-    );
-  }
-  return content;
+    </Paper>
+  );
 };
 
 export default FileUpload;

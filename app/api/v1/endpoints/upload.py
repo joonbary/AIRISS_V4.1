@@ -79,6 +79,11 @@ async def upload_file(
         file_id = str(uuid.uuid4())
         import json
         
+        # DataFrame을 임시 파일로 저장
+        os.makedirs('temp_data', exist_ok=True)
+        file_path = f'temp_data/{file_id}.pkl'
+        df.to_pickle(file_path)
+        
         file_record = FileModel(
             id=file_id,
             filename=file.filename,
@@ -88,17 +93,10 @@ async def upload_file(
             uid_columns=json.dumps(uid_columns),  # JSON string으로 저장
             opinion_columns=json.dumps(opinion_columns),  # JSON string으로 저장
             quantitative_columns=json.dumps(quantitative_columns),  # JSON string으로 저장
-            airiss_ready=len(uid_columns) > 0 and len(opinion_columns) > 0,
-            hybrid_ready=len(quantitative_columns) > 0,
-            dataframe_path=f'temp_data/{file_id}.pkl'
+            file_path=file_path
         )
         db.add(file_record)
         db.commit()
-        
-        # DataFrame을 임시 파일로 저장
-        os.makedirs('temp_data', exist_ok=True)
-        file_path = f'temp_data/{file_id}.pkl'
-        df.to_pickle(file_path)
         
         logger.info(f"파일 저장 완료: {file_id}")
         
@@ -123,5 +121,7 @@ async def upload_file(
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
         logger.error(f"파일 업로드 오류: {e}")
-        raise HTTPException(status_code=400, detail=f"파일 처리 오류: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"파일 처리 오류: {str(e)}")

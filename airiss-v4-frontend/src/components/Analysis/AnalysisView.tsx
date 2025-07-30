@@ -20,19 +20,21 @@ import {
   CardContent,
   CircularProgress,
   SelectChangeEvent,
-  AlertTitle
+  AlertTitle,
+  InputAdornment
 } from '@mui/material';
-import { PlayArrow, Stop, Download, Info, CheckCircle, Warning } from '@mui/icons-material';
-import { startAnalysis, getAnalysisStatus, downloadResults, checkResultsAvailability, getFiles } from '../../services/api';
+import { PlayArrow, Stop, Download, Info, CheckCircle, Warning, Lock, PictureAsPdf } from '@mui/icons-material';
+import { startAnalysis, getAnalysisStatus, downloadResults, checkResultsAvailability, getFiles, API_BASE_URL } from '../../services/api';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { AnalysisResult } from '../../types';
-import DashboardLayout from '../Layout/DashboardLayout';
+import axios from 'axios';
 
 interface AnalysisViewProps {
   fileId?: string | null;
   fileName?: string;
   totalRecords?: number;
   columns?: string[];
+  onAnalysisComplete?: (jobId: string) => void;
 }
 
 interface FileInfo {
@@ -61,7 +63,8 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
   fileId: propFileId,
   fileName: propFileName,
   totalRecords: propTotalRecords,
-  columns: propColumns = []
+  columns: propColumns = [],
+  onAnalysisComplete
 }) => {
   // URL 파라미터 읽기
   const [searchParams] = useSearchParams();
@@ -121,12 +124,18 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
   const [currentFileName, setCurrentFileName] = useState<string>(fileName || '');
   const [totalRecords, setTotalRecords] = useState<number>(initialTotalRecords || 0);
   const [columns, setColumns] = useState<string[]>(initialColumns || []);
+  
+  // 작업 목록 상태 추가
+  const [existingJobs, setExistingJobs] = useState<any[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   // 상태 관리
   const [sampleSize, setSampleSize] = useState<number>(25);
   const [analysisMode, setAnalysisMode] = useState<'text' | 'quantitative' | 'hybrid'>('hybrid');
   const [enableAI, setEnableAI] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
+  const [maskedApiKey, setMaskedApiKey] = useState('');
   const [openaiModel, setOpenaiModel] = useState('gpt-3.5-turbo');
   const [maxTokens, setMaxTokens] = useState(1200);
   const [uidColumn, setUidColumn] = useState('');
@@ -142,18 +151,65 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
   const [analysisCompleted, setAnalysisCompleted] = useState(false);
   const [downloadVisible, setDownloadVisible] = useState(false);
 
-  // WebSocket 연결
+  // WebSocket 연결 (현재 폴링 전용 모드)
   const { 
     isConnected, 
     connect, 
     disconnect, 
-    sendMessage 
+    sendMessage,
+    lastMessage,
+    getJobProgress
   } = useWebSocket();
+  
+  // 강제 폴링 모드 (WebSocket 대신 폴링만 사용)
+  const [forcePollMode, setForcePollMode] = useState(true);
 
-  // WebSocket 메시지 핸들러 참조
-  const messageHandlerRef = useRef<((event: MessageEvent) => void) | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-
+  // 기존 작업 목록 가져오기
+  useEffect(() => {
+    const fetchExistingJobs = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/analysis/jobs`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        
+        if (response.ok) {
+          const jobs = await response.json();
+          const completedJobs = jobs.filter((job: any) => job.status === 'completed');
+          setExistingJobs(completedJobs);
+          
+          // 가장 최근 완료된 작업 자동 선택
+          if (completedJobs.length > 0 && !selectedJobId) {
+            const latestJob = completedJobs[completedJobs.length - 1];
+            setSelectedJobId(latestJob.id);
+            setJobId(latestJob.id);
+            
+            // 분석 결과 표시
+            if (latestJob.result && latestJob.result.analysis_results) {
+              setResults(latestJob.result);
+              setAnalysisCompleted(true);
+              setCurrentProgress(100);
+              setStatus('분석 완료!');
+              setDownloadVisible(true);
+              
+              // 부모 컴포넌트에 jobId 전달
+              if (onAnalysisComplete) {
+                onAnalysisComplete(latestJob.id);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch existing jobs:', error);
+      }
+    };
+    
+    fetchExistingJobs();
+  }, []);
+  
   // 파일 목록 가져오기 (getFiles API 사용)
   useEffect(() => {
     const fetchFiles = async () => {
@@ -248,12 +304,20 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
     return () => {
       console.log('🔌 Disconnecting WebSocket...');
       disconnect();
-      // WebSocket 이벤트 리스너 정리
-      if (messageHandlerRef.current && wsRef.current) {
-        wsRef.current.removeEventListener('message', messageHandlerRef.current);
-      }
     };
-  }, [connect, disconnect]);
+  }, []); // 빈 배열로 변경 - 컴포넌트 마운트 시에만 실행
+  
+  // 별도의 연결 상태 모니터링
+  useEffect(() => {
+    if (!isConnected && !isAnalyzing) {
+      const reconnectTimer = setTimeout(() => {
+        console.log('🔄 WebSocket disconnected, attempting to reconnect...');
+        connect(['analysis', 'alerts']);
+      }, 5000);
+      
+      return () => clearTimeout(reconnectTimer);
+    }
+  }, [isConnected, isAnalyzing]); // connect와 disconnect는 제외
 
   // UID와 Opinion 컬럼 자동 감지
   useEffect(() => {
@@ -290,133 +354,114 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
     }
   }, [validColumns, uidColumn]);
 
-  // WebSocket 메시지 핸들러 설정
+  // API 키 상태 확인
   useEffect(() => {
-    // 백엔드 메시지 핸들러
-    const handleBackendMessage = (event: MessageEvent) => {
+    const fetchApiKeyStatus = async () => {
       try {
-        const data: BackendWebSocketMessage = JSON.parse(event.data);
-        console.log('📡 Backend WebSocket message:', data);
-        
-        switch (data.type) {
-          case 'analysis_progress':
-            setCurrentProgress(data.progress || 0);
-            setStatus(`처리 중... ${data.current_uid || ''} (${data.processed || 0}/${data.total || totalRecords})`);
-              break;
-            
-          case 'analysis_completed':
+        const response = await axios.get('/api/v1/config/api-key-status');
+        if (response.data.configured) {
+          setApiKeyConfigured(true);
+          setMaskedApiKey(response.data.masked_key);
+          console.log('✅ API 키가 환경변수에 설정되어 있습니다:', response.data.masked_key);
+        } else {
+          setApiKeyConfigured(false);
+          console.log('⚠️ API 키가 환경변수에 설정되지 않았습니다');
+        }
+      } catch (error) {
+        console.error('API 키 상태 확인 실패:', error);
+        setApiKeyConfigured(false);
+      }
+    };
+
+    fetchApiKeyStatus();
+  }, []);
+
+  // useWebSocket 훅의 메시지 처리
+  useEffect(() => {
+    if (lastMessage && jobId) {
+      console.log('📡 WebSocket message:', lastMessage);
+      
+      switch (lastMessage.type) {
+        case 'analysis_preparing':
+          if (lastMessage.job_id === jobId) {
+            setCurrentProgress(0);
+            setStatus(lastMessage.message || '분석 준비 중...');
+            setIsAnalyzing(true);
+          }
+          break;
+          
+        case 'analysis_progress':
+          if (lastMessage.job_id === jobId) {
+            const progressData = getJobProgress(jobId);
+            if (progressData) {
+              setCurrentProgress(progressData.progress);
+              
+              // 준비 단계인지 실제 분석 중인지 구분
+              if (lastMessage.status === 'preparing' || progressData.progress < 10) {
+                setStatus(lastMessage.message || '분석 준비 중...');
+              } else {
+                setStatus(`처리 중... ${progressData.current_uid || ''} (${progressData.processed || 0}/${progressData.total || totalRecords})`);
+              }
+            }
+          }
+          break;
+          
+        case 'analysis_completed':
+          if (lastMessage.job_id === jobId) {
             setIsAnalyzing(false);
             setAnalysisCompleted(true);
             setCurrentProgress(100);
             setStatus('분석 완료!');
             
             // 완료 시 파일 존재 여부 확인 후 다운로드 버튼 활성화
-            if (jobId) {
-              checkAndEnableDownload(jobId).catch(console.error);
-            }
+            checkAndEnableDownload(jobId).catch(console.error);
+            refreshAnalysisStatus(jobId);
             
-            // 완료 시 결과 업데이트
-            if (data.average_score !== undefined) {
-              setResults({
-                total_analyzed: data.total_processed || totalRecords,
-                average_score: data.average_score,
-                processing_time: '처리완료'
-              } as AnalysisResult);
+            // 부모 컴포넌트에 분석 완료 알림
+            console.log('🎉 분석 완료! jobId:', jobId, 'onAnalysisComplete 함수 존재:', !!onAnalysisComplete);
+            if (onAnalysisComplete) {
+              onAnalysisComplete(jobId);
             }
-            
-            // 완료 시 상태 새로고침
-            if (jobId) {
-              refreshAnalysisStatus(jobId);
-            }
-            break;
-            
-          case 'analysis_failed':
-            setError(data.error || '분석 실패');
+          }
+          break;
+          
+        case 'analysis_failed':
+          if (lastMessage.job_id === jobId) {
+            setError(lastMessage.error || '분석 실패');
             setIsAnalyzing(false);
             setStatus('분석 실패');
             setCurrentProgress(0);
-            break;
-            
-          case 'analysis_started':
-            setStatus('분석이 시작되었습니다...');
-            setCurrentProgress(0);
-            break;
-            
-          case 'alert':
-            // alert 타입의 메시지 처리
-            if (data.level === 'success' && data.message?.includes('Analysis completed')) {
-              // 분석 완료 처리
+          }
+          break;
+          
+        case 'alert':
+          // alert 타입의 메시지 처리
+          if (lastMessage.level === 'success' && lastMessage.message?.includes('Analysis completed')) {
+            const completedJobId = lastMessage.data?.job_id || jobId;
+            if (completedJobId === jobId) {
               setIsAnalyzing(false);
               setAnalysisCompleted(true);
               setCurrentProgress(100);
               setStatus('분석 완료!');
               
-              // job_id 추출
-              const completedJobId = data.details?.job_id || jobId;
+              checkAndEnableDownload(jobId).catch(console.error);
+              refreshAnalysisStatus(jobId);
               
-              // 완료 시 파일 존재 여부 확인 후 다운로드 버튼 활성화
-              if (completedJobId) {
-                checkAndEnableDownload(completedJobId).catch(console.error);
-                refreshAnalysisStatus(completedJobId);
+              // 부모 컴포넌트에 분석 완료 알림
+              console.log('🎉 분석 완료 (alert)! completedJobId:', completedJobId, 'onAnalysisComplete 함수 옆재:', !!onAnalysisComplete);
+              if (onAnalysisComplete) {
+                onAnalysisComplete(completedJobId);
               }
-              
-              // 결과 개수 표시
-              if (data.details?.results_count) {
-                setResults({
-                  total_analyzed: data.details.results_count,
-                  average_score: 0,
-                  processing_time: '처리완료'
-                } as AnalysisResult);
-              }
-            } else if (data.level === 'error') {
-              setError(data.message || '오류 발생');
-              setIsAnalyzing(false);
-              setStatus('분석 실패');
             }
-            break;
-        }
-      } catch (err) {
-        console.error('WebSocket message parse error:', err);
+          } else if (lastMessage.level === 'error') {
+            setError(lastMessage.message || '오류 발생');
+            setIsAnalyzing(false);
+            setStatus('분석 실패');
+          }
+          break;
       }
-    };
-
-    // WebSocket 인스턴스 찾기 및 리스너 추가
-    const setupWebSocketListener = () => {
-      // WebSocketService의 실제 WebSocket 인스턴스 접근 시도
-      const webSocketService = (window as any).webSocketService;
-      const ws = webSocketService?.ws || (window as any).__airiss_ws;
-      
-      if (ws && ws.addEventListener) {
-        console.log('✅ Setting up WebSocket listener');
-        wsRef.current = ws;
-        messageHandlerRef.current = handleBackendMessage;
-        ws.addEventListener('message', handleBackendMessage);
-        return true;
-      }
-      return false;
-    };
-
-    // 즉시 시도하고, 실패하면 지연 후 재시도
-    if (!setupWebSocketListener()) {
-      const retryTimer = setTimeout(() => {
-        setupWebSocketListener();
-      }, 1000);
-      
-      return () => {
-        clearTimeout(retryTimer);
-        if (messageHandlerRef.current && wsRef.current) {
-          wsRef.current.removeEventListener('message', messageHandlerRef.current);
-        }
-      };
     }
-
-    // 클린업
-    return () => {
-      if (messageHandlerRef.current && wsRef.current) {
-        wsRef.current.removeEventListener('message', messageHandlerRef.current);
-      }
-    };
-  }, [jobId, totalRecords, isAnalyzing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lastMessage, jobId, totalRecords, getJobProgress]);
 
   // 파일 존재 여부 확인 및 다운로드 버튼 활성화
   const checkAndEnableDownload = async (jobId: string) => {
@@ -475,7 +520,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
     }
   };
 
-  // 분석 상태 폴링 (WebSocket 연결 실패 시 폴백)
+  // 분석 상태 폴링 (강제 폴링 모드 또는 WebSocket 실패 시)
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
@@ -487,16 +532,23 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
           const statusData = await getAnalysisStatus(jobId);
           console.log('📊 Polling status:', statusData);
           
-          // 폴링은 WebSocket이 연결되지 않았을 때만 진행률 업데이트
-          if (!isConnected) {
+          // 폴링: WebSocket 불안정 시에도 진행률 및 완료상태 감지
+          console.log('📊 Polling status update:', statusData);
+          
+          // 강제 폴링 모드이거나 WebSocket이 연결되지 않았으면 폴링으로 업데이트
+          if (forcePollMode || !isConnected) {
+            console.log('🔄 Updating via polling (Force polling mode or WebSocket disconnected)');
             setCurrentProgress(statusData.progress || 0);
             setStatus(`처리 중... (${statusData.processed || 0}/${statusData.total || totalRecords})`);
           }
           
+          // 분석 완료는 WebSocket 상태와 관계없이 항상 확인
           if (statusData.status === 'completed') {
+            console.log('🎯 Analysis completed detected via polling!', statusData);
             setIsAnalyzing(false);
             setAnalysisCompleted(true);
             setCurrentProgress(100);
+            setStatus('분석 완료!');
             clearInterval(interval);
             
             // 파일 존재 여부 확인 후 다운로드 버튼 활성화
@@ -519,11 +571,69 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
         } catch (err) {
           console.error('❌ Polling error:', err);
         }
-      }, 3000); // 3초마다 상태 확인
+      }, forcePollMode ? 1500 : (isConnected ? 5000 : 2000)); // 강제 폴링 모드: 1.5초, 기타: 기존 로직
 
       return () => clearInterval(interval);
     }
   }, [jobId, isAnalyzing, totalRecords, isConnected]);
+
+  // WebSocket 메시지 처리 (강제 폴링 모드에서는 비활성화)
+  useEffect(() => {
+    if (!lastMessage || forcePollMode) return;
+    
+    console.log('📨 WebSocket message received:', lastMessage);
+    
+    const handleWebSocketMessage = async () => {
+      // 분석 진행 상황 업데이트
+      if (lastMessage.type === 'analysis_progress' && lastMessage.job_id === jobId) {
+        console.log('📊 Progress update:', lastMessage);
+        setCurrentProgress(lastMessage.progress || 0);
+        setStatus(`처리 중... (${lastMessage.processed || 0}/${lastMessage.total || totalRecords})`);
+        
+        // 평균 점수가 있으면 결과 업데이트
+        if (lastMessage.average_score !== undefined) {
+          setResults({
+            total_analyzed: lastMessage.processed || 0,
+            average_score: lastMessage.average_score,
+            processing_time: '진행 중...'
+          } as AnalysisResult);
+        }
+      }
+      
+      // 분석 완료 처리
+      if (lastMessage.type === 'analysis_completed' && lastMessage.job_id === jobId) {
+        console.log('🎯 Analysis completed via WebSocket!', lastMessage);
+        setIsAnalyzing(false);
+        setAnalysisCompleted(true);
+        setCurrentProgress(100);
+        setStatus('분석 완료!');
+        
+        // 결과 설정
+        if (lastMessage.average_score !== undefined) {  
+          setResults({
+            total_analyzed: lastMessage.total_processed || totalRecords,
+            average_score: lastMessage.average_score,
+            processing_time: '완료'
+          } as AnalysisResult);
+        }
+        
+        // 파일 존재 여부 확인 후 다운로드 버튼 활성화
+        if (jobId) {
+          await checkAndEnableDownload(jobId);
+        }
+      }
+      
+      // 분석 실패 처리
+      if (lastMessage.type === 'analysis_failed' && lastMessage.job_id === jobId) {
+        console.log('❌ Analysis failed via WebSocket:', lastMessage);
+        setIsAnalyzing(false);
+        setCurrentProgress(0);
+        setError(lastMessage.error || '분석 실패');
+      }
+    };
+
+    handleWebSocketMessage();
+  }, [lastMessage, jobId, totalRecords]);
 
   // 분석 시작
   const handleStartAnalysis = async () => {
@@ -559,13 +669,25 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
     setResults(null);
 
     try {
+      // 강제 폴링 모드에서는 WebSocket 연결 시도하지 않음
+      if (!forcePollMode && !isConnected) {
+        console.log('🔌 Connecting to WebSocket...');
+        try {
+          await connect(['analysis', 'alerts']);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (wsError) {
+          console.warn('⚠️ WebSocket connection failed, using polling mode:', wsError);
+        }
+      }
+
       // 백엔드 요청 파라미터 (AnalysisRequest 모델과 완벽히 일치)
       const requestParams = {
         file_id: currentFileId,
         sample_size: sampleSize,
         analysis_mode: analysisMode,
         enable_ai_feedback: enableAI,
-        openai_api_key: enableAI ? apiKey : undefined,
+        // API 키가 환경변수에 설정되어 있으면 전송하지 않음
+        openai_api_key: enableAI && !apiKeyConfigured ? apiKey : undefined,
         openai_model: openaiModel,
         max_tokens: maxTokens
       };
@@ -578,6 +700,13 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
       
       setJobId(response.job_id);
       setStatus(response.message || '분석이 시작되었습니다');
+      console.log('🎯 분석 시작됨. jobId:', response.job_id);
+      
+      // 분석 시작 시 부모 컴포넌트에 jobId 전달
+      if (onAnalysisComplete) {
+        console.log('🚀 분석 시작 시 부모에게 jobId 전달:', response.job_id);
+        onAnalysisComplete(response.job_id);
+      }
       
       // WebSocket 메시지 전송 (분석 구독)
       if (isConnected && sendMessage) {
@@ -587,6 +716,8 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
           job_id: response.job_id
         });
         console.log('📡 Subscribe to analysis channel:', subscribeSuccess);
+      } else {
+        console.warn('⚠️ WebSocket not connected, will rely on polling');
       }
     } catch (err: any) {
       console.error('❌ Analysis start failed:', err);
@@ -645,6 +776,54 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
     }
   };
 
+  // 개인별 PDF 다운로드
+  const handlePdfDownload = async (employeeId: string, employeeName: string = '') => {
+    if (!jobId) {
+      setError('다운로드할 분석 결과가 없습니다.');
+      return;
+    }
+
+    try {
+      console.log('📄 AnalysisView PDF 다운로드:', { 
+        employeeId: employeeId, 
+        employeeIdType: typeof employeeId,
+        employeeIdLength: employeeId.length,
+        containsDtype: employeeId.includes('dtype'),
+        callStack: new Error().stack
+      });
+      
+      const response = await fetch(`${API_BASE_URL}/api/v1/analysis/pdf/${jobId}/${employeeId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      
+      // 다운로드 실행
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `AIRISS_v4_${employeeId}_${employeeName}_리포트.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('✅ PDF Download completed');
+    } catch (err: any) {
+      console.error('❌ PDF Download failed:', err);
+      setError(`PDF 다운로드 실패: ${err.message || '알 수 없는 오류'}`);
+    }
+  };
+
   // Select 핸들러
   const handleSampleSizeChange = (event: SelectChangeEvent<number>) => {
     setSampleSize(event.target.value as number);
@@ -663,7 +842,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
   };
 
   return (
-    <DashboardLayout>
+    <Box>
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h5" gutterBottom>
           AIRISS v4.0 분석 설정
@@ -677,6 +856,67 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
         )}
 
         <Grid container spacing={3}>
+          {/* 기존 분석 결과 */}
+          {existingJobs.length > 0 && (
+            <Grid item xs={12}>
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    기존 분석 결과
+                  </Typography>
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+                    <Select
+                      value={selectedJobId || ''}
+                      onChange={(e) => {
+                        const jobId = e.target.value;
+                        setSelectedJobId(jobId);
+                        setJobId(jobId);
+                        
+                        // 선택된 작업의 결과 표시
+                        const job = existingJobs.find(j => j.id === jobId);
+                        if (job && job.result) {
+                          setResults(job.result);
+                          setAnalysisCompleted(true);
+                          setCurrentProgress(100);
+                          setStatus('분석 완료!');
+                          setDownloadVisible(true);
+                          
+                          // 파일 정보 업데이트
+                          if (job.file_id) {
+                            setCurrentFileId(job.file_id);
+                            setCurrentFileName(job.filename || '');
+                          }
+                          
+                          // 부모 컴포넌트에 jobId 전달
+                          if (onAnalysisComplete) {
+                            onAnalysisComplete(jobId);
+                          }
+                        }
+                      }}
+                      displayEmpty
+                    >
+                      <MenuItem value="" disabled>
+                        분석 결과를 선택하세요
+                      </MenuItem>
+                      {existingJobs.map((job) => (
+                        <MenuItem key={job.id} value={job.id}>
+                          {job.filename || '알 수 없는 파일'} - {new Date(job.created_at).toLocaleString('ko-KR')}
+                          {job.result?.analysis_results && ` (${job.result.analysis_results.length}명 분석)`}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  {selectedJobId && results && (
+                    <Alert severity="success" sx={{ mt: 2 }}>
+                      <AlertTitle>분석 완료</AlertTitle>
+                      {results.analysis_results?.length || 0}명의 직원 분석 완료
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+          
           {/* 파일 정보 */}
           <Grid item xs={12}>
             <Card variant="outlined">
@@ -832,9 +1072,18 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
                   fullWidth
                   type="password"
                   label="OpenAI API Key"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-..."
+                  value={apiKeyConfigured ? maskedApiKey : apiKey}
+                  onChange={(e) => !apiKeyConfigured && setApiKey(e.target.value)}
+                  placeholder={apiKeyConfigured ? "환경변수에 설정됨" : "sk-..."}
+                  disabled={apiKeyConfigured}
+                  InputProps={{
+                    startAdornment: apiKeyConfigured ? (
+                      <InputAdornment position="start">
+                        <Lock color="success" fontSize="small" />
+                      </InputAdornment>
+                    ) : undefined,
+                  }}
+                  helperText={apiKeyConfigured ? "API 키가 안전하게 서버에 설정되어 있습니다" : ""}
                 />
               </Grid>
               
@@ -926,9 +1175,23 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
               }}
             />
           </Box>
-          <Typography variant="body2" color="text.secondary">
-            {status || '처리 중...'} - {(currentProgress || 0).toFixed(0)}% 완료
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              {status || '처리 중...'} - {(currentProgress || 0).toFixed(0)}% 완료
+              {forcePollMode && <span style={{ color: '#2196F3', marginLeft: '8px' }}>(폴링 모드)</span>}
+            </Typography>
+            {jobId && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => jobId && refreshAnalysisStatus(jobId)}
+                disabled={!jobId}
+                sx={{ ml: 2 }}
+              >
+                상태 새로고침
+              </Button>
+            )}
+          </Box>
         </Paper>
       )}
 
@@ -977,6 +1240,81 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
               </Card>
             </Grid>
           </Grid>
+          
+          {/* 분석 결과 상세 보기 */}
+          {results && results.analysis_results && results.analysis_results.length > 0 && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                직원별 분석 결과
+              </Typography>
+              <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+                {results.analysis_results.map((result: any, index: number) => (
+                  <Card key={index} sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={5}>
+                          <Typography variant="subtitle1" fontWeight="bold">
+                            {result.name || result.employee_id || result.uid || `직원 ${index + 1}`}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            최종 점수: <strong>{result.final_score?.toFixed(1) || 'N/A'}점</strong>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={5}>
+                          {result.qualitative_scores && (
+                            <>
+                              <Typography variant="body2">
+                                정성 점수: {result.qualitative_scores.sentiment?.toFixed(1) || 'N/A'}
+                              </Typography>
+                              <Typography variant="body2">
+                                키워드 점수: {result.qualitative_scores.keyword?.toFixed(1) || 'N/A'}
+                              </Typography>
+                            </>
+                          )}
+                        </Grid>
+                        <Grid item xs={12} sm={2}>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<PictureAsPdf />}
+                            onClick={() => handlePdfDownload(
+                              result.employee_id || result.uid || `employee_${index + 1}`,
+                              result.name || ''
+                            )}
+                            sx={{
+                              color: '#FF5722',
+                              borderColor: '#FF5722',
+                              '&:hover': { 
+                                borderColor: '#E64A19',
+                                bgcolor: 'rgba(255, 87, 34, 0.08)'
+                              }
+                            }}
+                          >
+                            PDF
+                          </Button>
+                        </Grid>
+                        {result.top_keywords && result.top_keywords.length > 0 && (
+                          <Grid item xs={12}>
+                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 1 }}>
+                              <Typography variant="body2" color="text.secondary">주요 키워드:</Typography>
+                              {result.top_keywords.map((kw: any, idx: number) => (
+                                <Chip
+                                  key={idx}
+                                  label={`${kw.keyword} (${kw.count})`}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              ))}
+                            </Box>
+                          </Grid>
+                        )}
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+            </Box>
+          )}
           
           {console.log('🔍 다운로드 버튼 렌더링 체크:', {
             downloadVisible,
@@ -1035,7 +1373,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
           </>
         </Paper>
       )}
-    </DashboardLayout>
+    </Box>
   );
 }
 

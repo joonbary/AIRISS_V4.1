@@ -233,6 +233,7 @@ export interface AnalysisResult {
   average_score: number;
   processing_time: string;
   results: EmployeeAnalysisResult[];
+  analysis_results?: any[]; // 백엔드 호환성을 위해 추가
   analysis_summary: AnalysisSummary;
   metadata: {
     analysis_mode: string;

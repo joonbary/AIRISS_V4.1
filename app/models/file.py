@@ -22,11 +22,7 @@ class File(Base):
     quantitative_columns = Column(Text)  # JSON
     
     file_path = Column(String(500))
-    dataframe_path = Column(String(500))
     
     user_id = Column(String(255))
     session_id = Column(String(255))
     size = Column(BigInteger, default=0)
-    
-    airiss_ready = Column(Boolean, default=False)
-    hybrid_ready = Column(Boolean, default=False)

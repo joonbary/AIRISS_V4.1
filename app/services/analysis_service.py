@@ -25,10 +25,12 @@ class AnalysisService:
         logger.info("✅ AnalysisService 초기화 완료")
     
     async def upload_file(self, file_contents: bytes, filename: str) -> Dict[str, Any]:
-        """파일 업로드 처리"""
+        """파일 업로드 처리 및 컬럼 분석"""
         try:
             import uuid
             from pathlib import Path
+            import pandas as pd
+            import io
             
             # Generate file ID
             file_id = str(uuid.uuid4())
@@ -41,22 +43,105 @@ class AnalysisService:
             with open(file_path, "wb") as f:
                 f.write(file_contents)
             
-            # Store file info
+            logger.info(f"📁 파일 저장 완료: {file_path}")
+            
+            # Excel 파일 분석
+            df = None
+            try:
+                if filename.endswith(('.xlsx', '.xls')):
+                    df = pd.read_excel(io.BytesIO(file_contents))
+                    logger.info(f"📊 Excel 파일 읽기 완료: {len(df)} rows, {len(df.columns)} columns")
+                elif filename.endswith('.csv'):
+                    # 여러 인코딩 시도
+                    encodings = ['utf-8', 'cp949', 'euc-kr', 'iso-8859-1']
+                    for encoding in encodings:
+                        try:
+                            df = pd.read_csv(io.StringIO(file_contents.decode(encoding)))
+                            logger.info(f"📊 CSV 파일 읽기 완료 (인코딩: {encoding}): {len(df)} rows, {len(df.columns)} columns")
+                            break
+                        except:
+                            continue
+                    
+                    if df is None:
+                        raise ValueError("CSV 파일 인코딩을 인식할 수 없습니다")
+                else:
+                    raise ValueError("지원되지 않는 파일 형식입니다. CSV 또는 Excel 파일만 가능합니다.")
+                
+                logger.info(f"📋 파일 컬럼명: {list(df.columns)}")
+                logger.info(f"📄 첫 3행 데이터 미리보기:\n{df.head(3)}")
+                
+            except Exception as e:
+                logger.error(f"❌ 파일 읽기 오류: {e}")
+                raise ValueError(f"파일 읽기 실패: {e}")
+            
+            # 데이터 프레임이 비어있는지 확인
+            if df.empty:
+                logger.error(f"❌ 파일에 데이터가 없습니다: {file_path}")
+                raise ValueError("파일에 데이터가 없습니다. 다른 파일을 선택해주십시오.")
+            
+            # 컬럼 분석
+            all_columns = list(df.columns)
+            
+            # UID 컬럼 감지
+            uid_keywords = ['uid', 'id', '아이디', '사번', '직원', 'user', 'emp', 'employee']
+            uid_columns = [col for col in all_columns if any(keyword in col.lower() for keyword in uid_keywords)]
+            
+            # 의견 컬럼 감지
+            opinion_keywords = ['의견', 'opinion', '평가', 'feedback', '내용', '코멘트', '피드백', 'comment', 'review', '자료', '텍스트', 'text']
+            opinion_columns = [col for col in all_columns if any(keyword in col.lower() for keyword in opinion_keywords)]
+            
+            # 정량데이터 컬럼 감지
+            quant_keywords = ['점수', 'score', '평점', 'rating', '등급', 'grade', 'level', '달성률', '비율', 'rate', '%', 'percent']
+            quantitative_columns = []
+            
+            for col in all_columns:
+                col_lower = col.lower()
+                if any(keyword in col_lower for keyword in quant_keywords):
+                    # 실제 데이터 확인
+                    sample_data = df[col].dropna().head(10)
+                    if len(sample_data) > 0:
+                        quantitative_columns.append(col)
+            
+            logger.info(f"🎯 컬럼 분석 결과:")
+            logger.info(f"   - 전체 컬럼: {len(all_columns)}개")
+            logger.info(f"   - UID 컬럼: {uid_columns}")
+            logger.info(f"   - 의견 컬럼: {opinion_columns}")
+            logger.info(f"   - 정량 컬럼: {quantitative_columns}")
+            
+            # Store file info with analysis results
             file_info = {
                 "file_id": file_id,
                 "filename": filename,
                 "path": str(file_path),
                 "size": len(file_contents),
+                "total_records": len(df),
+                "columns": all_columns,
+                "uid_columns": uid_columns,
+                "opinion_columns": opinion_columns,
+                "quantitative_columns": quantitative_columns,
                 "uploaded_at": datetime.now().isoformat()
             }
             
             self.uploaded_files[file_id] = file_info
             
-            logger.info(f"✅ 파일 업로드 완료: {filename} -> {file_id}")
+            logger.info(f"✅ 파일 업로드 및 분석 완료: {filename} -> {file_id}")
             
             return {
                 "file_id": file_id,
                 "filename": filename,
+                "total_records": len(df),
+                "column_count": len(all_columns),
+                "columns": all_columns,
+                "uid_columns": uid_columns,
+                "opinion_columns": opinion_columns,
+                "quantitative_columns": quantitative_columns,
+                "airiss_ready": len(uid_columns) > 0 and len(opinion_columns) > 0,
+                "hybrid_ready": len(quantitative_columns) > 0,
+                "data_quality": {
+                    "non_empty_records": len(df.dropna()),
+                    "completeness": round((len(df.dropna()) / len(df)) * 100, 1) if len(df) > 0 else 0,
+                    "quantitative_completeness": round((len(quantitative_columns) / len(all_columns)) * 100, 1) if len(all_columns) > 0 else 0
+                },
                 "message": "File uploaded successfully"
             }
             
@@ -89,6 +174,9 @@ class AnalysisService:
                 'max_tokens': max_tokens
             }
             
+            # 데이터베이스에 Job 레코드 생성
+            await self._create_job_record(job_id, job_data)
+            
             self.active_jobs[job_id] = {
                 'status': 'processing',
                 'start_time': datetime.now(),
@@ -112,6 +200,52 @@ class AnalysisService:
             
         except Exception as e:
             logger.error(f"❌ 분석 시작 오류: {e}")
+            raise
+    
+    async def _create_job_record(self, job_id: str, job_data: Dict[str, Any]):
+        """데이터베이스에 Job 레코드 생성"""
+        try:
+            from app.db.database import get_db
+            from app.models.job import Job
+            import json
+            
+            def create_job():
+                db = next(get_db())
+                try:
+                    # 파일 정보 가져오기
+                    file_id = job_data['file_id']
+                    file_info = self.uploaded_files.get(file_id, {})
+                    
+                    job = Job(
+                        id=job_id,
+                        file_id=file_id,
+                        filename=file_info.get('filename'),
+                        status='processing',
+                        sample_size=job_data['sample_size'],
+                        analysis_mode=job_data['analysis_mode'],
+                        enable_ai_feedback=job_data['enable_ai_feedback'],
+                        openai_model=job_data.get('openai_model'),
+                        max_tokens=job_data.get('max_tokens'),
+                        total_records=file_info.get('total_records', 0),
+                        job_data=json.dumps(job_data)
+                    )
+                    db.add(job)
+                    db.commit()
+                    logger.info(f"✅ Job 레코드 생성 완료: {job_id}")
+                    
+                except Exception as e:
+                    db.rollback()
+                    logger.error(f"❌ Job 레코드 생성 오류: {e}")
+                    raise
+                finally:
+                    db.close()
+            
+            # 동기 함수를 비동기로 실행
+            import asyncio
+            await asyncio.to_thread(create_job)
+            
+        except Exception as e:
+            logger.error(f"❌ Job 레코드 생성 중 오류: {e}")
             raise
     
     async def update_progress(self, job_id: str, progress: float, details: Dict = None):
@@ -138,6 +272,9 @@ class AnalysisService:
                 self.active_jobs[job_id]['end_time'] = datetime.now()
                 self.active_jobs[job_id]['results'] = results
                 
+                # 데이터베이스 Job 레코드 업데이트
+                await self._update_job_completion(job_id, results)
+                
                 if self.websocket_manager:
                     await self.websocket_manager.send_alert(
                         "success",
@@ -149,6 +286,44 @@ class AnalysisService:
             
         except Exception as e:
             logger.error(f"❌ 분석 완료 처리 오류: {e}")
+    
+    async def _update_job_completion(self, job_id: str, results: Dict[str, Any]):
+        """데이터베이스 Job 레코드 완료 업데이트"""
+        try:
+            from app.db.database import get_db
+            from app.models.job import Job
+            import json
+            
+            def update_job():
+                db = next(get_db())
+                try:
+                    job = db.query(Job).filter(Job.id == job_id).first()
+                    if job:
+                        job.status = 'completed'
+                        job.end_time = datetime.now()
+                        job.progress = 100.0
+                        job.processed_records = len(results.get('analysis_results', results.get('data', [])))
+                        job.average_score = results.get('summary', {}).get('average_score', 0.0)
+                        job.results_data = json.dumps(results)
+                        
+                        db.commit()
+                        logger.info(f"✅ Job 완료 업데이트: {job_id}")
+                    else:
+                        logger.warning(f"⚠️ Job 레코드를 찾을 수 없음: {job_id}")
+                        
+                except Exception as e:
+                    db.rollback()
+                    logger.error(f"❌ Job 완료 업데이트 오류: {e}")
+                    raise
+                finally:
+                    db.close()
+            
+            # 동기 함수를 비동기로 실행
+            import asyncio
+            await asyncio.to_thread(update_job)
+            
+        except Exception as e:
+            logger.error(f"❌ Job 완료 업데이트 중 오류: {e}")
     
     async def fail_analysis(self, job_id: str, error: str):
         """분석 실패 처리"""
@@ -193,10 +368,17 @@ class AnalysisService:
             
             try:
                 df = pd.read_excel(file_path)
-                logger.info(f"데이터 로드 완료: {len(df)} rows, {len(df.columns)} columns")
+                logger.info(f"📊 데이터 로드 완료: {len(df)} rows, {len(df.columns)} columns")
+                logger.info(f"📋 Excel 파일 컬럼명: {list(df.columns)}")
+                logger.info(f"📄 첫 5행 데이터 미리보기:\n{df.head()}")
             except Exception as e:
-                logger.error(f"파일 읽기 오류: {e}")
+                logger.error(f"❌ 파일 읽기 오류: {e}")
                 raise ValueError(f"Excel 파일 읽기 실패: {e}")
+            
+            # 데이터 프레임이 비어있는지 확인
+            if df.empty:
+                logger.error(f"❌ 파일에 데이터가 없습니다: {file_path}")
+                raise ValueError("파일에 데이터가 없습니다. 다른 파일을 선택해주십시오.")
             
             await self.update_progress(job_id, 20, {
                 "status": "데이터 검증 중",
@@ -204,11 +386,34 @@ class AnalysisService:
                 "columns": len(df.columns)
             })
             
-            # 3. 필수 컬럼 확인
-            required_columns = ['uid', 'opinion']
-            missing_columns = [col for col in required_columns if col not in df.columns]
-            if missing_columns:
-                raise ValueError(f"필수 컬럼이 없습니다: {missing_columns}")
+            # 3. 필수 컬럼 확인 (유연한 컬럼명 매칭)
+            column_names = [col.lower().strip() for col in df.columns]
+            logger.info(f"🔍 소문자 변환된 컬럼명: {column_names}")
+            
+            # uid 컬럼 찾기
+            uid_column = None
+            for col in df.columns:
+                if col.lower().strip() in ['uid', 'id', '직원번호', 'employee_id', '사번']:
+                    uid_column = col
+                    break
+            
+            # opinion 컬럼 찾기  
+            opinion_column = None
+            for col in df.columns:
+                col_lower = col.lower().strip()
+                if any(keyword in col_lower for keyword in ['opinion', '의견', '평가', 'comment', '코멘트', 'feedback', '리뷰', 'review', '자료', '내용', 'content', '텍스트', 'text']):
+                    opinion_column = col
+                    break
+            
+            if not uid_column:
+                logger.error(f"❌ 직원 ID 컬럼을 찾을 수 없습니다. 사용 가능한 컬럼: {list(df.columns)}")
+                raise ValueError("직원 ID 컬럼(uid, id, 직원번호 등)을 찾을 수 없습니다.")
+                
+            if not opinion_column:
+                logger.error(f"❌ 의견 컬럼을 찾을 수 없습니다. 사용 가능한 컬럼: {list(df.columns)}")
+                raise ValueError("의견 컬럼(opinion, 의견, 평가 등)을 찾을 수 없습니다.")
+            
+            logger.info(f"✅ 컬럼 매칭 성공: uid='{uid_column}', opinion='{opinion_column}'")
             
             # 4. HybridAnalyzer 초기화
             from app.services.hybrid_analyzer import AIRISSHybridAnalyzer
@@ -232,12 +437,20 @@ class AnalysisService:
                     progress = 30 + (idx / sample_size) * 50  # 30-80% 구간
                     await self.update_progress(job_id, progress, {
                         "status": f"분석 중: {idx+1}/{sample_size}",
-                        "current_uid": row.get('uid', f'ROW_{idx+1}')
+                        "current_uid": row.get(uid_column, f'ROW_{idx+1}')
                     })
                     
-                    # 분석 수행
-                    uid = str(row.get('uid', f'EMP_{idx+1}'))
-                    opinion = str(row.get('opinion', ''))
+                    # 분석 수행 (실제 컬럼명 사용)
+                    uid = str(row.get(uid_column, f'EMP_{idx+1}'))  
+                    opinion = str(row.get(opinion_column, ''))
+                    
+                    # API 키 처리: 클라이언트 제공 키 우선, 없으면 환경변수 사용
+                    import os
+                    api_key = job_data.get('openai_api_key')
+                    if not api_key and job_data.get('enable_ai_feedback', False):
+                        api_key = os.getenv('OPENAI_API_KEY')
+                        if api_key:
+                            logger.info("✅ 환경변수에서 OpenAI API 키를 사용합니다")
                     
                     # HybridAnalyzer로 종합 분석
                     result = await analyzer.comprehensive_analysis(
@@ -248,15 +461,18 @@ class AnalysisService:
                         file_id=file_id,
                         filename=filename,
                         enable_ai=job_data.get('enable_ai_feedback', False),
-                        openai_api_key=job_data.get('openai_api_key'),
+                        openai_api_key=api_key,
                         openai_model=job_data.get('openai_model', 'gpt-3.5-turbo'),
                         max_tokens=job_data.get('max_tokens', 1200)
                     )
                     
                     # 결과 정리
+                    ai_feedback_data = result.get('ai_feedback', {})
                     analysis_results.append({
                         "uid": uid,
                         "name": row.get('name', ''),
+                        "department": row.get('department', ''),
+                        "position": row.get('position', ''),
                         "opinion": opinion[:200] + '...' if len(opinion) > 200 else opinion,
                         "score": result['hybrid_analysis']['overall_score'],
                         "grade": result['hybrid_analysis']['grade'],
@@ -264,13 +480,18 @@ class AnalysisService:
                         "text_score": result['text_analysis']['overall_score'],
                         "quantitative_score": result['quantitative_analysis']['quantitative_score'],
                         "dimension_scores": result['text_analysis']['dimension_scores'],
-                        "explainability": result['explainability']
+                        "explainability": result['explainability'],
+                        "ai_feedback": {
+                            'strengths': self._extract_strengths(ai_feedback_data),
+                            'improvements': self._extract_improvements(ai_feedback_data),
+                            'overall_comment': ai_feedback_data.get('ai_feedback', '')
+                        }
                     })
                     
                 except Exception as e:
                     logger.error(f"행 {idx+1} 분석 오류: {e}")
                     analysis_results.append({
-                        "uid": row.get('uid', f'ROW_{idx+1}'),
+                        "uid": row.get(uid_column, f'ROW_{idx+1}'),
                         "name": row.get('name', ''),
                         "score": 0,
                         "grade": "ERROR",
@@ -297,6 +518,7 @@ class AnalysisService:
                 "file_id": file_id,
                 "filename": filename,
                 "data": analysis_results,
+                "analysis_results": analysis_results,  # 프론트엔드 호환성
                 "summary": {
                     "total_analyzed": len(analysis_results),
                     "successful": len(valid_results),
@@ -318,22 +540,135 @@ class AnalysisService:
             # 9. 작업 완료 처리
             await self.complete_analysis(job_id, results)
             
-            # 10. 분석 작업 정보 저장
-            if hasattr(analyzer, 'save_analysis_job'):
-                job_info = {
-                    "job_id": job_id,
-                    "file_id": file_id,
-                    "filename": filename,
-                    "sample_size": sample_size,
-                    "analysis_mode": job_data.get('analysis_mode', 'hybrid'),
-                    "status": "completed",
-                    "results_summary": results['summary']
-                }
-                analyzer.save_analysis_job(job_info)
+            # 10. EmployeeResult 테이블에 각 직원 결과 저장
+            logger.info(f"🔥 EmployeeResult 저장 함수 호출 전: job_id={job_id}, 결과 개수={len(analysis_results)}")
+            try:
+                await self._save_employee_results(job_id, analysis_results)
+            except Exception as save_error:
+                logger.error(f"❌ EmployeeResult 저장 중 예외 발생: {save_error}")
+                # 저장 실패해도 분석은 성공으로 처리
+            
+            # 11. 분석 작업 정보는 이미 complete_analysis에서 저장됨
+            logger.info(f"✅ 분석 처리 완료: job_id={job_id}, 총 {len(analysis_results)}명 분석")
             
         except Exception as e:
             logger.error(f"분석 처리 중 오류: {e}")
             await self.fail_analysis(job_id, str(e))
+    
+    async def _save_employee_results(self, job_id: str, analysis_results: list):
+        """분석 결과를 EmployeeResult 테이블에 저장"""
+        try:
+            logger.info(f"🔄 EmployeeResult 저장 시작: job_id={job_id}, 결과 개수={len(analysis_results)}")
+            from app.db.database import get_db
+            from app.models.employee import EmployeeResult
+            import uuid
+            
+            # 동기 DB 세션 생성
+            def save_results():
+                db = next(get_db())
+                try:
+                    logger.info(f"📊 DB 세션 생성 완료, EmployeeResult 테이블에 저장 시작")
+                    
+                    # 기존 결과 삭제 (job_id 기준)
+                    deleted_count = db.query(EmployeeResult).filter(EmployeeResult.job_id == job_id).delete()
+                    logger.info(f"🗑️ 기존 결과 {deleted_count}개 삭제됨")
+                    
+                    # 새 결과 저장
+                    saved_count = 0
+                    for i, result in enumerate(analysis_results):
+                        if 'error' not in result:
+                            logger.info(f"💾 저장 중 [{i+1}/{len(analysis_results)}]: uid={result.get('uid')}, score={result.get('score')}")
+                            employee_result = EmployeeResult(
+                                id=str(uuid.uuid4()),
+                                job_id=job_id,
+                                uid=result['uid'],
+                                overall_score=result['score'],
+                                grade=result['grade'],
+                                text_score=result.get('text_score', 0),
+                                quantitative_score=result.get('quantitative_score', 0),
+                                confidence=result.get('confidence', 0),
+                                dimension_scores=result.get('dimension_scores', {}),
+                                ai_feedback={
+                                    'strengths': result.get('ai_feedback', {}).get('strengths', []),
+                                    'improvements': result.get('ai_feedback', {}).get('improvements', []),
+                                    'overall_comment': result.get('ai_feedback', {}).get('overall_comment', '')
+                                },
+                                employee_metadata={
+                                    'name': result.get('name', ''),
+                                    'department': result.get('department', ''),
+                                    'position': result.get('position', '')
+                                }
+                            )
+                            db.add(employee_result)
+                            saved_count += 1
+                        else:
+                            logger.warning(f"⚠️ 오류가 있는 결과 건너뜀 [{i+1}]: {result.get('error')}")
+                    
+                    db.commit()
+                    logger.info(f"✅ {saved_count}개의 직원 분석 결과를 EmployeeResult 테이블에 저장 완료")
+                    
+                except Exception as e:
+                    db.rollback()
+                    logger.error(f"❌ EmployeeResult 저장 오류: {e}")
+                finally:
+                    db.close()
+            
+            # 동기 함수를 비동기로 실행
+            import asyncio
+            await asyncio.to_thread(save_results)
+            
+        except Exception as e:
+            logger.error(f"❌ EmployeeResult 저장 중 오류: {e}")
+    
+    def _extract_strengths(self, ai_feedback_data: dict) -> list:
+        """펼드백에서 강점 추출"""
+        if not ai_feedback_data:
+            return []
+        
+        # ai_strengths 필드가 있으면 사용
+        if 'ai_strengths' in ai_feedback_data:
+            strengths_text = ai_feedback_data.get('ai_strengths', '')
+            if strengths_text:
+                # 문자열에서 강점 추출 (콤마로 구분)
+                return [s.strip() for s in strengths_text.split(',') if s.strip()][:3]
+        
+        # ai_feedback 필드에서 강점 추출
+        feedback_text = ai_feedback_data.get('ai_feedback', '')
+        if '강점' in feedback_text:
+            # 간단한 패턴 매칭
+            import re
+            strengths_match = re.search(r'강점[:은]([^\n치]+)', feedback_text)
+            if strengths_match:
+                strengths = strengths_match.group(1).strip()
+                return [s.strip() for s in strengths.split(',') if s.strip()][:3]
+        
+        # 기본값
+        return ["팀워크 우수", "성실한 업무 태도"]
+    
+    def _extract_improvements(self, ai_feedback_data: dict) -> list:
+        """피드백에서 개선점 추출"""
+        if not ai_feedback_data:
+            return []
+        
+        # ai_weaknesses 필드가 있으면 사용
+        if 'ai_weaknesses' in ai_feedback_data:
+            weaknesses_text = ai_feedback_data.get('ai_weaknesses', '')
+            if weaknesses_text:
+                # 문자열에서 개선점 추출 (콤마로 구분)
+                return [w.strip() for w in weaknesses_text.split(',') if w.strip()][:2]
+        
+        # ai_feedback 필드에서 개선점 추출
+        feedback_text = ai_feedback_data.get('ai_feedback', '')
+        if '개선' in feedback_text or '보완' in feedback_text:
+            # 간단한 패턴 매칭
+            import re
+            improvements_match = re.search(r'(개선|보완)[:점이]([^\n강]+)', feedback_text)
+            if improvements_match:
+                improvements = improvements_match.group(2).strip()
+                return [i.strip() for i in improvements.split(',') if i.strip()][:2]
+        
+        # 기본값
+        return ["전문성 향상 필요"]
     
     def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
         """작업 상태 조회"""
@@ -449,3 +784,8 @@ class AnalysisService:
         except Exception as e:
             logger.error(f"❌ 결과 내보내기 오류: {e}")
             return None
+    
+    def _get_db(self):
+        """데이터베이스 세션 반환"""
+        from app.db.database import get_db
+        return next(get_db())

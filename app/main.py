@@ -3,20 +3,23 @@
 AIRISS v4.0 Main Application
 OK Financial Group HR Analysis System
 """
-from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 import logging
 import os
 import sys
 from pathlib import Path
 import uvicorn
-from datetime import datetime, timedelta
+from datetime import datetime
+
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from app.db.database import get_db, engine
+from app.db.database import get_db, engine, init_db
 from app.models import Base
 from sqlalchemy.orm import Session
 
@@ -27,20 +30,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Create database tables
+# Initialize database tables
 try:
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database tables created successfully")
+    init_db()
+    logger.info("Database tables initialized successfully")
     
-    # Verify jobs table exists
+    # Verify tables exist
     from sqlalchemy import inspect
     inspector = inspect(engine)
-    if 'jobs' in inspector.get_table_names():
-        logger.info("✅ Jobs table verified")
+    tables = inspector.get_table_names()
+    logger.info(f"Available tables: {tables}")
+    
+    if 'employee_results' in tables:
+        logger.info("✅ Employee results table verified")
     else:
-        logger.warning("⚠️ Jobs table not found - creating...")
-        from app.models.job import Job
-        Job.__table__.create(engine)
+        logger.warning("⚠️ Employee results table not found")
         
 except Exception as e:
     logger.error(f"Database initialization error: {e}")
@@ -148,125 +152,24 @@ try:
 except ImportError as e:
     logger.error(f"Failed to import dashboard router: {e}")
 
+# v4.2 Employee AI Analysis endpoints
+try:
+    from app.api.v1.endpoints.employees import router as employees_router
+    app.include_router(employees_router, prefix="/api/v1/employees", tags=["Employees"])
+    logger.info("Employees router registered - v4.2 AI Dashboard")
+except ImportError as e:
+    logger.error(f"Failed to import employees router: {e}")
+
+# Configuration endpoints
+try:
+    from app.api.v1.endpoints.config import router as config_router
+    app.include_router(config_router, prefix="/api/v1/config", tags=["Configuration"])
+    logger.info("Configuration router registered")
+except ImportError as e:
+    logger.error(f"Failed to import config router: {e}")
+
 # Note: Authentication is disabled - all endpoints are public
 
-# Simple upload endpoint
-@app.post("/api/v1/analysis/upload")
-async def upload_file(file: UploadFile = File(...)):
-    """File upload endpoint"""
-    import uuid
-    
-    try:
-        # Create uploads directory
-        upload_dir = Path("uploads")
-        upload_dir.mkdir(exist_ok=True)
-        
-        # Generate job ID
-        job_id = str(uuid.uuid4())
-        
-        # Save file
-        file_path = upload_dir / f"{job_id}_{file.filename}"
-        content = await file.read()
-        
-        with open(file_path, "wb") as f:
-            f.write(content)
-        
-        logger.info(f"File uploaded: {file_path}")
-        
-        # Return job info
-        return {
-            "job_id": job_id,
-            "status": "uploaded",
-            "filename": file.filename,
-            "message": "File uploaded successfully"
-        }
-        
-    except Exception as e:
-        logger.error(f"Upload error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Job status endpoint
-@app.get("/api/v1/jobs/{job_id}")
-async def get_job_status(job_id: str):
-    """Get job status"""
-    # For now, return mock completed status
-    return {
-        "job_id": job_id,
-        "status": "completed",
-        "progress": 100,
-        "filename": "test_file.xlsx",
-        "download_url": f"/api/v1/download/{job_id}"
-    }
-
-# Download endpoint
-@app.get("/api/v1/download/{token}")
-async def download_result(token: str):
-    """Download analysis result"""
-    from fastapi.responses import FileResponse
-    import pandas as pd
-    from io import BytesIO
-    
-    try:
-        # Create sample Excel file
-        data = {
-            "UID": ["EMP001", "EMP002", "EMP003"],
-            "Name": ["김철수", "이영희", "박민수"],
-            "Score": [85.5, 78.2, 91.3],
-            "Grade": ["A", "B+", "S"]
-        }
-        
-        df = pd.DataFrame(data)
-        
-        # Save to temp file
-        temp_file = Path("temp_data") / f"result_{token}.xlsx"
-        temp_file.parent.mkdir(exist_ok=True)
-        
-        df.to_excel(temp_file, index=False)
-        
-        return FileResponse(
-            temp_file,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            filename=f"airiss_result_{token[:8]}.xlsx"
-        )
-        
-    except Exception as e:
-        logger.error(f"Download error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Analysis jobs endpoint for frontend
-@app.get("/analysis/jobs")
-async def get_analysis_jobs():
-    """Get list of analysis jobs"""
-    # Mock data for now
-    return {
-        "jobs": [
-            {
-                "job_id": "job1",
-                "filename": "test1.xlsx",
-                "status": "completed",
-                "created_at": datetime.now().isoformat(),
-                "progress": 100
-            },
-            {
-                "job_id": "job2", 
-                "filename": "test2.xlsx",
-                "status": "in_progress",
-                "created_at": datetime.now().isoformat(),
-                "progress": 45
-            }
-        ],
-        "total": 2
-    }
-
-# Upload endpoint without /api/v1 prefix for compatibility
-@app.post("/api/upload")
-async def upload_file_compat(file: UploadFile = File(...)):
-    """Compatibility upload endpoint"""
-    return await upload_file(file)
-
-# Import additional modules
-from datetime import datetime
-from fastapi import Form
 
 # Serve React static files in production (after all API routes)
 if os.getenv("ENVIRONMENT") == "production" or os.getenv("REACT_BUILD_PATH"):

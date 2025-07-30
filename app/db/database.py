@@ -63,6 +63,7 @@ def get_db() -> Generator[Session, None, None]:
 def init_db():
     """Initialize database tables"""
     from app.models import User, File, Job, AnalysisResult
+    from app.models.employee import EmployeeResult
     
     try:
         Base.metadata.create_all(bind=engine)

@@ -10,6 +10,7 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
     API_PORT = int(os.getenv("API_PORT", "8003"))
     API_HOST = os.getenv("API_HOST", "0.0.0.0")
+    UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
     ALLOWED_ORIGINS = [
         "http://localhost:3000",
         "http://localhost:3001",

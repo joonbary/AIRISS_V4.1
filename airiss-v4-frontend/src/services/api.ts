@@ -9,7 +9,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: parseInt(process.env.REACT_APP_API_TIMEOUT || '30000'),
+  timeout: parseInt(process.env.REACT_APP_API_TIMEOUT || '300000'), // 5분 타임아웃
 });
 
 // 요청 인터셉터 - 인증 없음
@@ -119,7 +119,9 @@ export const startAnalysis = async (params: {
   console.log('🚀 Sending analysis request:', requestParams);
   
   try {
-    const response = await api.post('/api/v1/analysis/analyze/' + params.file_id, requestParams);
+    const response = await api.post('/api/v1/analysis/analyze/' + params.file_id, requestParams, {
+      timeout: 600000 // 10분 타임아웃 (분석 요청 전용)
+    });
     console.log('✅ Analysis started:', response.data);
     
     if (!response.data.job_id) {
@@ -316,5 +318,8 @@ export const changePassword = async (currentPassword: string, newPassword: strin
 };
 
 // 인증 기능 완전히 제거됨 - 모든 API Public access
+
+// API_BASE_URL export 추가
+export { API_BASE_URL };
 
 export default api;

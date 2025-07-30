@@ -31,13 +31,11 @@ class FileRepository:
             INSERT INTO files (
                 id, filename, upload_time, total_records,
                 columns, uid_columns, opinion_columns,
-                quantitative_columns, file_path, user_id, session_id, size,
-                dataframe_path, airiss_ready, hybrid_ready
+                quantitative_columns, file_path, user_id, session_id, size
             ) VALUES (
                 :id, :filename, :upload_time, :total_records,
                 :columns, :uid_columns, :opinion_columns,
-                :quantitative_columns, :file_path, :user_id, :session_id, :size,
-                :dataframe_path, :airiss_ready, :hybrid_ready
+                :quantitative_columns, :file_path, :user_id, :session_id, :size
             )
         """)
         
@@ -53,10 +51,7 @@ class FileRepository:
             'file_path': file_data.get('file_path', ''),
             'user_id': file_data.get('user_id', ''),
             'session_id': file_data.get('session_id', ''),
-            'size': file_data.get('size', 0),
-            'dataframe_path': file_data.get('dataframe_path', ''),
-            'airiss_ready': file_data.get('airiss_ready', False),
-            'hybrid_ready': file_data.get('hybrid_ready', False)
+            'size': file_data.get('size', 0)
         })
         
         self.db.commit()
@@ -94,21 +89,38 @@ class FileRepository:
         
         return file_data
     
+    def get_file_metadata(self, file_id: str) -> Optional[Dict[str, Any]]:
+        """파일 메타데이터만 조회 (DataFrame 로드 없이)"""
+        result = self.db.execute(
+            text("SELECT * FROM files WHERE id = :file_id"),
+            {'file_id': file_id}
+        ).fetchone()
+        
+        if not result:
+            return None
+        
+        file_data = dict(result._mapping)
+        
+        # Convert datetime to string and JSON strings to lists
+        for key, value in file_data.items():
+            if isinstance(value, datetime):
+                file_data[key] = value.isoformat()
+            # Convert JSON strings to lists for column fields
+            elif key in ['columns', 'uid_columns', 'opinion_columns', 'quantitative_columns']:
+                if isinstance(value, str):
+                    try:
+                        file_data[key] = json.loads(value) if value else []
+                    except json.JSONDecodeError:
+                        logger.warning(f"Failed to parse JSON for {key}: {value}")
+                        file_data[key] = []
+                else:
+                    file_data[key] = value if value else []
+        
+        return file_data
+    
     def _load_dataframe(self, file_data: Dict[str, Any]) -> Optional[pd.DataFrame]:
         """DataFrame 로드"""
         try:
-            # Try pickle file first
-            dataframe_path = file_data.get('dataframe_path', '')
-            if dataframe_path and os.path.exists(dataframe_path):
-                try:
-                    with open(dataframe_path, 'rb') as f:
-                        df = pickle.load(f)
-                    if df is not None and len(df) > 0:
-                        logger.info(f"DataFrame loaded from pickle: {len(df)} rows")
-                        return df
-                except Exception as e:
-                    logger.warning(f"Failed to load pickle: {e}")
-            
             # Try original file
             file_path = file_data.get('file_path', '')
             if not file_path:
@@ -202,9 +214,12 @@ class FileRepository:
         params = {'file_id': file_id}
         
         for key, value in update_data.items():
-            if key in ['dataframe_path', 'airiss_ready', 'hybrid_ready', 'total_records']:
+            if key in ['total_records', 'columns', 'uid_columns', 'opinion_columns', 'quantitative_columns', 'file_path']:
                 update_fields.append(f"{key} = :{key}")
-                params[key] = value
+                if key in ['columns', 'uid_columns', 'opinion_columns', 'quantitative_columns']:
+                    params[key] = json.dumps(value) if isinstance(value, (list, dict)) else value
+                else:
+                    params[key] = value
         
         if not update_fields:
             return False

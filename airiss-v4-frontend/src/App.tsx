@@ -1,30 +1,36 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Dashboard from './components/Dashboard/Dashboard';
-import AdminDashboard from './components/AdminDashboard';
-import Profile from './components/Profile';
-import FileUpload from './components/Upload/FileUpload';
-import AnalysisView from './components/Analysis/AnalysisView';
-import AdvancedSearch from './components/Search/AdvancedSearch';
-import History from './components/History/History';
+import { Container, Box } from '@mui/material';
+import SimpleNavigation from './components/Layout/SimpleNavigation';
+import UnifiedDashboard from './pages/UnifiedDashboard';
+import HRDashboard from './pages/HRDashboard';
+import EmployeePdfPage from './pages/EmployeePdfPage';
 
 function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true }}>
-      <Routes>
-        {/* 모든 라우트 Public Access - 인증 불필요 */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/upload" element={<FileUpload />} />
-        <Route path="/analysis" element={<AnalysisView />} />
-        <Route path="/search" element={<AdvancedSearch />} />
-        <Route path="/history" element={<History />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/profile" element={<Profile />} />
-        {/* 루트 경로는 대시보드로 */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        {/* 모든 경로를 대시보드로 리다이렉트 */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+        <SimpleNavigation />
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          <Routes>
+            {/* AIRISS v4.2 - 간소화된 구조 */}
+            <Route path="/" element={<UnifiedDashboard />} />
+            <Route path="/hr-dashboard" element={<HRDashboard />} />
+            
+            {/* PDF 출력 전용 페이지 */}
+            <Route path="/employee/:uid/pdf" element={<EmployeePdfPage />} />
+            
+            {/* 호환성: 기존 경로들을 새 구조로 리다이렉션 */}
+            <Route path="/dashboard" element={<Navigate to="/" replace />} />
+            <Route path="/analysis" element={<Navigate to="/" replace />} />
+            <Route path="/admin" element={<Navigate to="/hr-dashboard" replace />} />
+            <Route path="/profile" element={<Navigate to="/hr-dashboard" replace />} />
+            
+            {/* 잘못된 경로는 AI 분석으로 리다이렉트 */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Container>
+      </Box>
     </BrowserRouter>
   );
 }

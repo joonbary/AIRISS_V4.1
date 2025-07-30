@@ -13,6 +13,7 @@ class Job(Base):
     
     id = Column(String(36), primary_key=True)
     file_id = Column(String(36), nullable=False)
+    filename = Column(String(255))
     
     status = Column(String(50), default='pending')
     sample_size = Column(Integer)
@@ -29,6 +30,7 @@ class Job(Base):
     total_records = Column(Integer, default=0)
     processed_records = Column(Integer, default=0)
     failed_records = Column(Integer, default=0)
+    average_score = Column(Float, default=0.0)
     
     error = Column(Text)
     job_data = Column(Text)  # JSON

@@ -13,6 +13,7 @@ numpy>=1.24.0
 openai>=1.0.0  # AI 피드백용 (API 키 있을 때만)
 openpyxl==3.1.2
 pandas>=2.2.0
+reportlab==4.0.7
 pydantic>=2.5.0
 python-dotenv==1.0.0
 python-multipart==0.0.6

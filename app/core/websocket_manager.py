@@ -91,15 +91,18 @@ class ConnectionManager:
     
     async def send_personal_message(self, message: dict, client_id: str):
         """특정 클라이언트에게 메시지 전송"""
-        if client_id in self.active_connections:
-            try:
-                await self.active_connections[client_id].send_json(message)
-                self.connection_stats["total_messages_sent"] += 1
-            except Exception as e:
-                logger.error(f"Error sending message to {client_id}: {e}")
-                # 연결이 끊어진 경우에만 disconnect 호출
-                if "no close frame received or sent" in str(e) or "connection is closed" in str(e):
-                    self.disconnect(client_id)
+        if client_id not in self.active_connections:
+            return
+            
+        websocket = self.active_connections[client_id]
+        try:
+            await websocket.send_json(message)
+            self.connection_stats["total_messages_sent"] += 1
+        except Exception as e:
+            logger.error(f"Error sending message to {client_id}: {e}")
+            # 연결이 끊어진 경우만 제거
+            if "closed" in str(e).lower() or "disconnected" in str(e).lower():
+                self.disconnect(client_id)
     
     async def broadcast(self, message: dict, exclude_client: str = None):
         """모든 연결된 클라이언트에게 메시지 전송"""
@@ -137,8 +140,7 @@ class ConnectionManager:
                     self.connection_stats["total_messages_sent"] += 1
                 except Exception as e:
                     logger.error(f"Error sending to {client_id} on channel {channel}: {e}")
-                    # 연결이 끊어진 경우에만 disconnect 호출
-                    if "no close frame received or sent" in str(e) or "connection is closed" in str(e):
+                    if "closed" in str(e).lower() or "disconnected" in str(e).lower():
                         disconnected_clients.append(client_id)
         
         # 연결이 끊긴 클라이언트 정리
@@ -220,12 +222,19 @@ class ConnectionManager:
     
     async def send_analysis_progress(self, job_id: str, progress_data: dict):
         """분석 진행상황 전송 - AIRISS 특화 기능"""
+        # details에서 데이터 추출
+        details = progress_data.get('details', {})
         message = {
             "type": "analysis_progress",
             "job_id": job_id,
-            "timestamp": datetime.now().isoformat(),
-            **progress_data
+            "progress": progress_data.get('progress', 0),
+            "processed": details.get('processed', 0),
+            "total": details.get('total', 0),
+            "current_uid": details.get('current_uid', ''),
+            "status": details.get('status', ''),
+            "timestamp": datetime.now().isoformat()
         }
+        logger.info(f"📤 Sending analysis progress: {message}")
         await self.broadcast_to_channel("analysis", message)
     
     async def send_alert(self, alert_level: str, message: str, details: dict = None):
