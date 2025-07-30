@@ -1,0 +1,12 @@
+# Nixpacks configuration for Railway
+[phases.setup]
+nixPkgs = ["python39", "curl"]
+
+[phases.install]
+cmds = ["pip install -r requirements.railway.txt"]
+
+[phases.build]
+cmds = ["echo 'Build complete'"]
+
+[start]
+cmd = "python start_minimal.py"
