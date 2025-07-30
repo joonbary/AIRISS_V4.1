@@ -72,7 +72,7 @@ ENV NODE_ENV=production
 ENV DISABLE_ESLINT_PLUGIN=true
 
 # Health check for Railway
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=30s --start-period=120s --retries=5 \
     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
 # Railway dynamic port support

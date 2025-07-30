@@ -1,45 +1,21 @@
 # AIRISS v4.1 Railway Optimized Dockerfile
-# Fast startup version without ML dependencies
+# Simplified for faster deployment
 
-# Stage 1: React Frontend Build
-FROM node:18-slim as frontend-builder
-
-WORKDIR /app/frontend
-
-# Install Node.js dependencies
-COPY airiss-v4-frontend/package*.json ./
-RUN npm ci --only=production
-
-# Copy React source and build
-COPY airiss-v4-frontend/ ./
-
-# Set build environment variables
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-ENV GENERATE_SOURCEMAP=false
-ENV DISABLE_ESLINT_PLUGIN=true
-ENV CI=false
-
-# Build React app
-RUN npm run build
-
-# Stage 2: Python FastAPI (Minimal Dependencies)
 FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install only essential system dependencies
+# Install minimal system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy React build
-COPY --from=frontend-builder /app/frontend/build ./static
+# Copy requirements first for better caching
+COPY requirements.txt .
 
-# Upgrade pip
-RUN pip install --upgrade pip
-
-# Install only core dependencies first (for faster startup)
-RUN pip install --no-cache-dir \
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
     fastapi==0.104.1 \
     uvicorn[standard]==0.24.0 \
     python-multipart==0.0.6 \
@@ -48,37 +24,29 @@ RUN pip install --no-cache-dir \
     aiosqlite>=0.19.0 \
     pydantic>=2.5.0 \
     aiofiles==23.2.1 \
-    pandas>=2.2.0 \
+    pandas==2.1.3 \
     openpyxl==3.1.2 \
-    reportlab==4.0.7 \
-    requests>=2.31.0
+    httpx==0.25.1 \
+    websockets==12.0
 
 # Copy application code
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p /app/data /app/uploads /app/results /app/temp_data && \
-    chmod -R 777 /app/data /app/uploads /app/results /app/temp_data
+RUN mkdir -p /app/data /app/uploads /app/results /app/temp_data
 
-# Create startup script for Railway
-RUN echo '#!/bin/bash\n\
-echo "Starting AIRISS v4.1 on Railway..."\n\
-echo "Initializing database..."\n\
-python -c "from app.db.database import init_db; init_db()"\n\
-echo "Starting server on port ${PORT:-8000}..."\n\
-python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info' > /app/startup_railway.sh && \
-    chmod +x /app/startup_railway.sh
-
-# Environment variables
+# Set environment variables
 ENV PYTHONPATH=/app
-ENV DATABASE_URL=sqlite:///app/data/airiss.db
-ENV SERVER_HOST=0.0.0.0
-ENV REACT_BUILD_PATH=/app/static
 ENV PYTHONUNBUFFERED=1
-ENV SKIP_ML_MODELS=true
+ENV DATABASE_URL=sqlite:///data/airiss.db
+ENV SERVER_HOST=0.0.0.0
 
-# Railway port
+# Health check with longer timeout for Railway
+HEALTHCHECK --interval=60s --timeout=60s --start-period=300s --retries=10 \
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
+
+# Expose port
 EXPOSE 8000
 
-# Use startup script
-CMD ["/bin/bash", "/app/startup_railway.sh"]
+# Use Railway-specific startup script
+CMD ["python", "start_railway.py"]
