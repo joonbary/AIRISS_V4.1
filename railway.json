@@ -4,7 +4,9 @@
     "builder": "nixpacks"
   },
   "deploy": {
-    "startCommand": "python test_app.py",
+    "startCommand": "python start_server.py",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 300,
     "restartPolicyType": "always",
     "numReplicas": 1
   },

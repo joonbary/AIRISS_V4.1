@@ -15,4 +15,4 @@ cmds = [
 ]
 
 [start]
-cmd = "python test_app.py"
+cmd = "python start_server.py"
