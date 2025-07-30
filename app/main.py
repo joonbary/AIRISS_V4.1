@@ -105,8 +105,14 @@ async def health_check():
 # Additional health endpoint for compatibility
 @app.get("/health")
 async def simple_health():
-    """Simple health check for frontend"""
-    return {"status": "healthy", "service": "AIRISS v4.0"}
+    """Simple health check for Railway and frontend"""
+    return {"status": "ok"}
+
+# Railway health check endpoint
+@app.get("/healthz")
+async def healthz():
+    """Railway health check endpoint"""
+    return {"status": "ok"}
 
 # Note: Auth router removed - authentication is disabled
 
@@ -212,6 +218,6 @@ if os.getenv("ENVIRONMENT") == "production" or os.getenv("REACT_BUILD_PATH"):
         logger.warning(f"⚠️ React build path not found: {react_build_path}")
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8006))
+    port = int(os.getenv("PORT", 8000))
     logger.info(f"Starting AIRISS v4.0 server on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)

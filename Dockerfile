@@ -1,4 +1,4 @@
-# AIRISS v4.1 Railway Multi-stage Dockerfile - Frontend Path Fixed
+# AIRISS v4.1 Railway Multi-stage Dockerfile - Optimized
 # React + FastAPI Complete Integration
 
 # Stage 1: React Frontend Build
@@ -40,16 +40,28 @@ COPY --from=frontend-builder /app/frontend/build ./static
 # Upgrade pip first
 RUN pip install --upgrade pip
 
-# Install Python dependencies
+# Create minimal requirements for faster startup
 COPY requirements.txt .
-# Install all dependencies including PyTorch
+
+# Install only essential dependencies first
+RUN pip install --no-cache-dir \
+    fastapi==0.104.1 \
+    uvicorn[standard]==0.24.0 \
+    python-multipart==0.0.6 \
+    python-dotenv==1.0.0 \
+    sqlalchemy>=2.0.0 \
+    aiosqlite>=0.19.0 \
+    pydantic>=2.5.0 \
+    aiofiles==23.2.1
+
+# Then install the rest
 RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Copy application code
 COPY . .
 
-# Create database directory
-RUN mkdir -p /app/data
+# Create necessary directories
+RUN mkdir -p /app/data /app/uploads /app/results /app/temp_data
 
 # Environment variables
 ENV PYTHONPATH=/app
@@ -60,13 +72,11 @@ ENV NODE_ENV=production
 ENV DISABLE_ESLINT_PLUGIN=true
 
 # Health check for Railway
-HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8002}/health || exit 1
-
-# Make startup script executable
-COPY startup.sh .
-RUN chmod +x startup.sh
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
 # Railway dynamic port support
-EXPOSE 8002
-CMD ["./startup.sh"]
+EXPOSE 8000
+
+# Direct uvicorn command for faster startup
+CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info"]

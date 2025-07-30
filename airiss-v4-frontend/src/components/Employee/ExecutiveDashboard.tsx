@@ -94,7 +94,7 @@ const ExecutiveDashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8006';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8006';
       
       // 통계 데이터 가져오기
       console.log('📊 대시보드 통계 API 호출:', `${API_BASE_URL}/api/v1/employees/dashboard/statistics`);

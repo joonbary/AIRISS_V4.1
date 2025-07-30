@@ -14,7 +14,8 @@ from app.schemas.employee import (
     EmployeeAIAnalysisList,
     AIRecommendation,
     AIFeedbackSave,
-    AIFeedbackResponse
+    AIFeedbackResponse,
+    DashboardStatistics
 )
 from app.services.employee_service import EmployeeService
 
@@ -195,7 +196,7 @@ async def get_competency_radar_data(
         logger.error(f"역량 레이더 데이터 조회 실패: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/dashboard/statistics")
+@router.get("/dashboard/statistics", response_model=DashboardStatistics)
 async def get_dashboard_statistics(
     department: Optional[str] = Query(None, description="부서별 통계"),
     db: Session = Depends(get_db)

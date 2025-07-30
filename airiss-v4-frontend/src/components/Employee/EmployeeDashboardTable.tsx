@@ -80,6 +80,7 @@ const EmployeeDashboardTable: React.FC<EmployeeDashboardTableProps> = ({
 }) => {
   // State
   const [employees, setEmployees] = useState<EmployeeAIAnalysisSummary[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<Order>('desc');
   const [orderBy, setOrderBy] = useState<keyof EmployeeAIAnalysisSummary>('ai_score');
@@ -136,7 +137,7 @@ const EmployeeDashboardTable: React.FC<EmployeeDashboardTableProps> = ({
       if (filterGrade) params.append('grade', filterGrade);
 
       // 백엔드 URL 사용
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8006';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8006';
       const response = await fetch(`${API_BASE_URL}/api/v1/employees/ai-analysis/list?${params}`, {
         method: 'GET',
         headers: {
@@ -146,11 +147,17 @@ const EmployeeDashboardTable: React.FC<EmployeeDashboardTableProps> = ({
       });
       
       console.log('직원 목록 API 응답:', response.status);
+      console.log('요청 URL:', `${API_BASE_URL}/api/v1/employees/ai-analysis/list?${params}`);
+      console.log('현재 페이지:', page + 1);
       
       if (response.ok) {
         const data = await response.json();
         console.log('받은 직원 데이터:', data);
+        console.log('받은 직원 수:', data.items?.length || 0);
+        console.log('전체 직원 수:', data.total || 0);
+        console.log('첫 3명:', data.items?.slice(0, 3).map((e: any) => `${e.name} (${e.employee_id})`));
         setEmployees(data.items || []);
+        setTotalCount(data.total || 0);
       } else {
         console.error('API 오류:', response.status, response.statusText);
         setEmployees([]);
@@ -398,7 +405,7 @@ const EmployeeDashboardTable: React.FC<EmployeeDashboardTableProps> = ({
         <TablePagination
           rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
-          count={100} // 실제로는 API에서 전체 개수를 받아와야 함
+          count={totalCount}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
