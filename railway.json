@@ -4,32 +4,7 @@
     "builder": "nixpacks"
   },
   "deploy": {
-    "startCommand": "python start_server.py",
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 300,
-    "restartPolicyType": "always",
-    "numReplicas": 1
-  },
-  "environments": {
-    "production": {
-      "variables": {
-        "ENVIRONMENT": "production",
-        "SERVER_HOST": "0.0.0.0",
-        "WS_HOST": "$RAILWAY_PUBLIC_DOMAIN",
-        "DATABASE_URL": "sqlite:///data/airiss.db",
-        "PYTHONPATH": "/app",
-        "REACT_BUILD_PATH": "/app/static",
-        "NODE_OPTIONS": "--max-old-space-size=4096",
-        "GENERATE_SOURCEMAP": "false",
-        "DISABLE_ESLINT_PLUGIN": "true",
-        "CI": "false"
-      }
-    }
-  },
-  "volumes": [
-    {
-      "name": "airiss-data",
-      "mountPath": "/app/data"
-    }
-  ]
+    "startCommand": "python main.py",
+    "restartPolicyType": "always"
+  }
 }
