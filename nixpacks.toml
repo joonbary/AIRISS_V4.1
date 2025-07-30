@@ -3,10 +3,16 @@
 nixPkgs = ["python39", "curl"]
 
 [phases.install]
-cmds = ["pip install -r requirements.railway.txt"]
+cmds = [
+    "pip install --upgrade pip",
+    "pip install -r requirements_minimal.txt"
+]
 
 [phases.build]
-cmds = ["echo 'Build complete'"]
+cmds = [
+    "python railway_env_setup.py",
+    "echo 'Build complete'"
+]
 
 [start]
-cmd = "python start_minimal.py"
+cmd = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
