@@ -4,11 +4,8 @@
     "builder": "nixpacks"
   },
   "deploy": {
-    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT",
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 300,
+    "startCommand": "python test_app.py",
     "restartPolicyType": "always",
-    "healthcheckInterval": 60,
     "numReplicas": 1
   },
   "environments": {
