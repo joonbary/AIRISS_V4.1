@@ -4,7 +4,7 @@ Security Utilities
 """
 
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 import jwt
 from passlib.context import CryptContext
 from .config import settings
@@ -24,7 +24,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(
-    subject: str | Dict[str, Any],
+    subject: Union[str, Dict[str, Any]],
     expires_delta: Optional[timedelta] = None
 ) -> str:
     """JWT 토큰 생성"""
