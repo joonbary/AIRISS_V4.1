@@ -182,10 +182,12 @@ if os.getenv("ENVIRONMENT") == "production" or os.getenv("REACT_BUILD_PATH"):
     from fastapi.staticfiles import StaticFiles
     from fastapi.responses import FileResponse
     
-    react_build_path = os.getenv("REACT_BUILD_PATH", "/app/static")
+    react_build_path = os.getenv("REACT_BUILD_PATH", "/app/airiss-v4-frontend/build")
     if os.path.exists(react_build_path):
-        # Mount static files
-        app.mount("/static", StaticFiles(directory=react_build_path), name="static")
+        # Mount static files from React build
+        static_path = os.path.join(react_build_path, "static")
+        if os.path.exists(static_path):
+            app.mount("/static", StaticFiles(directory=static_path), name="static")
         
         # Serve index.html for all non-API routes (catch-all must be last)
         @app.get("/{full_path:path}")
