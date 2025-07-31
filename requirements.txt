@@ -24,6 +24,7 @@ requests>=2.31.0
 # Authentication
 passlib[bcrypt]>=1.7.4
 python-jose[cryptography]>=3.3.0
+PyJWT>=2.8.0
 
 # Other
 jinja2==3.1.2
