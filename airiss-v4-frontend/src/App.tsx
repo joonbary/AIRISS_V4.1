@@ -1,15 +1,18 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Container, Box } from '@mui/material';
+import { Container, Box, ThemeProvider, CssBaseline } from '@mui/material';
 import SimpleNavigation from './components/Layout/SimpleNavigation';
 import UnifiedDashboard from './pages/UnifiedDashboard';
 import HRDashboard from './pages/HRDashboard';
 import EmployeePdfPage from './pages/EmployeePdfPage';
+import theme from './theme/okTheme';
 
 function App() {
   return (
-    <BrowserRouter future={{ v7_startTransition: true }}>
-      <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <BrowserRouter future={{ v7_startTransition: true }}>
+        <Box sx={{ minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
         <SimpleNavigation />
         <Container maxWidth="xl" sx={{ py: 3 }}>
           <Routes>
@@ -32,6 +35,7 @@ function App() {
         </Container>
       </Box>
     </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

@@ -14,7 +14,7 @@ const okColors = {
   lightGrey: '#F9FAFB',    // 배경 그레이
   success: '#10B981',      // 성공 (EHR과 동일)
   error: '#EF4444',        // 에러 (EHR과 동일)
-  info: '#3B82F6',         // 정보 (EHR과 동일)
+  info: '#FF6B00',         // 정보 (오렌지로 통일)
 };
 
 const theme = createTheme({

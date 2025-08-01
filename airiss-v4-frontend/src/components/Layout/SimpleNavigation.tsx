@@ -177,7 +177,14 @@ const SimpleNavigation: React.FC = () => {
 
   return (
     <>
-      <AppBar position="static" elevation={1}>
+      <AppBar 
+        position="static" 
+        elevation={1}
+        sx={{ 
+          background: 'linear-gradient(135deg, #FF6B00 0%, #FFAA00 100%)',
+          color: 'white' 
+        }}
+      >
         <Toolbar>
           {isMobile && (
             <IconButton
