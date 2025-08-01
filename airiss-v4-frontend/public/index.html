@@ -13,19 +13,25 @@
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     
     <!-- OK 폰트 미리 로딩 -->
-    <link rel="preload" href="/fonts/OKLight.otf" as="font" type="font/otf" crossorigin>
-    <link rel="preload" href="/fonts/OKMedium.otf" as="font" type="font/otf" crossorigin>
-    <link rel="preload" href="/fonts/OKBold.otf" as="font" type="font/otf" crossorigin>
+    <!-- Pretendard 폰트 (EHR 시스템과 동일) -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    
+    <!-- 폰트 미리 로딩 -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Medium.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Bold.woff2" as="font" type="font/woff2" crossorigin>
     
     <style>
-      /* 글로벌 폰트 설정 - CDN 기반 */
+      /* 글로벌 폰트 설정 - EHR과 동일 */
       body, * {
-        font-family: 'Noto Sans KR', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif !important;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        letter-spacing: -0.02em;
       }
       
-      /* OK체 대체 클래스 */
+      /* Pretendard 폰트 웨이트 클래스 */
       .font-light {
         font-weight: 300;
       }
@@ -54,11 +60,11 @@
         align-items: center;
         height: 100vh;
         font-size: 18px;
-        color: #FF5722;
+        color: #FF6B00;
       }
     </style>
     
-    <title>AIRISS v4.0 | OK금융그룹 AI HR System</title>
+    <title>AIRISS v4.1 | OK금융그룹 AI 기반 직원 성과역량 평가 시스템</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
