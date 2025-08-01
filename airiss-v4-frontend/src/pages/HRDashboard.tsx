@@ -71,10 +71,15 @@ const HRDashboard: React.FC = () => {
 
   const handleViewEmployeeDetail = async (employeeId: string) => {
     try {
+      console.log('🎯 클릭한 직원 ID:', employeeId);
       const employee = await employeeApi.getEmployeeAIAnalysis(employeeId);
+      console.log('📋 받은 직원 데이터:', employee);
+      console.log('👤 직원 이름:', employee.name);
+      console.log('🏢 직원 부서:', employee.department);
       setSelectedEmployee(employee);
       setDetailDialogOpen(true);
     } catch (error) {
+      console.error('❌ 직원 정보 로드 실패:', error);
       showSnackbar('직원 정보를 불러오는데 실패했습니다.', 'error');
     }
   };

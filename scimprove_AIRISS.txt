@@ -1,24 +1,141 @@
-/sc:implement -magic -seq -play -persona-frontend
+# 🧠 AIRISS 평가의견 분석 기능 개발 작업지시서 (Claude Code용)
 
-🎯 목표: 직원 상세 리포트를 A4 한 페이지로 완전히 정렬된 상태로 PDF 저장 가능하도록 "출력 전용 A4 페이지"를 구현
+## 📌 1. 프로젝트 개요
 
-1. 새로운 라우트 추가
-- `/employee/:uid/pdf` 경로에 A4 비율 고정 페이지 구성
-- 컴포넌트명: `<EmployeePdfPage />`
+- **프로젝트명**: AIRISS 텍스트기반 평가의견 분석 확장
+- **목표**: 엑셀로 수집된 직원 평가의견 데이터를 정제, 요약, 점수화하여 AIRISS 성과/역량 스코어링에 통합
+- **대상 데이터**: 최근 10년치 평가의견 (연도별 다건 존재 가능, 결측 존재)
+- **출력물**: 정제된 평가 요약, 강점/약점 키워드, 텍스트 점수, 조직 역량 매핑 결과
 
-2. 디자인 조건
-- 전체 크기: 794px × 1123px (A4 @96dpi 기준)
-- Tailwind 대신 인라인 CSS 또는 `PDF-safe` 클래스 제한 사용
-- 모든 텍스트·박스·레이더차트 위치 고정
+---
 
-3. 자동 캡처 및 다운로드
-- URL에 `?download=true` 파라미터 있으면
-  - html2canvas → jsPDF → 자동 다운로드 → window.close()
+## 📋 2. PRD (Product Requirements Document)
 
-4. 버튼 동작 수정
-- 기존 모달 UI 내 [PDF 저장] → 위 경로 새 창 열기 및 자동 다운로드 방식으로 변경
+### 2.1 주요 기능 요약
 
-5. 테스트 체크리스트
-- 모든 개인의 출력결과가 정확히 1페이지 내 정렬되는지 확인
-- 백분위, 점수, 차트, 추천 내용까지 완전 출력
-- AI 피드백 한글 깨짐 여부, 자간 오류 없는지 검토
+| 기능 | 설명 |
+|------|------|
+| 평가의견 업로드 | .xlsx/.csv → UID 및 의견 컬럼 자동 감지 |
+| 연도 병합 & 누락 처리 | UID 기준 연도별 병합. 결측 연도는 “의견 없음” 표시 |
+| 평가의견 정제 | 특수문자 제거, 정규화, 공백 처리 등 |
+| LLM 요약 | 평가의견을 1~2문장으로 요약 |
+| 키워드 추출 | 강점/약점 키워드 리스트 추출 |
+| 텍스트 점수화 | 긍정도/구체성/난이도 등을 기반으로 점수화 |
+| 역량 프레임워크 매핑 | AIRISS 8대 조직역량 기준으로 평가내용 매핑 |
+| hybrid_score 계산 | 정량점수 + 텍스트점수를 가중 평균하여 통합 |
+| 분석결과 저장 | EmployeeResult 테이블 확장 (text, hybrid 관련 필드 포함) |
+| 프론트 시각화 | 평가요약/강약점/스코어 등을 UI에 노출 |
+
+### 2.2 데이터 예시
+
+**입력**
+```json
+{
+  "UID": "A001",
+  "의견_2023": "업무 이해도가 높고 책임감 있게 추진함",
+  "의견_2022": "",
+  "의견_2021": "팀 내 협업에 기여하고 성과를 창출함"
+}
+출력
+
+json
+복사
+편집
+{
+  "UID": "A001",
+  "요약": "책임감 있게 업무를 추진하고 협업에도 기여함",
+  "강점": ["추진력", "협업"],
+  "약점": ["전략적 사고"],
+  "text_score": 85.2,
+  "confidence": 0.93,
+  "dimension_scores": {
+    "리더십": 87,
+    "협업": 83,
+    "문제해결": 72
+  },
+  "hybrid_score": 88.6,
+  "ok_grade": "OK★"
+}
+🗂️ 3. 구현 디렉토리 구조 (Claude Code 기준)
+pgsql
+복사
+편집
+airiss_v4/
+├── app/
+│   ├── api/
+│   │   └── endpoints/
+│   │       └── analysis_opinion.py
+│   ├── core/
+│   │   └── opinion_processor.py
+│   ├── services/
+│   │   └── opinion_analysis_service.py
+│   ├── models/
+│   │   └── opinion_result.py
+│   ├── db/
+│   │   └── repositories/
+│   │       └── opinion_repository.py
+│   ├── schemas/
+│   │   └── opinion.py
+│   ├── utils/
+│   │   └── text_cleaning.py
+├── frontend/
+│   └── components/
+│       └── OpinionAnalysisCard.tsx
+🚀 4. Super Claude 구현 지시서 세트
+4.1 설계 및 분석
+bash
+복사
+편집
+/sc:design AIRISS 평가의견 정제 및 분석 파이프라인 -persona-architect -seq -plan
+4.2 기능별 구현
+bash
+복사
+편집
+/sc:implement 연도별 평가의견 정렬 및 누락 마킹 처리기 -persona-backend -safe-mode
+
+/sc:implement LLM 기반 평가요약 및 강점/약점 키워드 추출기 -persona-analyzer -ultrathink
+
+/sc:implement 평가의견 텍스트 점수화 및 분석신뢰도 산출 -persona-analyzer -validate
+
+/sc:implement 평가문장 → 8대 조직역량 자동 매핑기 -persona-analyzer -scope project
+
+/sc:implement hybrid_score 생성기 (정량+정성 통합) -persona-performance -safe-mode
+4.3 데이터 저장 및 API
+bash
+복사
+편집
+/sc:implement 분석결과 저장용 OpinionResult 모델 및 API 라우팅 -persona-backend
+4.4 프론트 시각화
+bash
+복사
+편집
+/sc:build 평가요약/스코어/키워드 시각화 UI 컴포넌트 -persona-frontend --magic
+4.5 테스트 및 디버깅
+bash
+복사
+편집
+/sc:test AIRISS 평가의견 분석 전체 파이프라인 통합 테스트 -persona-qa -play
+
+/sc:troubleshoot 누락데이터/불완전 의견 처리 검증 -safe-mode
+✅ 부가 권장사항
+프롬프트 템플릿 관리: prompts/opinion_summary.json 형태로 통합
+
+LLM 생성 메타정보 저장: "generated": true, "model": "GPT-4" 등으로 명시
+
+가상 의견 생성 금지 정책: 실제 평가의견이 없는 연도는 생성하지 않음
+
+📅 실행 순서 제안
+단계	항목	지시어
+1	파이프라인 설계	/sc:design
+2	기능별 구현	/sc:implement, /sc:improve
+3	프론트 연동	/sc:build, /sc:test
+4	테스트 및 배포	/sc:test, /sc:troubleshoot
+
+go
+복사
+편집
+
+저장 시 파일명 예시:  
+📄 `airiss_opinion_analysis_spec.md`
+
+필요 시 `.docx`, `.pdf` 변환 파일도 제공 가능합니다. 요청해 주세요.

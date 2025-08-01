@@ -9,6 +9,8 @@ from .file import File
 from .job import Job
 from .analysis import AnalysisResult
 from .analysis_result import AnalysisResultModel, AnalysisJobModel, AnalysisStatsModel
+from .opinion_result import OpinionResult, OpinionKeyword
+from .employee import EmployeeResult
 
 __all__ = [
     "Base",
@@ -18,5 +20,8 @@ __all__ = [
     "AnalysisResult",
     "AnalysisResultModel",
     "AnalysisJobModel",
-    "AnalysisStatsModel"
+    "AnalysisStatsModel",
+    "OpinionResult",
+    "OpinionKeyword",
+    "EmployeeResult"
 ]

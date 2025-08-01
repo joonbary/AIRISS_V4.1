@@ -216,6 +216,14 @@ async def get_results(
             analysis_results = results.get('data', [])
             logger.info(f"✅ Returning results for job {job_id}: {len(analysis_results)} results")
             
+            # 첫 번째 결과 로그로 확인
+            if analysis_results and len(analysis_results) > 0:
+                logger.info(f"📋 첫 번째 분석 결과 샘플:")
+                logger.info(f"  - UID: {analysis_results[0].get('uid')}")
+                logger.info(f"  - Name: {analysis_results[0].get('name')}")
+                logger.info(f"  - Score: {analysis_results[0].get('score')}")
+                logger.info(f"  - Grade: {analysis_results[0].get('grade')}")
+            
             # 프론트엔드 호환성을 위해 analysis_results 필드도 추가
             if 'analysis_results' not in results and analysis_results:
                 results['analysis_results'] = analysis_results

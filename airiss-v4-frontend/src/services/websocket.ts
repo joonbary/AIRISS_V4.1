@@ -41,7 +41,7 @@ async function checkServerStatus() {
     console.log('\n🏥 서버 상태 확인 중...');
     
     const apiUrl = 'http://localhost:8003';
-    const wsUrl = 'ws://localhost:8006/ws';
+    const wsUrl = 'ws://localhost:8003/ws';
     
     try {
         // API 서버 확인
@@ -73,7 +73,7 @@ function testWebSocketConnection() {
     console.log('\n🔌 WebSocket 연결 테스트...');
     
     const clientId = `debug-${Date.now()}`;
-    const wsUrl = `ws://localhost:8006/ws/${clientId}?channels=analysis,alerts`;
+    const wsUrl = `ws://localhost:8003/ws/${clientId}?channels=analysis,alerts`;
     
     console.log('🎯 연결 URL:', wsUrl);
     

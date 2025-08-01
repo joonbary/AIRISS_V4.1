@@ -51,7 +51,7 @@ const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
     getJobProgress,
     clearError
   } = useWebSocket({
-    baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:8006',
+    baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:8003',
     autoConnect: autoStart
   });
   

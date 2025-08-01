@@ -94,7 +94,7 @@ const ExecutiveDashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8006';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8003';
       
       // 통계 데이터 가져오기
       console.log('📊 대시보드 통계 API 호출:', `${API_BASE_URL}/api/v1/employees/dashboard/statistics`);
@@ -398,7 +398,7 @@ const ExecutiveDashboard: React.FC = () => {
                     <Avatar>{candidate.name[0]}</Avatar>
                   </ListItemAvatar>
                   <ListItemText
-                    primary={candidate.name}
+                    primary={`${candidate.name} (${candidate.employee_id})`}
                     secondary={`${candidate.department} | ${candidate.position}`}
                   />
                   <Typography variant="body2" color="success.main">
@@ -422,7 +422,7 @@ const ExecutiveDashboard: React.FC = () => {
                     <Avatar>{employee.name[0]}</Avatar>
                   </ListItemAvatar>
                   <ListItemText
-                    primary={employee.name}
+                    primary={`${employee.name} (${employee.employee_id})`}
                     secondary={`${employee.department} | ${employee.position}`}
                   />
                   <Typography variant="body2" color="warning.main">

@@ -87,12 +87,30 @@ class EmployeeService:
     def get_employee_ai_analysis(self, employee_id: str) -> Optional[EmployeeAIAnalysis]:
         """특정 직원의 AI 분석 결과 조회"""
         try:
-            # 직원 분석 결과 조회
-            employee_result = self.db.query(EmployeeResult).filter(
+            logger.info(f"🔍 직원 AI 분석 조회 시작 - ID: {employee_id}")
+            
+            # 직원 분석 결과 조회 - 메타데이터가 있는 것 우선
+            employee_results = self.db.query(EmployeeResult).filter(
                 EmployeeResult.uid == employee_id
-            ).first()
+            ).all()
+            
+            logger.info(f"📊 조회된 결과 수: {len(employee_results)}")
+            
+            # 메타데이터가 있는 것을 우선적으로 선택
+            employee_result = None
+            for result in employee_results:
+                if result.employee_metadata and result.employee_metadata.get('name'):
+                    employee_result = result
+                    logger.info(f"✅ 메타데이터가 있는 결과 선택 - 이름: {result.employee_metadata.get('name')}")
+                    break
+            
+            # 메타데이터가 있는 것이 없으면 첫 번째 것 사용
+            if not employee_result and employee_results:
+                employee_result = employee_results[0]
+                logger.info("⚠️ 메타데이터가 없어 첫 번째 결과 사용")
             
             if not employee_result:
+                logger.warning(f"❌ 직원 {employee_id}의 데이터를 찾을 수 없음")
                 return None
                 
             # 메타데이터 추출
@@ -122,13 +140,13 @@ class EmployeeService:
             career_recommendations = ["프로젝트 관리", "팀 리더십"]
             education_suggestions = ["리더십 교육", "전략적 사고 프로그램"]
             
-            return EmployeeAIAnalysis(
+            result = EmployeeAIAnalysis(
                 employee_id=employee_id,
                 name=name,
                 department=department,
                 position=position,
                 profile_image=None,
-                ai_score=int(employee_result.overall_score),
+                ai_score=int(employee_result.overall_score) if employee_result.overall_score else 0,
                 grade=self._map_grade(employee_result.grade),
                 competencies=competencies,
                 strengths=strengths,
@@ -139,6 +157,9 @@ class EmployeeService:
                 analyzed_at=datetime.now(),
                 model_version="v4.2"
             )
+            
+            logger.info(f"📤 반환 데이터 - ID: {result.employee_id}, 이름: {result.name}, 부서: {result.department}")
+            return result
             
         except Exception as e:
             logger.error(f"직원 AI 분석 조회 실패: {e}")
@@ -152,8 +173,25 @@ class EmployeeService:
     ) -> EmployeeAIAnalysisList:
         """전체 직원 AI 분석 목록 조회"""
         try:
-            # 직원 분석 결과 조회
-            query = self.db.query(EmployeeResult)
+            # 직원 분석 결과 조회 - 중복 제거를 위해 서브쿼리 사용
+            # 각 uid별로 가장 최신 데이터(ID가 가장 큰 것)만 선택
+            from sqlalchemy import func, and_
+            from sqlalchemy.orm import aliased
+            
+            # 각 uid별 최신 id를 구하는 서브쿼리
+            subquery = self.db.query(
+                EmployeeResult.uid,
+                func.max(EmployeeResult.id).label('max_id')
+            ).group_by(EmployeeResult.uid).subquery()
+            
+            # 메인 쿼리
+            query = self.db.query(EmployeeResult).join(
+                subquery,
+                and_(
+                    EmployeeResult.uid == subquery.c.uid,
+                    EmployeeResult.id == subquery.c.max_id
+                )
+            )
             
             # 필터 적용
             if filters.get("department"):
@@ -162,6 +200,15 @@ class EmployeeService:
                 query = query.filter(func.json_extract(EmployeeResult.employee_metadata, "$.position") == filters["position"])
             if filters.get("grade"):
                 query = query.filter(EmployeeResult.grade == filters["grade"])
+            if filters.get("search"):
+                # 이름 또는 직원번호로 검색
+                search_term = f"%{filters['search']}%"
+                query = query.filter(
+                    or_(
+                        EmployeeResult.uid.like(search_term),
+                        func.json_extract(EmployeeResult.employee_metadata, "$.name").like(search_term)
+                    )
+                )
             
             # 정렬 적용
             sort_field = sort_options.get("field", "overall_score")
@@ -177,6 +224,11 @@ class EmployeeService:
                     query = query.order_by(EmployeeResult.grade.desc())
                 else:
                     query = query.order_by(EmployeeResult.grade.asc())
+            elif sort_field == "name":
+                if sort_order == "desc":
+                    query = query.order_by(func.json_extract(EmployeeResult.employee_metadata, "$.name").desc())
+                else:
+                    query = query.order_by(func.json_extract(EmployeeResult.employee_metadata, "$.name").asc())
             
             # 총 개수 조회
             total = query.count()

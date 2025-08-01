@@ -159,6 +159,9 @@ class AnalysisService:
                            max_tokens: int = 1200) -> str:
         """분석 작업 시작"""
         try:
+            logger.info(f"🎯 분석 시작 요청 - enable_ai_feedback: {enable_ai_feedback}")
+            logger.info(f"🎯 OpenAI API 키 전달 여부: {'있음' if openai_api_key else '없음'}")
+            
             # Generate job ID
             import uuid
             job_id = str(uuid.uuid4())
@@ -251,15 +254,35 @@ class AnalysisService:
     async def update_progress(self, job_id: str, progress: float, details: Dict = None):
         """분석 진행률 업데이트"""
         try:
+            # 메모리 업데이트
             if job_id in self.active_jobs:
                 self.active_jobs[job_id]['progress'] = progress
                 self.active_jobs[job_id]['last_update'] = datetime.now()
-                
-                if self.websocket_manager:
-                    await self.websocket_manager.send_analysis_progress(job_id, {
-                        "progress": progress,
-                        "details": details or {}
-                    })
+            
+            # 데이터베이스 업데이트
+            from app.db.database import get_db
+            from app.models.job import Job
+            
+            def update_job_progress():
+                db = next(get_db())
+                try:
+                    job = db.query(Job).filter(Job.id == job_id).first()
+                    if job:
+                        job.progress = progress
+                        job.updated_at = datetime.now()
+                        db.commit()
+                        logger.info(f"📊 진행률 업데이트: {job_id} - {progress}%")
+                finally:
+                    db.close()
+            
+            await asyncio.to_thread(update_job_progress)
+            
+            # WebSocket 알림
+            if self.websocket_manager:
+                await self.websocket_manager.send_analysis_progress(job_id, {
+                    "progress": progress,
+                    "details": details or {}
+                })
             
         except Exception as e:
             logger.error(f"❌ 진행률 업데이트 오류: {e}")
@@ -347,6 +370,12 @@ class AnalysisService:
     
     async def _process_analysis(self, job_id: str, job_data: Dict[str, Any]):
         """실제 분석 작업 처리 - HybridAnalyzer 통합"""
+        logger.info("="*60)
+        logger.info(f"🚀 _process_analysis 시작")
+        logger.info(f"🆔 job_id: {job_id}")
+        logger.info(f"📁 job_data: {job_data}")
+        logger.info("="*60)
+        
         try:
             file_id = job_data['file_id']
             logger.info(f"분석 처리 시작: job_id={job_id}, file_id={file_id}")
@@ -405,6 +434,30 @@ class AnalysisService:
                     opinion_column = col
                     break
             
+            # 이름 컬럼 찾기
+            name_column = None
+            for col in df.columns:
+                col_lower = col.lower().strip()
+                if any(keyword in col_lower for keyword in ['name', '이름', '성명', '직원명']):
+                    name_column = col
+                    break
+            
+            # 부서 컬럼 찾기
+            department_column = None
+            for col in df.columns:
+                col_lower = col.lower().strip()
+                if any(keyword in col_lower for keyword in ['department', '부서', 'dept', '소속', '팀']):
+                    department_column = col
+                    break
+            
+            # 직급 컬럼 찾기
+            position_column = None
+            for col in df.columns:
+                col_lower = col.lower().strip()
+                if any(keyword in col_lower for keyword in ['position', '직급', '직위', 'title', 'grade', '등급']):
+                    position_column = col
+                    break
+            
             if not uid_column:
                 logger.error(f"❌ 직원 ID 컬럼을 찾을 수 없습니다. 사용 가능한 컬럼: {list(df.columns)}")
                 raise ValueError("직원 ID 컬럼(uid, id, 직원번호 등)을 찾을 수 없습니다.")
@@ -414,6 +467,12 @@ class AnalysisService:
                 raise ValueError("의견 컬럼(opinion, 의견, 평가 등)을 찾을 수 없습니다.")
             
             logger.info(f"✅ 컬럼 매칭 성공: uid='{uid_column}', opinion='{opinion_column}'")
+            if name_column:
+                logger.info(f"✅ 이름 컬럼 발견: '{name_column}'")
+            if department_column:
+                logger.info(f"✅ 부서 컬럼 발견: '{department_column}'")
+            if position_column:
+                logger.info(f"✅ 직급 컬럼 발견: '{position_column}'")
             
             # 4. HybridAnalyzer 초기화
             from app.services.hybrid_analyzer import AIRISSHybridAnalyzer
@@ -431,8 +490,12 @@ class AnalysisService:
             
             # 6. 각 행에 대해 분석 수행
             analysis_results = []
+            logger.info(f"🔄 분석 루프 시작: {sample_size}개 레코드")
+            
             for idx, (index, row) in enumerate(df_sample.iterrows()):
                 try:
+                    logger.info(f"📊 레코드 {idx+1}/{sample_size} 분석 시작")
+                    
                     # 진행률 업데이트
                     progress = 30 + (idx / sample_size) * 50  # 30-80% 구간
                     await self.update_progress(job_id, progress, {
@@ -444,15 +507,29 @@ class AnalysisService:
                     uid = str(row.get(uid_column, f'EMP_{idx+1}'))  
                     opinion = str(row.get(opinion_column, ''))
                     
+                    # 메타데이터 추출
+                    name = str(row.get(name_column, '')) if name_column else ''
+                    department = str(row.get(department_column, '')) if department_column else ''
+                    position = str(row.get(position_column, '')) if position_column else ''
+                    
                     # API 키 처리: 클라이언트 제공 키 우선, 없으면 환경변수 사용
-                    import os
+                    from app.core.config import settings
                     api_key = job_data.get('openai_api_key')
+                    
+                    logger.info(f"🔑 API 키 처리 - enable_ai_feedback: {job_data.get('enable_ai_feedback')}")
+                    logger.info(f"🔑 클라이언트 제공 API 키: {'있음' if api_key else '없음'}")
+                    
                     if not api_key and job_data.get('enable_ai_feedback', False):
-                        api_key = os.getenv('OPENAI_API_KEY')
+                        api_key = settings.OPENAI_API_KEY
                         if api_key:
-                            logger.info("✅ 환경변수에서 OpenAI API 키를 사용합니다")
+                            logger.info(f"✅ 환경변수에서 OpenAI API 키를 사용합니다: {api_key[:7]}...{api_key[-4:]}")
+                        else:
+                            logger.warning("⚠️ OpenAI API 키가 설정되지 않았습니다")
+                    
+                    logger.info(f"🔑 최종 API 키 사용: {'있음' if api_key else '없음'}")
                     
                     # HybridAnalyzer로 종합 분석
+                    logger.info(f"🔬 HybridAnalyzer 호출 시작 - UID: {uid}")
                     result = await analyzer.comprehensive_analysis(
                         uid=uid,
                         opinion=opinion,
@@ -466,13 +543,15 @@ class AnalysisService:
                         max_tokens=job_data.get('max_tokens', 1200)
                     )
                     
+                    logger.info(f"✅ HybridAnalyzer 분석 완료 - UID: {uid}")
+                    
                     # 결과 정리
                     ai_feedback_data = result.get('ai_feedback', {})
                     analysis_results.append({
                         "uid": uid,
-                        "name": row.get('name', ''),
-                        "department": row.get('department', ''),
-                        "position": row.get('position', ''),
+                        "name": name,
+                        "department": department,
+                        "position": position,
                         "opinion": opinion[:200] + '...' if len(opinion) > 200 else opinion,
                         "score": result['hybrid_analysis']['overall_score'],
                         "grade": result['hybrid_analysis']['grade'],
@@ -490,11 +569,24 @@ class AnalysisService:
                     
                 except Exception as e:
                     logger.error(f"행 {idx+1} 분석 오류: {e}")
+                    logger.error(f"오류 상세: {type(e).__name__}: {str(e)}")
+                    import traceback
+                    logger.error(f"트레이스백:\n{traceback.format_exc()}")
+                    
                     analysis_results.append({
                         "uid": row.get(uid_column, f'ROW_{idx+1}'),
                         "name": row.get('name', ''),
                         "score": 0,
                         "grade": "ERROR",
+                        "error": str(e)
+                    })
+                    
+                    # 오류가 발생해도 진행률은 계속 업데이트
+                    progress = 30 + ((idx + 1) / sample_size) * 50  # 30-80% 구간
+                    await self.update_progress(job_id, progress, {
+                        "processed": idx + 1,
+                        "total": sample_size,
+                        "current_uid": row.get(uid_column, f'ROW_{idx+1}'),
                         "error": str(e)
                     })
             
@@ -672,7 +764,45 @@ class AnalysisService:
     
     def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
         """작업 상태 조회"""
-        return self.active_jobs.get(job_id)
+        # 먼저 메모리에서 확인
+        job_info = self.active_jobs.get(job_id)
+        if job_info:
+            return job_info
+        
+        # 메모리에 없으면 데이터베이스에서 확인
+        try:
+            from app.db.database import get_db
+            from app.models.job import Job
+            import json
+            
+            db = next(get_db())
+            try:
+                job = db.query(Job).filter(Job.id == job_id).first()
+                if job:
+                    # 데이터베이스 정보를 메모리 형식으로 변환
+                    job_info = {
+                        'status': job.status,
+                        'start_time': job.created_at,
+                        'progress': 100 if job.status == 'completed' else 0,
+                        'data': json.loads(job.job_data) if job.job_data else {}
+                    }
+                    
+                    # 결과가 있으면 추가
+                    if job.results_data:
+                        results = json.loads(job.results_data) if isinstance(job.results_data, str) else job.results_data
+                        job_info['results'] = results
+                    
+                    logger.info(f"✅ 데이터베이스에서 작업 찾음: {job_id}, 상태: {job.status}")
+                    return job_info
+                else:
+                    logger.warning(f"❌ 작업을 찾을 수 없습니다: {job_id}")
+                    return None
+            finally:
+                db.close()
+                
+        except Exception as e:
+            logger.error(f"데이터베이스 조회 오류: {e}")
+            return None
     
     def list_active_jobs(self) -> Dict[str, Any]:
         """활성 작업 목록"""

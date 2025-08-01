@@ -166,6 +166,14 @@ try:
 except ImportError as e:
     logger.error(f"Failed to import employees router: {e}")
 
+# Opinion Analysis endpoints
+try:
+    from app.api.v1.endpoints.analysis_opinion import router as opinion_router
+    app.include_router(opinion_router, prefix="/api/v1/analysis", tags=["Opinion Analysis"])
+    logger.info("Opinion Analysis router registered")
+except ImportError as e:
+    logger.error(f"Failed to import opinion analysis router: {e}")
+
 # Configuration endpoints
 try:
     from app.api.v1.endpoints.config import router as config_router

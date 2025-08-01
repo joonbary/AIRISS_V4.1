@@ -17,3 +17,6 @@ class EmployeeResult(Base):
     dimension_scores = Column(JSON)
     ai_feedback = Column(JSON, nullable=True)
     employee_metadata = Column(JSON, nullable=True)  # metadata -> employee_metadata로 변경
+    
+    # Relationships
+    opinion_analysis = relationship("OpinionResult", back_populates="employee", uselist=False)

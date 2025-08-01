@@ -59,6 +59,9 @@ interface ResultsViewerProps {
 
 interface EmployeeResult {
   uid: string;
+  name?: string;
+  department?: string;
+  position?: string;
   overall_score: number;
   grade: string;
   dimension_scores: Record<string, number>;
@@ -131,6 +134,10 @@ const ResultsViewer: React.FC<ResultsViewerProps> = ({ jobId, autoLoad = true })
       // Get real analysis results from backend
       const analysisResults = await getAnalysisResults(jobId);
       
+      console.log('📥 백엔드에서 받은 원본 데이터:', analysisResults);
+      console.log('📋 데이터 항목 수:', analysisResults?.data?.length);
+      console.log('🔍 첫 번째 데이터:', analysisResults?.data?.[0]);
+      
       if (!analysisResults || !analysisResults.data) {
         setError('분석 결과 데이터를 찾을 수 없습니다.');
         return;
@@ -146,7 +153,10 @@ const ResultsViewer: React.FC<ResultsViewerProps> = ({ jobId, autoLoad = true })
         processing_time: analysisResults.metadata?.processing_time || '완료',
         results: analysisResults.data.map((item: any) => ({
           uid: item.uid || 'N/A',
-          overall_score: item.score || 0,
+          name: item.name || '',
+          department: item.department || '',
+          position: item.position || '',
+          overall_score: item.score || item.ai_score || 0,
           grade: item.grade || 'N/A',
           dimension_scores: item.dimension_scores || {},
           ai_feedback: item.explainability?.ai_feedback,
@@ -253,6 +263,10 @@ const ResultsViewer: React.FC<ResultsViewerProps> = ({ jobId, autoLoad = true })
 
   // Handle employee detail view
   const handleViewDetails = (employee: EmployeeResult) => {
+    console.log('🔍 선택된 직원 상세 정보:', employee);
+    console.log('👤 UID:', employee.uid);
+    console.log('📛 이름:', employee.name);
+    console.log('📊 점수:', employee.overall_score);
     setSelectedEmployee(employee);
     setDetailDialogOpen(true);
   };
@@ -551,7 +565,10 @@ const ResultsViewer: React.FC<ResultsViewerProps> = ({ jobId, autoLoad = true })
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>직원 ID</TableCell>
+                  <TableCell>UID</TableCell>
+                  <TableCell>이름</TableCell>
+                  <TableCell>부서</TableCell>
+                  <TableCell>직급</TableCell>
                   <TableCell align="center">종합 점수</TableCell>
                   <TableCell align="center">등급</TableCell>
                   <TableCell align="center">차원별 점수</TableCell>
@@ -567,12 +584,30 @@ const ResultsViewer: React.FC<ResultsViewerProps> = ({ jobId, autoLoad = true })
                       </Typography>
                     </TableCell>
                     
+                    <TableCell>
+                      <Typography variant="body2">
+                        {result.name || '-'}
+                      </Typography>
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Typography variant="body2">
+                        {result.department || '-'}
+                      </Typography>
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Typography variant="body2">
+                        {result.position || '-'}
+                      </Typography>
+                    </TableCell>
+                    
                     <TableCell align="center">
                       <Typography
                         variant="h6"
                         sx={{ color: getScoreColor(result.overall_score) }}
                       >
-                        {result.overall_score.toFixed(1)}
+                        {result.overall_score ? result.overall_score.toFixed(1) : 'N/A'}
                       </Typography>
                     </TableCell>
                     

@@ -235,7 +235,10 @@ const EnhancedEmployeeDetailCard: React.FC<EmployeeDetailCardProps> = ({
   };
 
   // AI 피드백 요약 생성
-  const generateSummary = (comment: string) => {
+  const generateSummary = (comment: string | null | undefined) => {
+    if (!comment || typeof comment !== 'string') {
+      return '평가 의견이 없습니다.';
+    }
     const sentences = comment.split('.');
     return sentences[0] + '.';
   };
@@ -264,7 +267,7 @@ ${employee.strengths.join(', ')}
 ${employee.improvements.join(', ')}
 
 [AI 종합 피드백]
-${employee.ai_comment}
+${employee.ai_comment || '평가 의견이 없습니다.'}
 
 [추천 경력 방향]
 ${employee.career_recommendation.join(', ')}
@@ -304,14 +307,14 @@ ${employee.education_suggestion.join(', ')}
           </Avatar>
           <Box flex={1}>
             <Typography variant="h4" component="h2" gutterBottom>
-              {employee.name}
+              {employee.name} ({employee.employee_id})
             </Typography>
             <Typography variant="h6" color="text.secondary" gutterBottom>
               {employee.department} | {employee.position}
             </Typography>
             <Box display="flex" alignItems="center" gap={2} mb={1}>
               <Typography variant="h5">
-                AI 종합점수: {employee.ai_score}
+                AI 종합점수: {employee.ai_score || 'N/A'}
               </Typography>
               <Chip
                 label={`${employee.grade}등급`}
@@ -528,7 +531,7 @@ ${employee.education_suggestion.join(', ')}
               ) : (
                 <Box>
                   <Typography variant="body1" paragraph>
-                    <strong>종합 평가:</strong> {employee.ai_comment}
+                    <strong>종합 평가:</strong> {employee.ai_comment || '평가 의견이 없습니다.'}
                   </Typography>
                   <Divider sx={{ my: 2 }} />
                   <Typography variant="body2" color="text.secondary">

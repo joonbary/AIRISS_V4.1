@@ -33,7 +33,7 @@ interface UseWebSocketOptions {
 
 export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketReturn => {
   const {
-    baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8006',
+    baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8003',
     autoConnect = false,
     channels = ['analysis', 'alerts']
   } = options;

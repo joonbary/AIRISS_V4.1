@@ -5,7 +5,7 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
 // API Base URL - AIRISS v4.0 Backend
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8006';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8003';
 
 // Create axios instance with AIRISS v4.0 configuration
 const apiV4 = axios.create({
@@ -51,7 +51,7 @@ apiV4.interceptors.response.use(
       const data: any = error.response.data;
       error.message = data.detail || data.message || error.message;
     } else if (error.request) {
-      error.message = '🔗 AIRISS v4.0 서버에 연결할 수 없습니다. 백엔드 서버(포트 8006)가 실행 중인지 확인해주세요.';
+      error.message = '🔗 AIRISS v4.0 서버에 연결할 수 없습니다. 백엔드 서버(포트 8003)가 실행 중인지 확인해주세요.';
     }
     
     return Promise.reject(error);

@@ -44,7 +44,7 @@ class WebSocketService {
     this.isConnecting = true;
 
     try {
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8006';
+      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8003';
       const wsUrl = baseUrl.replace(/^http/, 'ws');
       const id = clientId || `client-${Date.now()}`;
       const fullUrl = `${wsUrl}/connect?client_id=${id}`;

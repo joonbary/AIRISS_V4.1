@@ -24,7 +24,7 @@ import {
   InputAdornment
 } from '@mui/material';
 import { PlayArrow, Stop, Download, Info, CheckCircle, Warning, Lock, PictureAsPdf } from '@mui/icons-material';
-import { startAnalysis, getAnalysisStatus, downloadResults, checkResultsAvailability, getFiles, API_BASE_URL } from '../../services/api';
+import { startAnalysis, getAnalysisStatus, downloadResults, checkResultsAvailability, getFiles, getAnalysisResults, API_BASE_URL } from '../../services/api';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { AnalysisResult } from '../../types';
 import axios from 'axios';
@@ -161,8 +161,8 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
     getJobProgress
   } = useWebSocket();
   
-  // 강제 폴링 모드 (WebSocket 대신 폴링만 사용)
-  const [forcePollMode, setForcePollMode] = useState(true);
+  // 강제 폴링 모드 (WebSocket 대신 폴링만 사용) - 기본값을 false로 변경하여 WebSocket 우선 사용
+  const [forcePollMode, setForcePollMode] = useState(false);
 
   // 기존 작업 목록 가져오기
   useEffect(() => {
@@ -187,18 +187,36 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
             setSelectedJobId(latestJob.id);
             setJobId(latestJob.id);
             
-            // 분석 결과 표시
-            if (latestJob.result && latestJob.result.analysis_results) {
-              setResults(latestJob.result);
+            // 분석 결과 표시 - API에서 실제 데이터 가져오기
+            try {
+              const detailResults = await getAnalysisResults(latestJob.id);
+              console.log('📊 기존 작업 결과 데이터:', detailResults);
+              setResults({
+                total_analyzed: detailResults.analysis_results?.length || 0,
+                average_score: latestJob.result?.average_score || 0,
+                processing_time: '완료',
+                analysis_results: detailResults.analysis_results || detailResults.data || [],
+                ...detailResults
+              });
               setAnalysisCompleted(true);
               setCurrentProgress(100);
               setStatus('분석 완료!');
               setDownloadVisible(true);
-              
-              // 부모 컴포넌트에 jobId 전달
-              if (onAnalysisComplete) {
-                onAnalysisComplete(latestJob.id);
+            } catch (error) {
+              console.error('❌ 기존 작업 결과 로드 실패:', error);
+              // 기존 로직 fallback
+              if (latestJob.result && latestJob.result.analysis_results) {
+                setResults(latestJob.result);
+                setAnalysisCompleted(true);
+                setCurrentProgress(100);
+                setStatus('분석 완료!');
+                setDownloadVisible(true);
               }
+            }
+            
+            // 부모 컴포넌트에 jobId 전달
+            if (onAnalysisComplete) {
+              onAnalysisComplete(latestJob.id);
             }
           }
         }
@@ -354,11 +372,18 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
     }
   }, [validColumns, uidColumn]);
 
-  // API 키 상태 확인
+  // API 키 상태 확인 및 저장된 키 로드
   useEffect(() => {
+    // localStorage에서 저장된 API key 불러오기
+    const savedApiKey = localStorage.getItem('openai_api_key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+      console.log('💾 저장된 API 키를 불러왔습니다.');
+    }
+
     const fetchApiKeyStatus = async () => {
       try {
-        const response = await axios.get('/api/v1/config/api-key-status');
+        const response = await axios.get(`${API_BASE_URL}/api/v1/config/api-key-status`);
         if (response.data.configured) {
           setApiKeyConfigured(true);
           setMaskedApiKey(response.data.masked_key);
@@ -498,6 +523,21 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
         setCurrentProgress(100);
         setStatus('분석 완료!');
         
+        // 실제 분석 결과 데이터 가져오기
+        try {
+          const detailResults = await getAnalysisResults(jobId);
+          console.log('📊 수동 새로고침 결과 데이터:', detailResults);
+          setResults({
+            total_analyzed: detailResults.analysis_results?.length || statusData.total_processed || totalRecords,
+            average_score: statusData.average_score || 0,
+            processing_time: '완료',
+            analysis_results: detailResults.analysis_results || detailResults.data || [],
+            ...detailResults
+          });
+        } catch (error) {
+          console.error('❌ 분석 결과 데이터 로드 실패:', error);
+        }
+        
         // 파일 존재 여부 확인 후 다운로드 버튼 활성화
         await checkAndEnableDownload(jobId);
         
@@ -550,6 +590,21 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
             setCurrentProgress(100);
             setStatus('분석 완료!');
             clearInterval(interval);
+            
+            // 실제 분석 결과 데이터 가져오기
+            try {
+              const detailResults = await getAnalysisResults(jobId);
+              console.log('📊 폴링 완료 결과 데이터:', detailResults);
+              setResults({
+                total_analyzed: detailResults.analysis_results?.length || statusData.total_processed || totalRecords,
+                average_score: statusData.average_score || 0,
+                processing_time: '완료',
+                analysis_results: detailResults.analysis_results || detailResults.data || [],
+                ...detailResults
+              });
+            } catch (error) {
+              console.error('❌ 폴링 완료 결과 데이터 로드 실패:', error);
+            }
             
             // 파일 존재 여부 확인 후 다운로드 버튼 활성화
             await checkAndEnableDownload(jobId);
@@ -608,13 +663,27 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
         setCurrentProgress(100);
         setStatus('분석 완료!');
         
-        // 결과 설정
-        if (lastMessage.average_score !== undefined) {  
+        // 실제 분석 결과 데이터 가져오기
+        try {
+          const detailResults = await getAnalysisResults(jobId);
+          console.log('📊 WebSocket 완료 결과 데이터:', detailResults);
           setResults({
             total_analyzed: lastMessage.total_processed || totalRecords,
             average_score: lastMessage.average_score,
-            processing_time: '완료'
-          } as AnalysisResult);
+            processing_time: '완료',
+            analysis_results: detailResults.analysis_results || detailResults.data || [],
+            ...detailResults
+          });
+        } catch (error) {
+          console.error('❌ WebSocket 완료 결과 데이터 로드 실패:', error);
+          // Fallback to summary data only
+          if (lastMessage.average_score !== undefined) {
+            setResults({
+              total_analyzed: lastMessage.total_processed || totalRecords,
+              average_score: lastMessage.average_score,
+              processing_time: '완료'
+            } as AnalysisResult);
+          }
         }
         
         // 파일 존재 여부 확인 후 다운로드 버튼 활성화
@@ -872,14 +941,36 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
                         setSelectedJobId(jobId);
                         setJobId(jobId);
                         
-                        // 선택된 작업의 결과 표시
+                        // 선택된 작업의 결과 표시 - API에서 실제 데이터 가져오기
                         const job = existingJobs.find(j => j.id === jobId);
-                        if (job && job.result) {
-                          setResults(job.result);
-                          setAnalysisCompleted(true);
-                          setCurrentProgress(100);
-                          setStatus('분석 완료!');
-                          setDownloadVisible(true);
+                        if (job) {
+                          (async () => {
+                            try {
+                              const detailResults = await getAnalysisResults(jobId);
+                              console.log('📊 수동 선택 결과 데이터:', detailResults);
+                              setResults({
+                                total_analyzed: detailResults.analysis_results?.length || 0,
+                                average_score: job.result?.average_score || 0,
+                                processing_time: '완료',
+                                analysis_results: detailResults.analysis_results || detailResults.data || [],
+                                ...detailResults
+                              });
+                              setAnalysisCompleted(true);
+                              setCurrentProgress(100);
+                              setStatus('분석 완료!');
+                              setDownloadVisible(true);
+                            } catch (error) {
+                              console.error('❌ 수동 선택 결과 로드 실패:', error);
+                              // Fallback to existing data
+                              if (job.result) {
+                                setResults(job.result);
+                                setAnalysisCompleted(true);
+                                setCurrentProgress(100);
+                                setStatus('분석 완료!');
+                                setDownloadVisible(true);
+                              }
+                            }
+                          })();
                           
                           // 파일 정보 업데이트
                           if (job.file_id) {
@@ -1073,7 +1164,19 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
                   type="password"
                   label="OpenAI API Key"
                   value={apiKeyConfigured ? maskedApiKey : apiKey}
-                  onChange={(e) => !apiKeyConfigured && setApiKey(e.target.value)}
+                  onChange={(e) => {
+                    if (!apiKeyConfigured) {
+                      const newApiKey = e.target.value;
+                      setApiKey(newApiKey);
+                      // localStorage에 API key 저장
+                      if (newApiKey) {
+                        localStorage.setItem('openai_api_key', newApiKey);
+                        console.log('💾 API 키가 저장되었습니다.');
+                      } else {
+                        localStorage.removeItem('openai_api_key');
+                      }
+                    }
+                  }}
                   placeholder={apiKeyConfigured ? "환경변수에 설정됨" : "sk-..."}
                   disabled={apiKeyConfigured}
                   InputProps={{
@@ -1248,27 +1351,47 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
                 직원별 분석 결과
               </Typography>
               <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
-                {results.analysis_results.map((result: any, index: number) => (
-                  <Card key={index} sx={{ mb: 2 }}>
-                    <CardContent>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={5}>
-                          <Typography variant="subtitle1" fontWeight="bold">
-                            {result.name || result.employee_id || result.uid || `직원 ${index + 1}`}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            최종 점수: <strong>{result.final_score?.toFixed(1) || 'N/A'}점</strong>
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={5}>
-                          {result.qualitative_scores && (
-                            <>
+                {results.analysis_results.map((result: any, index: number) => {
+                  // 디버깅을 위한 로그
+                  console.log(`📋 직원 ${index} 데이터:`, result);
+                  
+                  return (
+                    <Card 
+                      key={result.uid || result.employee_id || index} 
+                      sx={{ 
+                        mb: 2, 
+                        cursor: 'pointer',
+                        '&:hover': { bgcolor: 'action.hover' }
+                      }}
+                      onClick={() => {
+                        console.log('🔍 클릭된 직원:', result);
+                        alert(`선택된 직원: ${result.name || '이름 없음'} (${result.uid || 'UID 없음'})\n점수: ${result.score || result.overall_score || 'N/A'}`);
+                      }}
+                    >
+                      <CardContent>
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} sm={5}>
+                            <Typography variant="subtitle1" fontWeight="bold">
+                              {result.name || `직원 ${index + 1}`} ({result.uid || 'UID 없음'})
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              최종 점수: <strong>{(result.score || result.overall_score || result.final_score || 0).toFixed(1)}점</strong>
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12} sm={5}>
+                            {result.grade && (
                               <Typography variant="body2">
-                                정성 점수: {result.qualitative_scores.sentiment?.toFixed(1) || 'N/A'}
+                                등급: <Chip label={result.grade} size="small" color="primary" />
                               </Typography>
-                              <Typography variant="body2">
-                                키워드 점수: {result.qualitative_scores.keyword?.toFixed(1) || 'N/A'}
-                              </Typography>
+                            )}
+                            {(result.text_score !== undefined || result.quantitative_score !== undefined) && (
+                              <>
+                                <Typography variant="body2">
+                                  정성 점수: {result.text_score?.toFixed(1) || 'N/A'}
+                                </Typography>
+                                <Typography variant="body2">
+                                  정량 점수: {result.quantitative_score?.toFixed(1) || 'N/A'}
+                                </Typography>
                             </>
                           )}
                         </Grid>
@@ -1311,7 +1434,8 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
                       </Grid>
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </Box>
             </Box>
           )}

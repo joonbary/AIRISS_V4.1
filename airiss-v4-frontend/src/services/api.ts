@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 // API 기본 URL 설정 (Railway 호환)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8006';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8003';
 
 // axios 인스턴스 생성
 const api = axios.create({

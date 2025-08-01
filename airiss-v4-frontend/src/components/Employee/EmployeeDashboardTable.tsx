@@ -64,6 +64,7 @@ interface HeadCell {
 }
 
 const headCells: readonly HeadCell[] = [
+  { id: 'employee_id', numeric: false, label: 'UID' },
   { id: 'name', numeric: false, label: '이름' },
   { id: 'department', numeric: false, label: '부서' },
   { id: 'position', numeric: false, label: '직급' },
@@ -137,7 +138,7 @@ const EmployeeDashboardTable: React.FC<EmployeeDashboardTableProps> = ({
       if (filterGrade) params.append('grade', filterGrade);
 
       // 백엔드 URL 사용
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8006';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8003';
       const response = await fetch(`${API_BASE_URL}/api/v1/employees/ai-analysis/list?${params}`, {
         method: 'GET',
         headers: {
@@ -320,10 +321,10 @@ const EmployeeDashboardTable: React.FC<EmployeeDashboardTableProps> = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {employees.map((employee) => (
+              {employees.map((employee, index) => (
                 <TableRow
                   hover
-                  key={employee.employee_id}
+                  key={`${employee.employee_id}-${index}`}
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
                   <TableCell padding="checkbox">
@@ -336,11 +337,13 @@ const EmployeeDashboardTable: React.FC<EmployeeDashboardTableProps> = ({
                     </Avatar>
                   </TableCell>
                   <TableCell component="th" scope="row">
-                    <Typography variant="body2" fontWeight="medium">
-                      {employee.name}
-                    </Typography>
                     <Typography variant="caption" color="text.secondary">
                       {employee.employee_id}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="medium">
+                      {employee.name}
                     </Typography>
                   </TableCell>
                   <TableCell>{employee.department}</TableCell>
@@ -382,7 +385,10 @@ const EmployeeDashboardTable: React.FC<EmployeeDashboardTableProps> = ({
                     <Tooltip title="상세보기">
                       <IconButton
                         size="small"
-                        onClick={() => onViewDetail?.(employee.employee_id)}
+                        onClick={() => {
+                          console.log('🖱️ 직원 클릭됨:', employee.employee_id, employee.name);
+                          onViewDetail?.(employee.employee_id);
+                        }}
                       >
                         <ViewIcon />
                       </IconButton>

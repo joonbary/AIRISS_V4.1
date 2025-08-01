@@ -3,7 +3,7 @@
  */
 import axios, { AxiosError } from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8006';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8003';
 
 // Types
 export interface CompetencyScores {
@@ -127,9 +127,17 @@ class EmployeeApiService {
    */
   async getEmployeeAIAnalysis(employeeId: string): Promise<EmployeeAIAnalysis> {
     try {
+      console.log('🔍 API 호출 - 직원 ID:', employeeId);
+      console.log('📡 요청 URL:', `${API_BASE_URL}/api/v1/employees/${employeeId}/ai-analysis`);
+      
       const response = await this.axiosInstance.get(
         `/api/v1/employees/${employeeId}/ai-analysis`
       );
+      
+      console.log('✅ API 응답:', response.data);
+      console.log('👤 응답 직원 이름:', response.data.name);
+      console.log('🆔 응답 직원 ID:', response.data.employee_id);
+      
       return response.data;
     } catch (error) {
       console.error('Failed to fetch employee AI analysis:', error);
