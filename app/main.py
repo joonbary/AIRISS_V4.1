@@ -76,6 +76,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# X-Frame-Options를 제거하여 iframe 허용
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
+class RemoveXFrameOptionsMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        # 디버깅용 로그
+        logger.info(f"Request from: {request.headers.get('referer', 'Unknown')}")
+        logger.info(f"Origin: {request.headers.get('origin', 'Unknown')}")
+        
+        # X-Frame-Options 헤더 제거
+        if "X-Frame-Options" in response.headers:
+            del response.headers["X-Frame-Options"]
+            logger.info("Removed X-Frame-Options header")
+            
+        # Content Security Policy 설정
+        allowed_origin = os.getenv("CORS_ORIGINS", "").split(",")[0].strip()
+        if allowed_origin and allowed_origin != "*":
+            csp = f"frame-ancestors 'self' {allowed_origin} http://localhost:* https://localhost:*;"
+            response.headers["Content-Security-Policy"] = csp
+            logger.info(f"Set CSP: {csp}")
+        
+        return response
+
+app.add_middleware(RemoveXFrameOptionsMiddleware)
+
 
 # API Routes
 @app.get("/api")
