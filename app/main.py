@@ -57,9 +57,20 @@ app = FastAPI(
 )
 
 # CORS middleware
+# 환경 변수에서 허용할 도메인 가져오기
+cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
+if cors_origins == ["*"]:
+    # 개발 환경에서는 모든 도메인 허용
+    cors_origins = ["*"]
+else:
+    # 프로덕션에서는 특정 도메인만 허용
+    cors_origins = [origin.strip() for origin in cors_origins]
+    # 로컬 개발도 허용
+    cors_origins.extend(["http://localhost:8080", "http://localhost:3000"])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
