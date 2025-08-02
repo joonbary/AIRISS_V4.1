@@ -2,14 +2,16 @@
 # React + FastAPI Complete Integration
 
 # Stage 1: React Frontend Build
-FROM node:18-slim as frontend-builder
+FROM node:18-alpine as frontend-builder
 
 WORKDIR /app/frontend
 
-# Install Node.js dependencies (production + dev for build)
-COPY airiss-v4-frontend/package*.json ./
-# Clean install with retry logic
-RUN npm cache clean --force && npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+# Install Node.js dependencies
+COPY airiss-v4-frontend/package.json ./
+COPY airiss-v4-frontend/package-lock.json ./
+# Install dependencies with increased timeout
+RUN npm config set fetch-retry-maxtimeout 120000 && \
+    npm install --legacy-peer-deps --loglevel verbose
 
 # Copy React source and build
 COPY airiss-v4-frontend/ ./
@@ -21,10 +23,12 @@ ENV DISABLE_ESLINT_PLUGIN=true
 ENV CI=false
 ENV REACT_APP_API_URL=""
 
-# Build with simple command (no cross-env in Docker)
-RUN DISABLE_ESLINT_PLUGIN=true npm run build:simple || \
-    (echo "Build failed, trying alternative build" && \
-     DISABLE_ESLINT_PLUGIN=true CI=false npm run build:simple)
+# Build React app (use build:docker which has no cross-env)
+RUN export DISABLE_ESLINT_PLUGIN=true && \
+    export CI=false && \
+    export GENERATE_SOURCEMAP=false && \
+    export NODE_ENV=production && \
+    npm run build:docker
 
 # Stage 2: Python FastAPI + React Static Files  
 FROM python:3.9-slim

@@ -36,7 +36,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "cross-env DISABLE_ESLINT_PLUGIN=true react-scripts build",
-    "build:simple": "react-scripts build",
+    "build:simple": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
+    "build:docker": "react-scripts build",
     "build:win": "set DISABLE_ESLINT_PLUGIN=true&& react-scripts build",
     "test": "react-scripts test",
     "test:ci": "cross-env CI=true react-scripts test --coverage --passWithNoTests --silent --watchAll=false --testPathIgnorePatterns=node_modules",
