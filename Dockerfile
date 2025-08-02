@@ -16,11 +16,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy pre-built React static files
-COPY airiss-v4-frontend/build ./static 2>/dev/null || \
-    (echo "No pre-built React files found, creating placeholder" && \
-     mkdir -p ./static && \
-     echo '<html><body><h1>AIRISS v4</h1></body></html>' > ./static/index.html)
+# Create static directory
+RUN mkdir -p ./static
+
+# Create a simple placeholder HTML as fallback
+RUN echo '<!DOCTYPE html><html><head><title>AIRISS v4</title></head><body><h1>AIRISS v4 Loading...</h1><p>Building React app...</p></body></html>' > ./static/index.html
 
 # Upgrade pip first
 RUN pip install --upgrade pip
