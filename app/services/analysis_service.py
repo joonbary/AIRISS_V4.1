@@ -356,6 +356,28 @@ class AnalysisService:
                 self.active_jobs[job_id]['error'] = error
                 self.active_jobs[job_id]['end_time'] = datetime.now()
                 
+                # 데이터베이스 업데이트
+                from app.db.database import get_db
+                from app.models.job import Job
+                
+                def update_job_failure():
+                    db = next(get_db())
+                    try:
+                        job = db.query(Job).filter(Job.id == job_id).first()
+                        if job:
+                            job.status = 'failed'
+                            job.error_message = error[:500] if error else None  # 에러 메시지 길이 제한
+                            job.end_time = datetime.now()
+                            db.commit()
+                            logger.info(f"🔄 Job 실패 업데이트: {job_id}")
+                    except Exception as e:
+                        db.rollback()
+                        logger.error(f"❌ Job 실패 업데이트 오류: {e}")
+                    finally:
+                        db.close()
+                
+                await asyncio.to_thread(update_job_failure)
+                
                 if self.websocket_manager:
                     await self.websocket_manager.send_alert(
                         "error",
@@ -434,6 +456,15 @@ class AnalysisService:
                     opinion_column = col
                     break
             
+            # 필수 컬럼 확인
+            if uid_column is None:
+                logger.error(f"❌ UID 컬럼을 찾을 수 없습니다. 사용 가능한 컬럼: {list(df.columns)}")
+                raise ValueError("필수 컬럼 'UID' 또는 '직원번호'를 찾을 수 없습니다.")
+                
+            if opinion_column is None:
+                logger.error(f"❌ 평가의견 컬럼을 찾을 수 없습니다. 사용 가능한 컬럼: {list(df.columns)}")
+                raise ValueError("필수 컬럼 '평가의견' 또는 'Opinion'을 찾을 수 없습니다.")
+            
             # 이름 컬럼 찾기
             name_column = None
             for col in df.columns:
@@ -458,9 +489,12 @@ class AnalysisService:
                     position_column = col
                     break
             
-            if not uid_column:
-                logger.error(f"❌ 직원 ID 컬럼을 찾을 수 없습니다. 사용 가능한 컬럼: {list(df.columns)}")
-                raise ValueError("직원 ID 컬럼(uid, id, 직원번호 등)을 찾을 수 없습니다.")
+            logger.info(f"📦 컬럼 매핑 결과:")
+            logger.info(f"  - UID: {uid_column}")
+            logger.info(f"  - Opinion: {opinion_column}")
+            logger.info(f"  - Name: {name_column or '없음'}")
+            logger.info(f"  - Department: {department_column or '없음'}")
+            logger.info(f"  - Position: {position_column or '없음'}")
                 
             if not opinion_column:
                 logger.error(f"❌ 의견 컬럼을 찾을 수 없습니다. 사용 가능한 컬럼: {list(df.columns)}")
