@@ -9,6 +9,7 @@ interface ProgressData {
   average_score?: number;
   estimated_remaining?: number;
   processing_speed?: number;
+  status?: string;  // Add status field
 }
 
 export interface UseWebSocketReturn {
