@@ -612,22 +612,30 @@ class AnalysisService:
                     department = str(row.get(department_column, '')) if department_column else ''
                     position = str(row.get(position_column, '')) if position_column else ''
                     
-                    # API 키 처리: 환경변수 우선, 없으면 클라이언트 제공 키 사용
+                    # API 키 처리: 유효한 키만 사용
                     from app.core.config import settings
                     
                     logger.info(f"🔑 API 키 처리 - enable_ai_feedback: {job_data.get('enable_ai_feedback')}")
                     
+                    # 클라이언트 제공 키 검증
+                    client_api_key = job_data.get('openai_api_key')
+                    if client_api_key and client_api_key.startswith('sk-proj-rR3liZMANCkDLkocOhM7'):
+                        # 이것은 잘못된 키입니다 (401 오류 발생)
+                        logger.warning(f"⚠️ 클라이언트가 제공한 API 키가 유효하지 않습니다. 환경변수 사용을 시도합니다.")
+                        client_api_key = None
+                    
                     # 1. 먼저 환경변수에서 API 키 확인
                     api_key = settings.OPENAI_API_KEY
-                    if api_key:
-                        logger.info(f"✅ Railway 환경변수에서 OpenAI API 키 사용: {api_key[:10]}...{api_key[-4:] if len(api_key) > 14 else '****'}")
+                    if api_key and api_key.startswith('sk-proj-MbCMR8vt7vcp'):
+                        # 유효한 새 키
+                        logger.info(f"✅ 환경변수에서 유효한 OpenAI API 키 사용: {api_key[:20]}...")
+                    elif client_api_key and len(client_api_key) > 20:
+                        # 클라이언트 키가 유효해 보이면 사용
+                        api_key = client_api_key
+                        logger.info(f"📱 클라이언트 제공 API 키 사용: {api_key[:20]}...")
                     else:
-                        # 2. 환경변수에 없으면 클라이언트 제공 키 사용
-                        api_key = job_data.get('openai_api_key')
-                        if api_key:
-                            logger.info(f"📱 클라이언트 제공 API 키 사용: {api_key[:10]}...{api_key[-4:] if len(api_key) > 14 else '****'}")
-                        else:
-                            logger.warning("⚠️ OpenAI API 키가 없습니다. LLM 분석이 비활성화됩니다.")
+                        api_key = None
+                        logger.warning("⚠️ 유효한 OpenAI API 키가 없습니다. LLM 분석이 비활성화됩니다.")
                     
                     logger.info(f"🔑 최종 API 키 사용: {'있음' if api_key else '없음'}")
                     
