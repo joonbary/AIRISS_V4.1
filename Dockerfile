@@ -23,13 +23,14 @@ ENV DISABLE_ESLINT_PLUGIN=true
 ENV CI=false
 ENV REACT_APP_API_URL=""
 
-# Build React app
+# Build React app directly without cross-env
 ENV CI=false
 ENV DISABLE_ESLINT_PLUGIN=true
 ENV GENERATE_SOURCEMAP=false
 ENV NODE_ENV=production
 
-RUN npm run build
+# Use npx to run react-scripts directly
+RUN npx react-scripts build
 
 # Stage 2: Python FastAPI + React Static Files  
 FROM python:3.9-slim
