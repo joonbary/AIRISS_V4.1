@@ -8,7 +8,8 @@ WORKDIR /app/frontend
 
 # Install Node.js dependencies (production + dev for build)
 COPY airiss-v4-frontend/package*.json ./
-RUN npm ci
+# Clean install with retry logic
+RUN npm cache clean --force && npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
 # Copy React source and build
 COPY airiss-v4-frontend/ ./
@@ -18,9 +19,12 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV GENERATE_SOURCEMAP=false
 ENV DISABLE_ESLINT_PLUGIN=true
 ENV CI=false
+ENV REACT_APP_API_URL=""
 
-# Build with increased memory
-RUN npm run build
+# Build with simple command (no cross-env in Docker)
+RUN DISABLE_ESLINT_PLUGIN=true npm run build:simple || \
+    (echo "Build failed, trying alternative build" && \
+     DISABLE_ESLINT_PLUGIN=true CI=false npm run build:simple)
 
 # Stage 2: Python FastAPI + React Static Files  
 FROM python:3.9-slim
