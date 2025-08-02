@@ -2,7 +2,7 @@
 # React + FastAPI Complete Integration
 
 # Stage 1: React Frontend Build
-FROM node:18-alpine as frontend-builder
+FROM node:18 as frontend-builder
 
 WORKDIR /app/frontend
 
@@ -29,8 +29,12 @@ ENV DISABLE_ESLINT_PLUGIN=true
 ENV GENERATE_SOURCEMAP=false
 ENV NODE_ENV=production
 
-# Use npx to run react-scripts directly
-RUN npx react-scripts build
+# Try to build with verbose output
+RUN CI=false npm run build 2>&1 || \
+    (echo "Build failed. Showing package versions:" && \
+     npm list react react-scripts typescript && \
+     echo "Retrying with node directly:" && \
+     CI=false node_modules/.bin/react-scripts build)
 
 # Stage 2: Python FastAPI + React Static Files  
 FROM python:3.9-slim
