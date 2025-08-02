@@ -90,9 +90,12 @@ class RemoveXFrameOptionsMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
         
-        # 디버깅용 로그
-        logger.info(f"Request from: {request.headers.get('referer', 'Unknown')}")
-        logger.info(f"Origin: {request.headers.get('origin', 'Unknown')}")
+        # 디버깅용 로그 (Railway에서는 X-Forwarded-* 헤더 사용)
+        origin = request.headers.get('origin') or request.headers.get('x-forwarded-host', 'Unknown')
+        referer = request.headers.get('referer', 'Unknown')
+        
+        if origin != 'Unknown' or referer != 'Unknown':
+            logger.debug(f"Request from: {referer}, Origin: {origin}")
         
         # X-Frame-Options 헤더 제거
         if "X-Frame-Options" in response.headers:
