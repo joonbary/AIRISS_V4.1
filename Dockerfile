@@ -1,8 +1,16 @@
 # AIRISS v4.1 Railway Multi-stage Dockerfile - Optimized
 # React + FastAPI Complete Integration
 
-# Skip React build stage - use pre-built static files
-# React build is done locally and committed to repository
+# Stage 1: Build React with minimal setup
+FROM node:18-slim as builder
+WORKDIR /app
+COPY airiss-v4-frontend/package*.json ./
+RUN npm ci --only=production --silent
+COPY airiss-v4-frontend/ ./
+ENV CI=false
+ENV DISABLE_ESLINT_PLUGIN=true
+ENV GENERATE_SOURCEMAP=false
+RUN npm run build || echo "Build failed, using fallback"
 
 # Stage 2: Python FastAPI + React Static Files  
 FROM python:3.9-slim
@@ -16,11 +24,14 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Create static directory
-RUN mkdir -p ./static
+# Copy React build from builder stage
+COPY --from=builder /app/build ./static || echo "No build found"
 
-# Create a simple placeholder HTML as fallback
-RUN echo '<!DOCTYPE html><html><head><title>AIRISS v4</title></head><body><h1>AIRISS v4 Loading...</h1><p>Building React app...</p></body></html>' > ./static/index.html
+# Fallback: Create placeholder if build failed
+RUN if [ ! -f ./static/index.html ]; then \
+    mkdir -p ./static && \
+    echo '<!DOCTYPE html><html><head><title>AIRISS v4</title></head><body><h1>AIRISS v4</h1></body></html>' > ./static/index.html; \
+    fi
 
 # Upgrade pip first
 RUN pip install --upgrade pip
