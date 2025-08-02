@@ -149,14 +149,14 @@ class WebSocketService {
   private startKeepAlive(): void {
     this.stopKeepAlive();
     
-    // 15초마다 ping 전송 (더 자주)
+    // 30초마다 ping 전송 (Railway 환경 고려)
     this.keepAliveInterval = window.setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
         const now = Date.now();
         
-        // 마지막 ping 응답이 30초 이상 오래된 경우 재연결
-        if (this.lastPingTime && now - this.lastPingTime > 30000) {
-          console.warn('⚠️ No ping response for 30s, reconnecting...');
+        // 마지막 ping 응답이 60초 이상 오래된 경우 재연결
+        if (this.lastPingTime && now - this.lastPingTime > 60000) {
+          console.warn('⚠️ No ping response for 60s, reconnecting...');
           this.ws.close();
           return;
         }
@@ -173,7 +173,7 @@ class WebSocketService {
           this.ws.close();
         }
       }
-    }, 15000); // 15초마다
+    }, 30000); // 30초마다
   }
   
   private stopKeepAlive(): void {

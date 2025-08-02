@@ -41,7 +41,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                 # receive_json()이 블로킹되는 것을 방지하기 위해 receive_text() 사용
                 websocket_data = await asyncio.wait_for(
                     websocket.receive_text(),
-                    timeout=30.0  # 30초 타임아웃
+                    timeout=60.0  # 60초 타임아웃 (Railway 환경 고려)
                 )
                 
                 # JSON 파싱

@@ -66,7 +66,12 @@ else:
     # 프로덕션에서는 특정 도메인만 허용
     cors_origins = [origin.strip() for origin in cors_origins]
     # 로컬 개발도 허용
-    cors_origins.extend(["http://localhost:8080", "http://localhost:3000"])
+    cors_origins.extend([
+        "http://localhost:8080", 
+        "http://localhost:3000",
+        "https://web-production-4066.up.railway.app",
+        "https://ehrv10-production.up.railway.app"
+    ])
 
 app.add_middleware(
     CORSMiddleware,

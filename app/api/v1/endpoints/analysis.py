@@ -206,8 +206,15 @@ async def get_results(
             raise HTTPException(status_code=404, detail="작업을 찾을 수 없습니다")
         
         if job.status != 'completed':
-            logger.warning(f"⚠️ Job not completed: {job_id}, status: {job.status}")
-            raise HTTPException(status_code=400, detail=f"작업이 아직 완료되지 않았습니다. 현재 상태: {job.status}")
+            logger.info(f"⏳ Job not completed: {job_id}, status: {job.status}")
+            # 완료되지 않은 작업도 현재 상태를 반환
+            return {
+                "status": job.status,
+                "message": f"작업이 진행 중입니다: {job.status}",
+                "analysis_results": [],
+                "data": [],
+                "summary": {}
+            }
         
         if job.results_data:
             # Return the full results structure
