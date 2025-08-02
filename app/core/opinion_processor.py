@@ -10,12 +10,23 @@ import asyncio
 from datetime import datetime
 
 try:
+    import openai
     from openai import AsyncOpenAI
     OPENAI_AVAILABLE = True
     logging.info("✅ OpenAI library imported successfully")
+    logging.info(f"OpenAI version: {openai.__version__}")
 except ImportError as e:
     OPENAI_AVAILABLE = False
-    logging.warning(f"⚠️ OpenAI not available: {e}. Using mock processor.")
+    logging.error(f"❌ OpenAI import failed: {e}")
+    logging.error(f"ImportError details: {type(e).__name__}: {str(e)}")
+    import sys
+    logging.error(f"Python path: {sys.path}")
+    try:
+        import pip
+        installed_packages = [p.project_name for p in pip.get_installed_distributions()]
+        logging.error(f"Installed packages: {installed_packages[:10]}...")  # First 10 packages
+    except:
+        pass
 
 logger = logging.getLogger(__name__)
 
