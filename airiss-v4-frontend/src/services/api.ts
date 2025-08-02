@@ -121,7 +121,7 @@ export const startAnalysis = async (params: {
   console.log('🚀 Sending analysis request:', requestParams);
   
   try {
-    const response = await api.post('/api/v1/analysis/analyze/' + params.file_id, requestParams, {
+    const response = await api.post(`/api/v1/analysis/analyze/${params.file_id}`, requestParams, {
       timeout: 600000 // 10분 타임아웃 (분석 요청 전용)
     });
     console.log('✅ Analysis started:', response.data);

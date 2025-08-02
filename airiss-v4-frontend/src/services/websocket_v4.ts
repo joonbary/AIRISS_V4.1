@@ -44,8 +44,16 @@ class WebSocketService {
     this.isConnecting = true;
 
     try {
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8003';
-      const wsUrl = baseUrl.replace(/^http/, 'ws');
+      // Railway 환경에서는 wss 사용
+      const isProduction = process.env.NODE_ENV === 'production';
+      const baseUrl = process.env.REACT_APP_API_URL || 
+        (isProduction ? window.location.origin : 'http://localhost:8003');
+      
+      // 프로덕션에서는 https -> wss, 로컬에서는 http -> ws
+      const wsUrl = baseUrl
+        .replace(/^https/, 'wss')
+        .replace(/^http/, 'ws');
+      
       const id = clientId || `client-${Date.now()}`;
       const fullUrl = `${wsUrl}/connect?client_id=${id}`;
       

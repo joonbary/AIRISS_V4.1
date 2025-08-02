@@ -481,7 +481,8 @@ class AnalysisService:
             # 5. 샘플 크기 제한
             sample_size = min(job_data.get('sample_size', 10), len(df))
             df_sample = df.head(sample_size)
-            logger.info(f"분석 대상: {sample_size}명")
+            logger.info(f"📊 분석 대상: {sample_size}명 (전체: {len(df)}명)")
+            logger.info(f"📋 분석할 컬럼: uid={uid_column}, opinion={opinion_column}")
             
             await self.update_progress(job_id, 30, {
                 "status": "AI 분석 시작",
@@ -644,7 +645,9 @@ class AnalysisService:
             logger.info(f"✅ 분석 처리 완료: job_id={job_id}, 총 {len(analysis_results)}명 분석")
             
         except Exception as e:
-            logger.error(f"분석 처리 중 오류: {e}")
+            import traceback
+            logger.error(f"❌ 분석 처리 중 오류: {e}")
+            logger.error(f"🔍 상세 오류:\n{traceback.format_exc()}")
             await self.fail_analysis(job_id, str(e))
     
     async def _save_employee_results(self, job_id: str, analysis_results: list):
