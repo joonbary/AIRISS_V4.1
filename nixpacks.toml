@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["python39", "gcc"]
+
+[phases.install]
+cmds = ["pip install --upgrade pip", "pip install openai==1.54.5", "pip install -r requirements.txt"]
+
+[start]
+cmd = "pip install openai==1.54.5 && python check_openai.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
