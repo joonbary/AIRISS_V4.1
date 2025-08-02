@@ -78,6 +78,8 @@ const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
   // Handle WebSocket messages
   useEffect(() => {
     if (lastMessage?.job_id === jobId) {
+      console.log('📨 AnalysisProgress received message:', lastMessage);
+      
       switch (lastMessage.type) {
         case 'analysis_started':
           setAnalysisStatus('running');
@@ -85,6 +87,10 @@ const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
           break;
         case 'analysis_progress':
           setAnalysisStatus('running');
+          // 진행률 메시지에서 상태 업데이트
+          if (lastMessage.status) {
+            console.log(`📊 Progress update: ${lastMessage.progress}% - ${lastMessage.status}`);
+          }
           break;
         case 'analysis_completed':
           setAnalysisStatus('completed');
@@ -168,9 +174,10 @@ const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
     }
   };
 
-  const progressValue = jobProgress?.progress || 0;
-  const processed = jobProgress?.processed || 0;
-  const total = jobProgress?.total || 0;
+  // 진행률 계산 개선 - lastMessage에서도 가져오기
+  const progressValue = jobProgress?.progress || lastMessage?.progress || 0;
+  const processed = jobProgress?.processed || lastMessage?.processed || 0;
+  const total = jobProgress?.total || lastMessage?.total || 0;
 
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
@@ -235,11 +242,11 @@ const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
                   <Typography variant="subtitle2">현재 상태</Typography>
                 </Box>
                 <Typography variant="body2">
-                  {lastMessage?.message || '분석을 준비 중입니다...'}
+                  {lastMessage?.status || jobProgress?.status || '분석을 준비 중입니다...'}
                 </Typography>
-                {jobProgress?.current_uid && (
+                {(jobProgress?.current_uid || lastMessage?.current_uid) && (
                   <Typography variant="caption" color="text.secondary">
-                    처리 중: {jobProgress.current_uid}
+                    처리 중: {jobProgress?.current_uid || lastMessage?.current_uid}
                   </Typography>
                 )}
               </CardContent>

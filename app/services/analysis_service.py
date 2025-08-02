@@ -497,11 +497,13 @@ class AnalysisService:
                 try:
                     logger.info(f"📊 레코드 {idx+1}/{sample_size} 분석 시작")
                     
-                    # 진행률 업데이트
-                    progress = 30 + (idx / sample_size) * 50  # 30-80% 구간
+                    # 진행률 업데이트 - 더 세밀하게
+                    progress = 30 + ((idx + 0.5) / sample_size) * 50  # 30-80% 구간
                     await self.update_progress(job_id, progress, {
                         "status": f"분석 중: {idx+1}/{sample_size}",
-                        "current_uid": row.get(uid_column, f'ROW_{idx+1}')
+                        "current_uid": row.get(uid_column, f'ROW_{idx+1}'),
+                        "processed": idx + 1,
+                        "total": sample_size
                     })
                     
                     # 분석 수행 (실제 컬럼명 사용)
@@ -591,7 +593,11 @@ class AnalysisService:
                         "error": str(e)
                     })
             
-            await self.update_progress(job_id, 85, {"status": "결과 생성 중"})
+            await self.update_progress(job_id, 85, {
+                "status": "결과 생성 중",
+                "processed": sample_size,
+                "total": sample_size
+            })
             
             # 7. 분석 결과 요약
             valid_results = [r for r in analysis_results if 'error' not in r]

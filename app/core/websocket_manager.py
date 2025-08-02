@@ -222,20 +222,32 @@ class ConnectionManager:
     
     async def send_analysis_progress(self, job_id: str, progress_data: dict):
         """분석 진행상황 전송 - AIRISS 특화 기능"""
-        # details에서 데이터 추출
-        details = progress_data.get('details', {})
+        # details에서 데이터 추출 또는 직접 사용
+        details = progress_data.get('details', progress_data)
+        
+        # 진행률 계산 (progress가 없으면 processed/total로 계산)
+        progress = progress_data.get('progress', 0)
+        processed = details.get('processed', 0)
+        total = details.get('total', 0)
+        
+        if progress == 0 and total > 0:
+            progress = (processed / total) * 100
+        
         message = {
             "type": "analysis_progress",
             "job_id": job_id,
-            "progress": progress_data.get('progress', 0),
-            "processed": details.get('processed', 0),
-            "total": details.get('total', 0),
+            "progress": round(progress, 1),
+            "processed": processed,
+            "total": total,
             "current_uid": details.get('current_uid', ''),
             "status": details.get('status', ''),
             "timestamp": datetime.now().isoformat()
         }
-        logger.info(f"📤 Sending analysis progress: {message}")
-        await self.broadcast_to_channel("analysis", message)
+        
+        logger.info(f"📤 Sending analysis progress: job_id={job_id}, progress={message['progress']}%, status={message['status']}")
+        
+        # 모든 연결된 클라이언트에게 전송 (채널 구독 관계없이)
+        await self.broadcast(message)
     
     async def send_alert(self, alert_level: str, message: str, details: dict = None):
         """실시간 알림 전송 - AIRISS 특화 기능"""
