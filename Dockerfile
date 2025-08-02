@@ -1,40 +1,8 @@
 # AIRISS v4.1 Railway Multi-stage Dockerfile - Optimized
 # React + FastAPI Complete Integration
 
-# Stage 1: React Frontend Build
-FROM node:18 as frontend-builder
-
-WORKDIR /app/frontend
-
-# Install Node.js dependencies
-COPY airiss-v4-frontend/package.json ./
-COPY airiss-v4-frontend/package-lock.json ./
-# Install dependencies with increased timeout
-RUN npm config set fetch-retry-maxtimeout 120000 && \
-    npm install --legacy-peer-deps --loglevel verbose
-
-# Copy React source and build
-COPY airiss-v4-frontend/ ./
-
-# Set build environment variables
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-ENV GENERATE_SOURCEMAP=false
-ENV DISABLE_ESLINT_PLUGIN=true
-ENV CI=false
-ENV REACT_APP_API_URL=""
-
-# Build React app directly without cross-env
-ENV CI=false
-ENV DISABLE_ESLINT_PLUGIN=true
-ENV GENERATE_SOURCEMAP=false
-ENV NODE_ENV=production
-
-# Try to build with verbose output
-RUN CI=false npm run build 2>&1 || \
-    (echo "Build failed. Showing package versions:" && \
-     npm list react react-scripts typescript && \
-     echo "Retrying with node directly:" && \
-     CI=false node_modules/.bin/react-scripts build)
+# Skip React build stage - use pre-built static files
+# React build is done locally and committed to repository
 
 # Stage 2: Python FastAPI + React Static Files  
 FROM python:3.9-slim
@@ -48,8 +16,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy React build results
-COPY --from=frontend-builder /app/frontend/build ./static
+# Copy pre-built React static files
+COPY airiss-v4-frontend/build ./static 2>/dev/null || \
+    (echo "No pre-built React files found, creating placeholder" && \
+     mkdir -p ./static && \
+     echo '<html><body><h1>AIRISS v4</h1></body></html>' > ./static/index.html)
 
 # Upgrade pip first
 RUN pip install --upgrade pip

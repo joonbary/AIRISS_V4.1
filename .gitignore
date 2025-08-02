@@ -55,7 +55,8 @@ yarn-error.log*
 
 # Build outputs
 dist/
-build/
+# DON'T ignore React build - needed for Railway
+# airiss-v4-frontend/build/
 *.egg-info/
 
 # IDEs
