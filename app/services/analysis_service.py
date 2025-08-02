@@ -612,19 +612,22 @@ class AnalysisService:
                     department = str(row.get(department_column, '')) if department_column else ''
                     position = str(row.get(position_column, '')) if position_column else ''
                     
-                    # API 키 처리: 클라이언트 제공 키 우선, 없으면 환경변수 사용
+                    # API 키 처리: 환경변수 우선, 없으면 클라이언트 제공 키 사용
                     from app.core.config import settings
-                    api_key = job_data.get('openai_api_key')
                     
                     logger.info(f"🔑 API 키 처리 - enable_ai_feedback: {job_data.get('enable_ai_feedback')}")
-                    logger.info(f"🔑 클라이언트 제공 API 키: {'있음' if api_key else '없음'}")
                     
-                    if not api_key and job_data.get('enable_ai_feedback', False):
-                        api_key = settings.OPENAI_API_KEY
+                    # 1. 먼저 환경변수에서 API 키 확인
+                    api_key = settings.OPENAI_API_KEY
+                    if api_key:
+                        logger.info(f"✅ Railway 환경변수에서 OpenAI API 키 사용: {api_key[:10]}...{api_key[-4:] if len(api_key) > 14 else '****'}")
+                    else:
+                        # 2. 환경변수에 없으면 클라이언트 제공 키 사용
+                        api_key = job_data.get('openai_api_key')
                         if api_key:
-                            logger.info(f"✅ 환경변수에서 OpenAI API 키를 사용합니다: {api_key[:7]}...{api_key[-4:]}")
+                            logger.info(f"📱 클라이언트 제공 API 키 사용: {api_key[:10]}...{api_key[-4:] if len(api_key) > 14 else '****'}")
                         else:
-                            logger.warning("⚠️ OpenAI API 키가 설정되지 않았습니다")
+                            logger.warning("⚠️ OpenAI API 키가 없습니다. LLM 분석이 비활성화됩니다.")
                     
                     logger.info(f"🔑 최종 API 키 사용: {'있음' if api_key else '없음'}")
                     
