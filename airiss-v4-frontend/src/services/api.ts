@@ -3,7 +3,7 @@ import axios, { AxiosError } from 'axios';
 // API 기본 URL 설정 (Railway 호환)
 // 프로덕션에서는 같은 도메인 사용 (프록시 설정됨)
 const API_BASE_URL = process.env.REACT_APP_API_URL || 
-  (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8003');
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8003');
 
 // axios 인스턴스 생성
 const api = axios.create({

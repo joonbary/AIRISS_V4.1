@@ -45,7 +45,7 @@ class WebSocketService {
 
     try {
       // Railway 환경에서는 wss 사용
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
       const baseUrl = process.env.REACT_APP_API_URL || 
         (isProduction ? window.location.origin : 'http://localhost:8003');
       

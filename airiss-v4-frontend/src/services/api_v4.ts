@@ -6,7 +6,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 
 // API Base URL - AIRISS v4.0 Backend
 const API_BASE_URL = process.env.REACT_APP_API_URL || 
-  (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8003');
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8003');
 
 // Create axios instance with AIRISS v4.0 configuration
 const apiV4 = axios.create({
