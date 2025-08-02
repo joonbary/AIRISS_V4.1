@@ -12,9 +12,10 @@ from datetime import datetime
 try:
     from openai import AsyncOpenAI
     OPENAI_AVAILABLE = True
-except ImportError:
+    logging.info("✅ OpenAI library imported successfully")
+except ImportError as e:
     OPENAI_AVAILABLE = False
-    logging.warning("OpenAI not available. Using mock processor.")
+    logging.warning(f"⚠️ OpenAI not available: {e}. Using mock processor.")
 
 logger = logging.getLogger(__name__)
 
@@ -83,11 +84,13 @@ class OpinionProcessor:
         # API 키 로드 상태 로깅
         if not self.api_key:
             logger.error("⚠️ OpenAI API key not found in settings!")
+            logger.error(f"Environment check - OPENAI_API_KEY exists: {bool(os.getenv('OPENAI_API_KEY'))}")
         else:
             logger.info(f"✅ OpenAI API key loaded: {self.api_key[:10]}...")
         
         if self.mock_mode:
             logger.warning(f"Running in mock mode - OPENAI_AVAILABLE: {OPENAI_AVAILABLE}, API_KEY: {bool(self.api_key)}")
+            logger.warning(f"OpenAI package installed: {OPENAI_AVAILABLE}, API key exists: {bool(self.api_key)}")
             self.client = None
         else:
             logger.info(f"✅ OpenAI client initialized with model: {self.model}")
