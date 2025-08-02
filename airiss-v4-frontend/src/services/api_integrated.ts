@@ -79,7 +79,7 @@ export const uploadFile = async (file: File, onProgress?: (progress: number) => 
   const formData = new FormData();
   formData.append('file', file);
   
-  const response = await api.post('/api/v1/analysis/upload', formData, {
+  const response = await api.post('/api/v1/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },

@@ -5,7 +5,8 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
 // API Base URL - AIRISS v4.0 Backend
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8003';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+  (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8003');
 
 // Create axios instance with AIRISS v4.0 configuration
 const apiV4 = axios.create({
@@ -133,7 +134,7 @@ export const analysisAPI = {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await apiV4.post<JobResponse>('/api/v1/analysis/upload', formData, {
+    const response = await apiV4.post<JobResponse>('/api/v1/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

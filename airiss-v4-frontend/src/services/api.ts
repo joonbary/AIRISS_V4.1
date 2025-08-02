@@ -1,7 +1,9 @@
 import axios, { AxiosError } from 'axios';
 
 // API 기본 URL 설정 (Railway 호환)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8003';
+// 프로덕션에서는 같은 도메인 사용 (프록시 설정됨)
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+  (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8003');
 
 // axios 인스턴스 생성
 const api = axios.create({
@@ -69,8 +71,8 @@ export const uploadFile = async (file: File) => {
   formData.append('file', file);
   
   try {
-    // 분석 서비스의 전용 업로드 엔드포인트 사용
-    const response = await api.post('/api/v1/analysis/upload', formData, {
+    // 업로드 엔드포인트 사용
+    const response = await api.post('/api/v1/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     
