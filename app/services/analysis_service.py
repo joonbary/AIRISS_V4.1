@@ -416,15 +416,45 @@ class AnalysisService:
             # Progress updates
             await self.update_progress(job_id, 10, {"status": "파일 로드 중"})
             
-            # 1. 파일 정보 가져오기
-            if file_id not in self.uploaded_files:
-                logger.error(f"❌ 파일 ID를 메모리에서 찾을 수 없습니다: {file_id}")
-                logger.error(f"📁 현재 업로드된 파일 목록: {list(self.uploaded_files.keys())}")
-                raise ValueError(f"파일을 찾을 수 없습니다: {file_id}")
+            # 1. 파일 정보 가져오기 - 먼저 데이터베이스에서 확인
+            file_info = None
+            file_path = None
+            filename = None
             
-            file_info = self.uploaded_files[file_id]
-            file_path = file_info['path']
-            filename = file_info['filename']
+            # 데이터베이스에서 파일 정보 조회
+            from app.db.database import get_db
+            from app.models.file import File as FileModel
+            import json
+            
+            db = next(get_db())
+            try:
+                file_record = db.query(FileModel).filter(FileModel.id == file_id).first()
+                if file_record:
+                    logger.info(f"✅ 데이터베이스에서 파일 정보 찾음: {file_id}")
+                    file_path = file_record.file_path
+                    filename = file_record.filename
+                    
+                    # 메모리 캐시에 저장
+                    self.uploaded_files[file_id] = {
+                        'path': file_path,
+                        'filename': filename,
+                        'total_records': file_record.total_records,
+                        'columns': json.loads(file_record.columns) if file_record.columns else []
+                    }
+                    file_info = self.uploaded_files[file_id]
+                else:
+                    # 메모리에서 확인 (fallback)
+                    if file_id in self.uploaded_files:
+                        logger.info(f"📦 메모리 캐시에서 파일 정보 찾음: {file_id}")
+                        file_info = self.uploaded_files[file_id]
+                        file_path = file_info['path']
+                        filename = file_info['filename']
+                    else:
+                        logger.error(f"❌ 파일을 찾을 수 없습니다: {file_id}")
+                        logger.error(f"📁 현재 업로드된 파일 목록: {list(self.uploaded_files.keys())}")
+                        raise ValueError(f"파일을 찾을 수 없습니다: {file_id}")
+            finally:
+                db.close()
             
             # 파일 존재 여부 확인
             import os
@@ -435,16 +465,29 @@ class AnalysisService:
             
             # 2. 파일 읽기 및 데이터 로드
             import pandas as pd
-            logger.info(f"Excel 파일 읽기: {file_path}")
+            logger.info(f"파일 읽기 시작: {file_path}")
             
             try:
-                df = pd.read_excel(file_path)
-                logger.info(f"📊 데이터 로드 완료: {len(df)} rows, {len(df.columns)} columns")
-                logger.info(f"📋 Excel 파일 컬럼명: {list(df.columns)}")
+                # pickle 파일로 저장된 경우
+                if file_path.endswith('.pkl'):
+                    df = pd.read_pickle(file_path)
+                    logger.info(f"📊 Pickle 파일 로드 완료: {len(df)} rows, {len(df.columns)} columns")
+                # Excel 파일인 경우
+                elif file_path.endswith(('.xlsx', '.xls')):
+                    df = pd.read_excel(file_path)
+                    logger.info(f"📊 Excel 파일 로드 완료: {len(df)} rows, {len(df.columns)} columns")
+                # CSV 파일인 경우
+                elif file_path.endswith('.csv'):
+                    df = pd.read_csv(file_path)
+                    logger.info(f"📊 CSV 파일 로드 완료: {len(df)} rows, {len(df.columns)} columns")
+                else:
+                    raise ValueError(f"지원되지 않는 파일 형식: {file_path}")
+                
+                logger.info(f"📋 파일 컬럼명: {list(df.columns)}")
                 logger.info(f"📄 첫 5행 데이터 미리보기:\n{df.head()}")
             except Exception as e:
                 logger.error(f"❌ 파일 읽기 오류: {e}")
-                raise ValueError(f"Excel 파일 읽기 실패: {e}")
+                raise ValueError(f"파일 읽기 실패: {e}")
             
             # 데이터 프레임이 비어있는지 확인
             if df.empty:

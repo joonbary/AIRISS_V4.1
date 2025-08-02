@@ -81,8 +81,9 @@ async def upload_file(
         
         # DataFrame을 임시 파일로 저장
         os.makedirs('temp_data', exist_ok=True)
-        file_path = f'temp_data/{file_id}.pkl'
+        file_path = os.path.abspath(f'temp_data/{file_id}.pkl')
         df.to_pickle(file_path)
+        logger.info(f"파일 저장 경로: {file_path}")
         
         file_record = FileModel(
             id=file_id,
