@@ -43,8 +43,9 @@ RUN pip install --upgrade pip
 # Create minimal requirements for faster startup
 COPY requirements.txt .
 
-# Install OpenAI FIRST to ensure it's available
-RUN pip install --no-cache-dir openai==1.54.5
+# Copy install script and install OpenAI FIRST
+COPY install_openai.sh .
+RUN chmod +x install_openai.sh && ./install_openai.sh
 
 # Install only essential dependencies
 RUN pip install --no-cache-dir \
@@ -81,5 +82,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=120s --retries=5 \
 # Railway dynamic port support
 EXPOSE 8000
 
-# Run check_openai.py first to verify installation, then start server
-CMD ["sh", "-c", "python check_openai.py && python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info"]
+# Install OpenAI on startup if not available, then start server
+CMD ["sh", "-c", "./install_openai.sh && python check_openai.py && python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info"]

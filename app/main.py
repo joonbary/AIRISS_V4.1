@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
 import sys
+import subprocess
 from pathlib import Path
 import uvicorn
 from datetime import datetime
@@ -29,6 +30,19 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Try to install OpenAI if not available
+try:
+    import openai
+    logger.info(f"✅ OpenAI already installed: {openai.__version__}")
+except ImportError:
+    logger.warning("⚠️ OpenAI not found, attempting to install...")
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "openai==1.54.5"])
+        import openai
+        logger.info(f"✅ OpenAI installed successfully: {openai.__version__}")
+    except Exception as e:
+        logger.error(f"❌ Failed to install OpenAI: {e}")
 
 # Initialize database tables
 try:
