@@ -23,12 +23,13 @@ ENV DISABLE_ESLINT_PLUGIN=true
 ENV CI=false
 ENV REACT_APP_API_URL=""
 
-# Build React app (use build:docker which has no cross-env)
-RUN export DISABLE_ESLINT_PLUGIN=true && \
-    export CI=false && \
-    export GENERATE_SOURCEMAP=false && \
-    export NODE_ENV=production && \
-    npm run build:docker
+# Build React app
+ENV CI=false
+ENV DISABLE_ESLINT_PLUGIN=true
+ENV GENERATE_SOURCEMAP=false
+ENV NODE_ENV=production
+
+RUN npm run build
 
 # Stage 2: Python FastAPI + React Static Files  
 FROM python:3.9-slim

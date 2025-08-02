@@ -11,7 +11,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter future={{ v7_startTransition: true }}>
+      <BrowserRouter>
         <Box sx={{ minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
         <SimpleNavigation />
         <Container maxWidth="xl" sx={{ py: 3 }}>
