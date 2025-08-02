@@ -23,7 +23,7 @@ class FileInfo(BaseModel):
     session_id: Optional[str] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class FileUploadResponse(BaseModel):
