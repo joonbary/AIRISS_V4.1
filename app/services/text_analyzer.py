@@ -661,18 +661,23 @@ class AIRISSTextAnalyzer:
 2. 중기(3개월): 구체적 목표
 3. 장기(6개월): 기대 성과
 """
-            response = await asyncio.to_thread(
-                client.chat.completions.create,
-                model=model,
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": "당신은 OK금융그룹의 수석 HR 전문가입니다. 건설적이고 실행 가능한 피드백을 제공하세요."
-                    },
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=max_tokens,
-                temperature=0.7
+            # Python 3.9 호환성을 위한 변경
+            import asyncio
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {
+                            "role": "system", 
+                            "content": "당신은 OK금융그룹의 수석 HR 전문가입니다. 건설적이고 실행 가능한 피드백을 제공하세요."
+                        },
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=max_tokens,
+                    temperature=0.7
+                )
             )
             feedback = response.choices[0].message.content
             # 응답 파싱 개선

@@ -389,6 +389,8 @@ class AnalysisService:
             
         except Exception as e:
             logger.error(f"❌ 분석 실패 처리 오류: {e}")
+            import traceback
+            logger.error(f"트레이스백:\n{traceback.format_exc()}")
     
     async def _process_analysis(self, job_id: str, job_data: Dict[str, Any]):
         """실제 분석 작업 처리 - HybridAnalyzer 통합"""
@@ -748,9 +750,10 @@ class AnalysisService:
                 finally:
                     db.close()
             
-            # 동기 함수를 비동기로 실행
+            # 동기 함수를 비동기로 실행 - Python 3.9 호환
             import asyncio
-            await asyncio.to_thread(save_results)
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, save_results)
             
         except Exception as e:
             logger.error(f"❌ EmployeeResult 저장 중 오류: {e}")
