@@ -622,6 +622,15 @@ class AIRISSTextAnalyzer:
             }
         
         try:
+            # API 키 유효성 검증
+            if not api_key or len(api_key) < 20:
+                logger.error("유효하지 않은 API 키")
+                raise ValueError("유효하지 않은 OpenAI API 키입니다.")
+            
+            # API 키 형식 확인
+            if not api_key.startswith(('sk-', 'sk-proj-')):
+                logger.warning(f"비표준 API 키 형식: {api_key[:10]}...")
+            
             client = self.openai.OpenAI(api_key=api_key)
             # 개선된 프롬프트
             prompt = f"""
@@ -679,7 +688,11 @@ class AIRISSTextAnalyzer:
                     temperature=0.7
                 )
             )
-            feedback = response.choices[0].message.content
+            if response and response.choices and len(response.choices) > 0:
+                feedback = response.choices[0].message.content
+            else:
+                logger.error("OpenAI API 응답이 비어있습니다")
+                raise ValueError("API 응답 없음")
             # 응답 파싱 개선
             sections = {
                 "strengths": "",
@@ -707,13 +720,25 @@ class AIRISSTextAnalyzer:
                 "error": None
             }
         except Exception as e:
-            logger.error(f"OpenAI API 오류: {e}", exc_info=True)
+            error_msg = str(e)
+            logger.error(f"OpenAI API 오류: {error_msg}", exc_info=True)
+            
+            # 일반적인 API 오류 메시지 처리
+            if "invalid" in error_msg.lower() and "api" in error_msg.lower():
+                error_detail = "OpenAI API 키가 유효하지 않습니다. 올바른 API 키를 입력해주세요."
+            elif "rate limit" in error_msg.lower():
+                error_detail = "API 사용량 한도를 초과했습니다. 잠시 후 다시 시도해주세요."
+            elif "connection" in error_msg.lower():
+                error_detail = "OpenAI 서버에 연결할 수 없습니다. 네트워크를 확인해주세요."
+            else:
+                error_detail = f"AI 분석 중 오류가 발생했습니다: {error_msg[:100]}"
+            
             return {
-                "ai_strengths": f"AI 분석 오류: {str(e)}",
-                "ai_weaknesses": "AI 분석을 완료할 수 없습니다.",
-                "ai_feedback": f"오류: {str(e)}",
-                "ai_recommendations": [],
-                "error": str(e)
+                "ai_strengths": "AI 분석이 실행되지 않았습니다.",
+                "ai_weaknesses": "기본 텍스트 분석 결과를 참고해주세요.",
+                "ai_feedback": error_detail,
+                "ai_recommendations": ["AI 분석 없이 기본 분석만 제공됩니다."],
+                "error": error_msg
             }
 
 

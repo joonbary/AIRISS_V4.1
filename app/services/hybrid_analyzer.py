@@ -189,6 +189,8 @@ class AIRISSHybridAnalyzer:
             except Exception as e:
                 logger.error(f"AI 피드백 생성 오류: {e}")
                 ai_feedback_result["error"] = str(e)
+                # AI 분석 실패해도 기본 분석은 계속 진행
+                logger.info("AI 분석 실패, 기본 텍스트 분석으로 진행합니다.")
         
         # 9. 분석 결과 구성 (numpy 타입 안전 변환)
         analysis_result = {
