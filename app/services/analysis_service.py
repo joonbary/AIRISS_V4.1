@@ -40,10 +40,19 @@ class AnalysisService:
             upload_dir.mkdir(exist_ok=True)
             
             file_path = upload_dir / f"{file_id}_{filename}"
+            
+            # 디버깅 로그 추가
+            import os
+            logger.info(f"📁 현재 작업 디렉토리: {os.getcwd()}")
+            logger.info(f"📁 uploads 디렉토리 경로: {upload_dir.absolute()}")
+            logger.info(f"📁 파일 저장 경로: {file_path.absolute()}")
+            
             with open(file_path, "wb") as f:
                 f.write(file_contents)
             
             logger.info(f"📁 파일 저장 완료: {file_path}")
+            logger.info(f"📁 파일 크기: {os.path.getsize(file_path)} bytes")
+            logger.info(f"📁 파일 존재 확인: {os.path.exists(file_path)}")
             
             # Excel 파일 분석
             df = None
@@ -112,7 +121,7 @@ class AnalysisService:
             file_info = {
                 "file_id": file_id,
                 "filename": filename,
-                "path": str(file_path),
+                "path": str(file_path.absolute()),  # 절대 경로 저장
                 "size": len(file_contents),
                 "total_records": len(df),
                 "columns": all_columns,
@@ -409,11 +418,20 @@ class AnalysisService:
             
             # 1. 파일 정보 가져오기
             if file_id not in self.uploaded_files:
+                logger.error(f"❌ 파일 ID를 메모리에서 찾을 수 없습니다: {file_id}")
+                logger.error(f"📁 현재 업로드된 파일 목록: {list(self.uploaded_files.keys())}")
                 raise ValueError(f"파일을 찾을 수 없습니다: {file_id}")
             
             file_info = self.uploaded_files[file_id]
             file_path = file_info['path']
             filename = file_info['filename']
+            
+            # 파일 존재 여부 확인
+            import os
+            if not os.path.exists(file_path):
+                logger.error(f"❌ 파일이 파일시스템에 존재하지 않습니다: {file_path}")
+                logger.error(f"📁 uploads 디렉토리 내용: {os.listdir('uploads') if os.path.exists('uploads') else '디렉토리 없음'}")
+                raise ValueError(f"파일이 존재하지 않습니다: {file_path}")
             
             # 2. 파일 읽기 및 데이터 로드
             import pandas as pd
