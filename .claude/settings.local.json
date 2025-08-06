@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(dir:*)",
+      "Bash(cp:*)",
+      "Bash(xcopy:*)",
+      "Bash(powershell:*)",
+      "Bash(pip install:*)",
+      "Bash(python test_db_connection.py:*)",
+      "Bash(python:*)",
+      "Bash(set PORT=8001)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
+}

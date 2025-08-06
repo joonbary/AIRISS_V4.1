@@ -1,0 +1,28 @@
+{
+  "short_name": "AIRISS v4.1",
+  "name": "AIRISS - AI 기반 인재 분석 시스템",
+  "description": "OK금융그룹 AI 기반 직원 성과/역량 스코어링 시스템",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#FF5722",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity", "analytics"]
+}

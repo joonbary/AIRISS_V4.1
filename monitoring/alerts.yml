@@ -1,0 +1,113 @@
+groups:
+  - name: airiss_alerts
+    interval: 30s
+    rules:
+      # Service Health
+      - alert: AirissServiceDown
+        expr: up{job="airiss-llm"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: airiss
+        annotations:
+          summary: "AIRISS LLM Service is down"
+          description: "AIRISS LLM service has been down for more than 2 minutes."
+
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: airiss
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 10% for the last 5 minutes."
+
+      # High Response Time
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: airiss
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is above 2 seconds."
+
+      # OpenAI API Failures
+      - alert: OpenAIAPIFailures
+        expr: rate(openai_api_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: airiss
+        annotations:
+          summary: "OpenAI API failures detected"
+          description: "OpenAI API error rate is above 5% for the last 5 minutes."
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes{name="airiss-llm-prod"} / container_spec_memory_limit_bytes{name="airiss-llm-prod"}) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: airiss
+        annotations:
+          summary: "High memory usage"
+          description: "Container memory usage is above 80% of limit."
+
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total{name="airiss-llm-prod"}[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: airiss
+        annotations:
+          summary: "High CPU usage"
+          description: "Container CPU usage is above 80%."
+
+      # Database Connection Issues
+      - alert: DatabaseConnectionFailure
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "Database connection failure"
+          description: "Cannot connect to PostgreSQL database."
+
+      # Redis Connection Issues
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: warning
+          service: cache
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis cache service is not responding."
+
+      # Rate Limiting
+      - alert: RateLimitExceeded
+        expr: rate(rate_limit_exceeded_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: info
+          service: airiss
+        annotations:
+          summary: "Rate limiting triggered frequently"
+          description: "Rate limiting is being triggered more than 10 times per minute."
+
+      # Disk Space
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "Low disk space"
+          description: "Less than 10% disk space remaining."

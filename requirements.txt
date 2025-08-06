@@ -1,0 +1,42 @@
+# Core dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+python-dotenv==1.0.0
+
+# Database
+sqlalchemy>=2.0.0
+psycopg2-binary
+aiosqlite>=0.19.0
+asyncpg==0.29.0
+
+# Data processing
+pandas>=2.2.0
+numpy>=1.24.0
+scipy>=1.11.0
+openpyxl==3.1.2
+
+# API and utilities
+pydantic[email]>=2.5.0
+email-validator>=2.0.0
+aiofiles==23.2.1
+httpx==0.25.1
+websockets==12.0
+requests>=2.31.0
+
+# Authentication
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
+PyJWT>=2.8.0
+
+# Other
+jinja2==3.1.2
+itsdangerous>=2.0.0
+reportlab==4.0.7
+
+# AI dependencies (REQUIRED - DO NOT COMMENT OUT)
+openai==1.54.5
+# scikit-learn>=1.3.0
+# nltk>=3.8
+# torch>=2.0.0
+# transformers>=4.30.0
