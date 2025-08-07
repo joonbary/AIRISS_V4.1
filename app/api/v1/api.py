@@ -5,7 +5,7 @@ AIRISS v4.0 API 라우터
 """
 
 from fastapi import APIRouter
-from app.api.v1.endpoints import analysis, employee, analysis_opinion, analysis_opinion_simple, config
+from app.api.v1.endpoints import analysis, employee, analysis_opinion, analysis_opinion_simple, config, hr_dashboard
 
 api_router = APIRouter()
 
@@ -42,6 +42,13 @@ api_router.include_router(
     config.router,
     prefix="/config",
     tags=["config"]
+)
+
+# HR 대시보드 엔드포인트
+api_router.include_router(
+    hr_dashboard.router,
+    prefix="/hr-dashboard",
+    tags=["hr_dashboard"]
 )
 
 # 향후 추가 엔드포인트

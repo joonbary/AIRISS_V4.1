@@ -201,6 +201,14 @@ try:
 except ImportError as e:
     logger.error(f"Failed to import config router: {e}")
 
+# HR Dashboard endpoints
+try:
+    from app.api.v1.endpoints.hr_dashboard import router as hr_dashboard_router
+    app.include_router(hr_dashboard_router, prefix="/api/v1/hr-dashboard", tags=["HR Dashboard"])
+    logger.info("HR Dashboard router registered")
+except ImportError as e:
+    logger.error(f"Failed to import HR dashboard router: {e}")
+
 # OpenAI Proxy endpoints (Railway 환경용)
 try:
     from app.api.v1.endpoints.openai_proxy import router as proxy_router
@@ -230,6 +238,15 @@ if os.path.exists(static_path):
     logger.info(f"✅ Static files configured from: {static_path}")
 else:
     logger.warning(f"⚠️ Static path not found: {static_path}")
+
+# HR Dashboard route
+@app.get("/hr-dashboard")
+async def serve_hr_dashboard():
+    """Serve HR Dashboard page"""
+    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard.html")
+    if os.path.exists(template_path):
+        return FileResponse(template_path)
+    return {"message": "HR Dashboard not found"}
 
 # Serve React app - This MUST come after all other routes
 @app.get("/")

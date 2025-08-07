@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR 대시보드 - AIRISS v4.0</title>
+    
+    <!-- Ant Design CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .hr-dashboard {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-card {
+            margin-bottom: 24px;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02), 0 2px 4px 0 rgba(0,0,0,0.02);
+        }
+        
+        .ant-card-head {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .ant-card-head-title {
+            color: white !important;
+        }
+        
+        .ant-card-extra {
+            color: white !important;
+        }
+        
+        .ant-statistic-title {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .ant-statistic-content {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .ant-table-thead > tr > th {
+            background: #fafafa;
+            font-weight: 600;
+        }
+        
+        .ant-progress-text {
+            font-size: 12px !important;
+        }
+        
+        .ant-tag {
+            margin: 2px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        canvas {
+            max-height: 300px;
+        }
+        
+        .ant-spin-container {
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .grade-distribution-card .ant-card-body {
+            padding: 24px;
+        }
+        
+        .risk-level-high {
+            color: #ff4d4f;
+            font-weight: bold;
+        }
+        
+        .risk-level-medium {
+            color: #faad14;
+            font-weight: bold;
+        }
+        
+        .promotion-score-bar {
+            display: inline-block;
+            width: 100px;
+        }
+        
+        .reason-tag {
+            display: inline-block;
+            margin: 2px;
+        }
+        
+        .top-talent-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .department-stats {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        
+        .header-stats {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02), 0 2px 4px 0 rgba(0,0,0,0.02);
+        }
+        
+        h2.ant-typography {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .ant-typography-secondary {
+            color: #666;
+        }
+        
+        .table-action-link {
+            color: #1890ff;
+            cursor: pointer;
+        }
+        
+        .table-action-link:hover {
+            color: #40a9ff;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div id="hr-dashboard-root"></div>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Ant Design -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- HR Dashboard Component -->
+    <script src="/static/js/hr-dashboard.js"></script>
+</body>
+</html>
