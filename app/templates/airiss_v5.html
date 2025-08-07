@@ -74,10 +74,13 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', 'Inter', sans-serif;
-            background: var(--bg-primary);
+            background: linear-gradient(135deg, #FAFBFC 0%, #F1F3F5 100%);
+            background-attachment: fixed;
             min-height: 100vh;
             color: var(--text-primary);
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             font-weight: 400;
             letter-spacing: -0.01em;
         }
@@ -86,7 +89,44 @@
         .app-container {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 32px;
+            position: relative;
+        }
+        
+        /* ===== 프리미엄 카드 시스템 ===== */
+        .premium-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            transition: var(--transition-slow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .premium-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--chanel-gradient);
+            opacity: 0;
+            transition: var(--transition-base);
+        }
+        
+        .premium-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+        
+        .premium-card:hover::before {
+            opacity: 1;
         }
         
         /* ===== 프리미엄 헤더 ===== */
@@ -182,14 +222,17 @@
         /* ===== 프리미엄 탭 네비게이션 ===== */
         .tab-navigation {
             display: flex;
-            gap: 8px;
-            margin-bottom: 32px;
+            gap: 4px;
+            margin-bottom: 40px;
             flex-wrap: wrap;
-            background: var(--card-bg);
-            padding: 8px;
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--border-light);
+            background: rgba(248, 250, 252, 0.8);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            padding: 6px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            position: relative;
         }
         
         .tab-button {
@@ -1348,40 +1391,144 @@
                 console.log('✅ 직원 목록 렌더링 완료');
             },
             
-            // 직원 상세 보기
+            // 직원 상세 보기 - 풍부한 AI 분석 정보 표시
             async viewEmployeeDetail(employeeId) {
                 try {
                     const data = await this.api.request('GET', `/employees/${employeeId}/ai-analysis`);
                     
                     const modalBody = document.getElementById('modal-body');
                     modalBody.innerHTML = `
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div>
-                                <h3>기본 정보</h3>
-                                <p><strong>이름:</strong> ${data.employee_name || '익명'}</p>
-                                <p><strong>부서:</strong> ${data.department || '-'}</p>
-                                <p><strong>직급:</strong> ${data.position || '-'}</p>
+                        <div class="employee-detail-content">
+                            <!-- 기본 정보 및 AI 점수 -->
+                            <div class="detail-header" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                                <div class="basic-info">
+                                    <h3 style="color: var(--chanel-orange); margin-bottom: 15px;">📋 기본 정보</h3>
+                                    <div class="info-grid">
+                                        <p><strong>이름:</strong> ${data.name || '익명'}</p>
+                                        <p><strong>부서:</strong> ${data.department || '-'}</p>
+                                        <p><strong>직급:</strong> ${data.position || '-'}</p>
+                                        <p><strong>분석 일시:</strong> ${data.analyzed_at ? new Date(data.analyzed_at).toLocaleDateString('ko-KR') : '-'}</p>
+                                    </div>
+                                </div>
+                                <div class="ai-score-section">
+                                    <h3 style="color: var(--chanel-orange); margin-bottom: 15px;">🎯 AI 종합 평가</h3>
+                                    <div style="text-align: center;">
+                                        <div class="score-circle" style="
+                                            width: 100px; 
+                                            height: 100px; 
+                                            border-radius: 50%; 
+                                            background: linear-gradient(135deg, var(--chanel-orange), #ff7a00);
+                                            display: flex; 
+                                            align-items: center; 
+                                            justify-content: center; 
+                                            margin: 0 auto 10px;
+                                            color: white;
+                                            font-size: 24px;
+                                            font-weight: bold;
+                                        ">${data.ai_score || 0}</div>
+                                        <div class="grade-badge" style="
+                                            background: var(--chanel-orange);
+                                            color: white;
+                                            padding: 5px 15px;
+                                            border-radius: 20px;
+                                            font-weight: bold;
+                                            display: inline-block;
+                                        ">${data.grade || 'C'} 등급</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <h3>AI 분석 결과</h3>
-                                <p><strong>AI 점수:</strong> ${data.ai_score || 0}</p>
-                                <p><strong>AI 등급:</strong> ${data.grade || 'C'}</p>
+                            
+                            <!-- 8대 역량 분석 -->
+                            <div class="competency-section" style="margin-bottom: 25px;">
+                                <h3 style="color: var(--chanel-orange); margin-bottom: 15px;">📊 8대 핵심 역량</h3>
+                                <div class="competency-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                                    ${Object.entries(data.competencies || {}).map(([key, value]) => `
+                                        <div class="competency-item" style="
+                                            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+                                            padding: 12px;
+                                            border-radius: 8px;
+                                            text-align: center;
+                                            border-left: 4px solid var(--chanel-orange);
+                                        ">
+                                            <div style="font-weight: bold; margin-bottom: 5px;">${key}</div>
+                                            <div style="font-size: 18px; color: var(--chanel-orange); font-weight: bold;">${value || 0}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
                             </div>
-                        </div>
-                        <div style="margin-top: 20px;">
-                            <h3>강점</h3>
-                            <ul>${(data.strengths || []).map(s => `<li>${s}</li>`).join('')}</ul>
-                        </div>
-                        <div style="margin-top: 20px;">
-                            <h3>개선점</h3>
-                            <ul>${(data.improvements || []).map(i => `<li>${i}</li>`).join('')}</ul>
+                            
+                            <!-- AI 종합 피드백 -->
+                            ${data.ai_comment ? `
+                            <div class="ai-feedback-section" style="margin-bottom: 25px;">
+                                <h3 style="color: var(--chanel-orange); margin-bottom: 15px;">🤖 AI 종합 피드백</h3>
+                                <div style="
+                                    background: linear-gradient(135deg, #f8f9fa, #fff);
+                                    padding: 20px;
+                                    border-radius: 12px;
+                                    border: 1px solid #e9ecef;
+                                    font-size: 14px;
+                                    line-height: 1.6;
+                                    color: #495057;
+                                ">${data.ai_comment}</div>
+                            </div>
+                            ` : ''}
+                            
+                            <!-- 강점과 개선점 -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                                <div class="strengths-section">
+                                    <h3 style="color: #28a745; margin-bottom: 15px;">✨ 핵심 강점</h3>
+                                    <ul style="background: #f8fff9; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                                        ${(data.strengths || ['데이터가 충분하지 않습니다']).map(s => `<li style="margin-bottom: 8px;">${s}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                <div class="improvements-section">
+                                    <h3 style="color: #dc3545; margin-bottom: 15px;">🎯 개선 포인트</h3>
+                                    <ul style="background: #fff5f5; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                                        ${(data.improvements || ['데이터가 충분하지 않습니다']).map(i => `<li style="margin-bottom: 8px;">${i}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- 추천 사항 -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="career-recommendation">
+                                    <h3 style="color: #17a2b8; margin-bottom: 15px;">🚀 경력 발전 추천</h3>
+                                    <ul style="background: #f0f8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #17a2b8;">
+                                        ${(data.career_recommendation || ['프로젝트 관리', '팀 리더십']).map(r => `<li style="margin-bottom: 8px;">${r}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                <div class="education-suggestion">
+                                    <h3 style="color: #6f42c1; margin-bottom: 15px;">📚 교육 프로그램</h3>
+                                    <ul style="background: #faf8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #6f42c1;">
+                                        ${(data.education_suggestion || ['리더십 교육', '전략적 사고 프로그램']).map(e => `<li style="margin-bottom: 8px;">${e}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- 분석 정보 -->
+                            <div style="margin-top: 20px; text-align: center; color: #6c757d; font-size: 12px;">
+                                분석 엔진: ${data.model_version || 'AIRISS v4.2'} | 
+                                생성 시간: ${new Date().toLocaleString('ko-KR')}
+                            </div>
                         </div>
                     `;
                     
-                    document.getElementById('modal-title').textContent = `${data.employee_name || employeeId} - AI 분석 리포트`;
+                    document.getElementById('modal-title').textContent = `${data.name || employeeId} - 상세 AI 분석 리포트`;
                     document.getElementById('employee-modal').classList.add('active');
                 } catch (error) {
                     console.error('Employee detail load failed:', error);
+                    
+                    const modalBody = document.getElementById('modal-body');
+                    modalBody.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #dc3545;">
+                            <h3>⚠️ 데이터 로드 실패</h3>
+                            <p>분석 데이터를 불러올 수 없습니다.</p>
+                            <p style="font-size: 14px; color: #6c757d;">오류: ${error.message}</p>
+                        </div>
+                    `;
+                    
+                    document.getElementById('modal-title').textContent = '데이터 로드 오류';
+                    document.getElementById('employee-modal').classList.add('active');
                 }
             },
             
