@@ -156,6 +156,26 @@ async def api_root():
     """API root endpoint"""
     return {"message": "AIRISS v4.0 API", "version": "4.0.2"}
 
+# HR Dashboard Final - Production Ready
+@app.get("/hr")
+async def hr_dashboard_final():
+    """Production-ready HR Dashboard"""
+    from fastapi.responses import FileResponse
+    
+    filepath = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_final.html")
+    
+    if os.path.exists(filepath):
+        return FileResponse(
+            filepath,
+            media_type="text/html",
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "X-Version": "2025.01.07"
+            }
+        )
+    
+    return {"error": "Dashboard not found"}
+
 # COMPLETELY NEW ENDPOINT - Never cached before
 @app.get("/dashboard/latest")
 async def dashboard_latest():
