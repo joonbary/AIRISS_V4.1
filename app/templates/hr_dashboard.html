@@ -169,11 +169,9 @@ const { useState, useEffect } = React;
 const { Card, Row, Col, Statistic, Table, Tag, Progress, Spin, Alert, Typography, Divider, Space, Tooltip, Button } = antd;
 const { Title, Text, Paragraph } = Typography;
 const { Column, ColumnGroup } = Table;
-const { DownloadOutlined, ReloadOutlined } = antd;
-const { Chart, registerables } = ChartJS;
-
+// Icon components will be created using React.createElement
 // Chart.js 등록
-Chart.register(...registerables);
+Chart.register(...Chart.registerables);
 
 const HRDashboard = () => {
     const [loading, setLoading] = useState(true);
@@ -505,6 +503,12 @@ const HRDashboard = () => {
         if (data?.grade_distribution) {
             const ctx = document.getElementById('gradeChart');
             if (ctx) {
+                // 이전 차트 제거
+                const existingChart = Chart.getChart(ctx);
+                if (existingChart) {
+                    existingChart.destroy();
+                }
+                
                 const chart = new Chart(ctx, {
                     type: 'bar',
                     data: {
@@ -569,10 +573,6 @@ const HRDashboard = () => {
                         }
                     }
                 });
-
-                return () => {
-                    chart.destroy();
-                };
             }
         }
     }, [data]);
@@ -607,19 +607,17 @@ const HRDashboard = () => {
                 </div>
                 <Space>
                     <Button 
-                        icon={React.createElement(ReloadOutlined)}
                         onClick={fetchDashboardData}
                         loading={loading}
                     >
-                        새로고침
+                        🔄 새로고침
                     </Button>
                     <Button 
                         type="primary"
-                        icon={React.createElement(DownloadOutlined)}
                         onClick={downloadPdf}
                         loading={downloadingPdf}
                     >
-                        PDF 다운로드
+                        📄 PDF 다운로드
                     </Button>
                 </Space>
             </div>
