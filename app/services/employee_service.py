@@ -239,144 +239,132 @@ class EmployeeService:
         sort_options: Dict[str, str],
         pagination: Dict[str, int]
     ) -> EmployeeAIAnalysisList:
-        """전체 직원 AI 분석 목록 조회 - 기존 analysis_results 우선 활용"""
+        """전체 직원 AI 분석 목록 조회 - 안전한 fallback 우선"""
         try:
-            # 1차: 기존 analysis_results 테이블에서 데이터 조회
+            # 먼저 간단한 employee_results 테이블 조회로 시작
             from sqlalchemy import func, and_
             
-            # 각 uid별로 가장 최신 분석 결과만 선택
+            # 각 uid별 최신 id를 구하는 서브쿼리  
             subquery = self.db.query(
-                AnalysisResult.uid,
-                func.max(AnalysisResult.id).label('max_id')
-            ).group_by(AnalysisResult.uid).subquery()
+                EmployeeResult.uid,
+                func.max(EmployeeResult.id).label('max_id')
+            ).group_by(EmployeeResult.uid).subquery()
             
-            analysis_query = self.db.query(AnalysisResult).join(
+            # 메인 쿼리
+            query = self.db.query(EmployeeResult).join(
                 subquery,
                 and_(
-                    AnalysisResult.uid == subquery.c.uid,
-                    AnalysisResult.id == subquery.c.max_id
+                    EmployeeResult.uid == subquery.c.uid,
+                    EmployeeResult.id == subquery.c.max_id
                 )
             )
             
             # 정렬 옵션 적용
-            sort_field = sort_options.get("field", "hybrid_score")
+            sort_field = sort_options.get("field", "overall_score")
             sort_order = sort_options.get("order", "desc")
             
             if sort_field == "ai_score":
-                sort_field = "hybrid_score"
+                sort_field = "overall_score"
             
-            if hasattr(AnalysisResult, sort_field):
+            if hasattr(EmployeeResult, sort_field):
                 if sort_order == "desc":
-                    analysis_query = analysis_query.order_by(getattr(AnalysisResult, sort_field).desc())
+                    query = query.order_by(getattr(EmployeeResult, sort_field).desc())
                 else:
-                    analysis_query = analysis_query.order_by(getattr(AnalysisResult, sort_field).asc())
+                    query = query.order_by(getattr(EmployeeResult, sort_field).asc())
             
             # 페이징 적용
             page = pagination.get("page", 1)
             page_size = pagination.get("page_size", 20)
             offset = (page - 1) * page_size
             
-            analysis_results = analysis_query.offset(offset).limit(page_size).all()
-            total_from_analysis = analysis_query.count()
+            results = query.offset(offset).limit(page_size).all()
+            total_count = query.count()
             
-            # AnalysisResult 데이터를 EmployeeAIAnalysisSummary로 변환
+            logger.info(f"📊 employee_results에서 {len(results)}개 데이터 조회")
+            
+            # 데이터 변환
             items = []
-            for result in analysis_results:
-                # AI 피드백에서 간단한 정보 추출
-                ai_feedback = result.ai_feedback or {}
-                dimension_scores = result.dimension_scores or {}
+            for result in results:
+                metadata = result.employee_metadata or {}
                 
-                # 주요 강점과 개선점 추출 (간단한 파싱)
-                ai_strengths = result.ai_strengths or ""
-                primary_strength = "우수한 업무 능력"
-                if ai_strengths:
-                    lines = [line.strip().lstrip('123456789.-• ').strip() 
-                            for line in ai_strengths.split('\n') 
-                            if line.strip() and not line.startswith('[')]
-                    if lines:
-                        primary_strength = lines[0][:50] + ("..." if len(lines[0]) > 50 else "")
-                
-                ai_weaknesses = result.ai_weaknesses or ""
-                primary_improvement = "전문성 향상"
-                if ai_weaknesses:
-                    lines = [line.strip().lstrip('123456789.-• ').strip() 
-                            for line in ai_weaknesses.split('\n') 
-                            if line.strip() and not line.startswith('[')]
-                    if lines:
-                        primary_improvement = lines[0][:50] + ("..." if len(lines[0]) > 50 else "")
-                
-                competencies = CompetencyScores(
-                    실행력=int(dimension_scores.get("실행력_정량점수", dimension_scores.get("problem_solving", 75))),
-                    성장지향=int(dimension_scores.get("성장지향_정량점수", dimension_scores.get("adaptability", 75))),
-                    협업=int(dimension_scores.get("협업_정량점수", dimension_scores.get("teamwork", 70))),
-                    고객지향=int(dimension_scores.get("고객지향_정량점수", dimension_scores.get("customer_focus", 80))),
-                    전문성=int(dimension_scores.get("전문성_정량점수", dimension_scores.get("technical", 75))),
-                    혁신성=int(dimension_scores.get("혁신성_정량점수", dimension_scores.get("innovation", 70))),
-                    리더십=int(dimension_scores.get("리더십_정량점수", dimension_scores.get("leadership", 65))),
-                    커뮤니케이션=int(dimension_scores.get("커뮤니케이션_정량점수", dimension_scores.get("communication", 75)))
-                )
-                
-                summary = EmployeeAIAnalysisSummary(
-                    employee_id=result.uid,
-                    name=f"직원_{result.uid[-4:]}",  # UID 마지막 4자리로 이름 생성
-                    department="미지정",
-                    position="미지정",
-                    ai_score=int(result.hybrid_score) if result.hybrid_score else 0,
-                    grade=self._map_grade(result.ok_grade),
-                    primary_strength=primary_strength,
-                    primary_improvement=primary_improvement,
-                    competencies=competencies,
-                    analyzed_at=result.created_at
-                )
-                items.append(summary)
-            
-            # 2차: employee_results 테이블에서 추가 데이터 조회 (analysis_results에 없는 경우)
-            if len(items) < page_size:
-                # analysis_results에서 이미 조회한 uid들 제외
-                existing_uids = [item.employee_id for item in items]
-                
-                employee_subquery = self.db.query(
-                    EmployeeResult.uid,
-                    func.max(EmployeeResult.id).label('max_id')
-                ).filter(~EmployeeResult.uid.in_(existing_uids)).group_by(EmployeeResult.uid).subquery()
-                
-                employee_query = self.db.query(EmployeeResult).join(
-                    employee_subquery,
-                    and_(
-                        EmployeeResult.uid == employee_subquery.c.uid,
-                        EmployeeResult.id == employee_subquery.c.max_id
-                    )
-                )
-                
-                remaining_limit = page_size - len(items)
-                employee_results = employee_query.limit(remaining_limit).all()
-                
-                # EmployeeResult 데이터 변환
-                for result in employee_results:
-                    metadata = result.employee_metadata or {}
+                # 기존 analysis_results에서 상세 데이터 찾기 시도
+                try:
+                    analysis_result = self.db.query(AnalysisResult).filter(
+                        AnalysisResult.uid == result.uid
+                    ).order_by(AnalysisResult.created_at.desc()).first()
                     
+                    if analysis_result:
+                        # 풍부한 AI 데이터 사용
+                        ai_strengths = analysis_result.ai_strengths or ""
+                        primary_strength = "우수한 업무 능력"
+                        if ai_strengths:
+                            lines = [line.strip().lstrip('123456789.-• ').strip() 
+                                    for line in ai_strengths.split('\n') 
+                                    if line.strip() and not line.startswith('[')]
+                            if lines:
+                                primary_strength = lines[0][:50] + ("..." if len(lines[0]) > 50 else "")
+                        
+                        ai_weaknesses = analysis_result.ai_weaknesses or ""
+                        primary_improvement = "전문성 향상"
+                        if ai_weaknesses:
+                            lines = [line.strip().lstrip('123456789.-• ').strip() 
+                                    for line in ai_weaknesses.split('\n') 
+                                    if line.strip() and not line.startswith('[')]
+                            if lines:
+                                primary_improvement = lines[0][:50] + ("..." if len(lines[0]) > 50 else "")
+                        
+                        # 8대 역량 점수
+                        dimension_scores = analysis_result.dimension_scores or {}
+                        competencies = CompetencyScores(
+                            실행력=int(dimension_scores.get("실행력_정량점수", dimension_scores.get("problem_solving", 75))),
+                            성장지향=int(dimension_scores.get("성장지향_정량점수", dimension_scores.get("adaptability", 75))),
+                            협업=int(dimension_scores.get("협업_정량점수", dimension_scores.get("teamwork", 70))),
+                            고객지향=int(dimension_scores.get("고객지향_정량점수", dimension_scores.get("customer_focus", 80))),
+                            전문성=int(dimension_scores.get("전문성_정량점수", dimension_scores.get("technical", 75))),
+                            혁신성=int(dimension_scores.get("혁신성_정량점수", dimension_scores.get("innovation", 70))),
+                            리더십=int(dimension_scores.get("리더십_정량점수", dimension_scores.get("leadership", 65))),
+                            커뮤니케이션=int(dimension_scores.get("커뮤니케이션_정량점수", dimension_scores.get("communication", 75)))
+                        )
+                        
+                        ai_score = int(analysis_result.hybrid_score) if analysis_result.hybrid_score else int(result.overall_score) if result.overall_score else 0
+                        grade = self._map_grade(analysis_result.ok_grade) if analysis_result.ok_grade else self._map_grade(result.grade)
+                        
+                    else:
+                        # 기본 데이터 사용
+                        primary_strength = "기본 업무 능력"
+                        primary_improvement = "전문성 향상"
+                        competencies = CompetencyScores(
+                            실행력=75, 성장지향=75, 협업=70, 고객지향=80,
+                            전문성=75, 혁신성=70, 리더십=65, 커뮤니케이션=75
+                        )
+                        ai_score = int(result.overall_score) if result.overall_score else 0
+                        grade = self._map_grade(result.grade)
+                        
+                except Exception as e:
+                    logger.warning(f"analysis_results 조회 실패 (UID: {result.uid}): {e}")
+                    # 안전한 기본값 사용
+                    primary_strength = "기본 업무 능력"
+                    primary_improvement = "전문성 향상"
                     competencies = CompetencyScores(
                         실행력=75, 성장지향=75, 협업=70, 고객지향=80,
                         전문성=75, 혁신성=70, 리더십=65, 커뮤니케이션=75
                     )
-                    
-                    summary = EmployeeAIAnalysisSummary(
-                        employee_id=result.uid,
-                        name=metadata.get("name", f"직원_{result.uid[-4:]}"),
-                        department=metadata.get("department", "미지정"),
-                        position=metadata.get("position", "미지정"),
-                        ai_score=int(result.overall_score) if result.overall_score else 0,
-                        grade=self._map_grade(result.grade),
-                        primary_strength="기본 업무 능력",
-                        primary_improvement="전문성 향상",
-                        competencies=competencies,
-                        analyzed_at=datetime.now()
-                    )
-                    items.append(summary)
-            
-            # 전체 개수는 두 테이블 합계
-            employee_total = self.db.query(EmployeeResult.uid).distinct().count()
-            total_count = max(total_from_analysis, employee_total)
+                    ai_score = int(result.overall_score) if result.overall_score else 0
+                    grade = self._map_grade(result.grade)
+                
+                summary = EmployeeAIAnalysisSummary(
+                    employee_id=result.uid,
+                    name=metadata.get("name", f"직원_{result.uid[-4:] if result.uid else '000'}"),
+                    department=metadata.get("department", "미지정"),
+                    position=metadata.get("position", "미지정"),
+                    ai_score=ai_score,
+                    grade=grade,
+                    primary_strength=primary_strength,
+                    primary_improvement=primary_improvement,
+                    competencies=competencies,
+                    analyzed_at=result.created_at if hasattr(result, 'created_at') else datetime.now()
+                )
+                items.append(summary)
             
             logger.info(f"📋 직원 목록 조회 완료 - 총 {len(items)}명, 전체 {total_count}명")
             
@@ -390,6 +378,7 @@ class EmployeeService:
             
         except Exception as e:
             logger.error(f"직원 AI 분석 목록 조회 실패: {e}")
+            # 완전히 빈 리스트라도 안전하게 반환
             return EmployeeAIAnalysisList(items=[], total=0, page=1, page_size=20, total_pages=0)
             
             
