@@ -170,7 +170,7 @@ async def hr_dashboard_final():
             media_type="text/html",
             headers={
                 "Cache-Control": "no-cache, no-store, must-revalidate",
-                "X-Version": "2025.01.07"
+                "X-Version": "2025.08.07"
             }
         )
     
