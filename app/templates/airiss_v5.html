@@ -1334,21 +1334,70 @@
                 } catch (error) {
                     console.error('❌ 직원 데이터 로딩 실패:', error);
                     
-                    // 오류 상태 표시
-                    const tbody = document.getElementById('employees-table');
-                    if (tbody) {
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="7" style="text-align: center; padding: 40px; color: var(--danger-color);">
-                                    <h3>❌ 데이터 로딩 실패</h3>
-                                    <p style="margin-top: 10px;">직원 분석 데이터를 불러올 수 없습니다.</p>
-                                    <button class="btn btn-primary" onclick="AIRISS.loadEmployeesData()" style="margin-top: 15px;">
-                                        🔄 다시 시도
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    }
+                    // API 실패 시 더미 데이터로 대체
+                    console.log('📋 더미 데이터로 대체 중...');
+                    
+                    const dummyEmployees = [
+                        {
+                            employee_id: 'DEMO001',
+                            name: '김철수',
+                            department: '개발팀',
+                            position: '선임연구원',
+                            ai_score: 87,
+                            grade: 'A',
+                            primary_strength: '문제 해결 능력과 창의적 사고',
+                            primary_improvement: '팀워크 스킬 향상 필요',
+                            competencies: {
+                                실행력: 85, 성장지향: 90, 협업: 70, 고객지향: 80,
+                                전문성: 95, 혁신성: 88, 리더십: 75, 커뮤니케이션: 72
+                            },
+                            strengths: ['창의적 문제 해결', '기술적 전문성', '빠른 학습 능력'],
+                            improvements: ['팀 협업 개선', '커뮤니케이션 스킬'],
+                            ai_comment: '뛰어난 기술적 역량을 보유하고 있으나, 팀워크와 소통 부분에서 개선이 필요합니다. 지속적인 성장 의지가 높아 발전 가능성이 큽니다.'
+                        },
+                        {
+                            employee_id: 'DEMO002', 
+                            name: '이영희',
+                            department: '마케팅팀',
+                            position: '과장',
+                            ai_score: 91,
+                            grade: 'A+',
+                            primary_strength: '뛰어난 소통능력과 기획력',
+                            primary_improvement: '데이터 분석 스킬 보강',
+                            competencies: {
+                                실행력: 88, 성장지향: 92, 협업: 95, 고객지향: 90,
+                                전문성: 82, 혁신성: 85, 리더십: 88, 커뮤니케이션: 95
+                            },
+                            strengths: ['우수한 커뮤니케이션', '전략적 사고', '리더십'],
+                            improvements: ['데이터 분석 역량', '기술적 이해도'],
+                            ai_comment: '탁월한 소통 능력과 리더십을 바탕으로 팀을 이끌어가는 능력이 뛰어납니다. 데이터 기반 의사결정 역량을 보강하면 더욱 성장할 수 있을 것입니다.'
+                        },
+                        {
+                            employee_id: 'DEMO003',
+                            name: '박민수', 
+                            department: '영업팀',
+                            position: '대리',
+                            ai_score: 79,
+                            grade: 'B+',
+                            primary_strength: '고객 관리 및 영업 역량',
+                            primary_improvement: '전략적 사고력 개발',
+                            competencies: {
+                                실행력: 82, 성장지향: 85, 협업: 78, 고객지향: 92,
+                                전문성: 75, 혁신성: 70, 리더십: 80, 커뮤니케이션: 85
+                            },
+                            strengths: ['고객 관계 관리', '영업 실적', '성실성'],
+                            improvements: ['전략적 사고', '혁신적 아이디어'],
+                            ai_comment: '고객과의 관계 구축과 유지에 탁월한 능력을 보여줍니다. 전략적 사고력과 혁신적 접근법을 개발하면 더 높은 성과를 달성할 수 있을 것입니다.'
+                        }
+                    ];
+                    
+                    this.state.employees = dummyEmployees;
+                    this.renderEmployees(dummyEmployees);
+                    
+                    // 더미 데이터 알림
+                    this.showNotification('💡 샘플 데이터로 표시 중입니다', 'info');
+                    
+                    console.log(`📋 더미 데이터 ${dummyEmployees.length}개 로드 완료`);
                 }
             },
             
