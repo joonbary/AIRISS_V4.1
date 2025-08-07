@@ -27,6 +27,7 @@ import {
   Warning,
   CheckCircle,
   Refresh,
+  PictureAsPdf,
 } from '@mui/icons-material';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -42,6 +43,7 @@ const ExecutiveDashboard = () => {
 
   const [dashboardData, setDashboardData] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -58,6 +60,36 @@ const ExecutiveDashboard = () => {
   const handleRefresh = async () => {
     await checkServiceHealth();
     loadDashboardData();
+  };
+
+  const downloadPdf = async () => {
+    try {
+      setDownloadingPdf(true);
+      
+      // AIRISS API 엔드포인트로 PDF 다운로드 요청
+      const response = await fetch('/api/v1/hr-dashboard/export/pdf');
+      
+      if (!response.ok) {
+        throw new Error('PDF 다운로드 실패');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `HR_Executive_Dashboard_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+    } catch (error) {
+      console.error('PDF 다운로드 오류:', error);
+      alert('PDF 다운로드 중 오류가 발생했습니다: ' + error.message);
+    } finally {
+      setDownloadingPdf(false);
+    }
   };
 
   // 등급별 색상
@@ -109,6 +141,24 @@ const ExecutiveDashboard = () => {
           AIRISS 경영진 대시보드
         </Typography>
         <Box display="flex" gap={2} alignItems="center">
+          <Button
+            variant="contained"
+            startIcon={<PictureAsPdf />}
+            onClick={downloadPdf}
+            disabled={downloadingPdf}
+            sx={{ mr: 2 }}
+          >
+            {downloadingPdf ? 'PDF 생성중...' : 'PDF 다운로드'}
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={handleRefresh}
+            disabled={isLoading}
+            sx={{ mr: 2 }}
+          >
+            새로고침
+          </Button>
           <Chip
             label={serviceHealth.status ? '서비스 정상' : '서비스 점검 중'}
             color={serviceHealth.status ? 'success' : 'warning'}
