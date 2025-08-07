@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR 대시보드 테스트 - AIRISS v4.0</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .test-container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .loading { text-align: center; padding: 50px; }
+        .error { color: red; padding: 20px; background: #ffe6e6; border-radius: 4px; }
+        .success { color: green; padding: 20px; background: #e6ffe6; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>HR 대시보드 진단 테스트</h1>
+        <div id="status">로딩 중...</div>
+        <div id="api-test"></div>
+        <div id="library-test"></div>
+    </div>
+
+    <script>
+        console.log('=== HR Dashboard 진단 시작 ===');
+        
+        // 1. 기본 JavaScript 테스트
+        document.getElementById('status').innerHTML = '✅ JavaScript 실행됨';
+        console.log('✅ JavaScript OK');
+        
+        // 2. API 테스트
+        async function testAPI() {
+            try {
+                console.log('API 테스트 시작...');
+                const response = await fetch('/api/v1/hr-dashboard/stats');
+                const data = await response.json();
+                
+                if (data.total_employees) {
+                    document.getElementById('api-test').innerHTML = 
+                        `<div class="success">✅ API 연결 성공: 총 직원 ${data.total_employees}명</div>`;
+                    console.log('✅ API OK:', data);
+                    return data;
+                } else {
+                    throw new Error('데이터 형식 오류');
+                }
+            } catch (error) {
+                console.error('❌ API 오류:', error);
+                document.getElementById('api-test').innerHTML = 
+                    `<div class="error">❌ API 연결 실패: ${error.message}</div>`;
+                return null;
+            }
+        }
+        
+        // 3. 라이브러리 로딩 대기 및 테스트
+        function waitForLibraries() {
+            let attempts = 0;
+            const maxAttempts = 50; // 5초
+            
+            const checkLibraries = () => {
+                attempts++;
+                console.log(`라이브러리 체크 시도 ${attempts}/${maxAttempts}`);
+                
+                if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined' && typeof antd !== 'undefined') {
+                    console.log('✅ 모든 라이브러리 로드 완료');
+                    document.getElementById('library-test').innerHTML = 
+                        '<div class="success">✅ React, ReactDOM, Ant Design 로드 완료</div>';
+                    
+                    // API 테스트 후 실제 대시보드 렌더링
+                    testAPI().then(data => {
+                        if (data) {
+                            renderDashboard(data);
+                        }
+                    });
+                    
+                } else if (attempts < maxAttempts) {
+                    setTimeout(checkLibraries, 100);
+                } else {
+                    console.error('❌ 라이브러리 로드 실패');
+                    document.getElementById('library-test').innerHTML = 
+                        '<div class="error">❌ 라이브러리 로드 실패</div>';
+                }
+            };
+            
+            checkLibraries();
+        }
+        
+        function renderDashboard(data) {
+            console.log('대시보드 렌더링 시작');
+            const container = document.createElement('div');
+            container.style.marginTop = '20px';
+            container.innerHTML = `
+                <h2>📊 대시보드 데이터</h2>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0;">
+                    <div style="background: #e6f7ff; padding: 15px; border-radius: 4px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold;">${data.total_employees}</div>
+                        <div>총 직원</div>
+                    </div>
+                    <div style="background: #f6ffed; padding: 15px; border-radius: 4px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold;">${data.promotion_candidates.count}</div>
+                        <div>승진 후보자</div>
+                    </div>
+                    <div style="background: #fff2e8; padding: 15px; border-radius: 4px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold;">${data.top_talents.count}</div>
+                        <div>핵심 인재</div>
+                    </div>
+                    <div style="background: #fff1f0; padding: 15px; border-radius: 4px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold;">${data.risk_employees.count}</div>
+                        <div>관리 필요</div>
+                    </div>
+                </div>
+            `;
+            
+            document.querySelector('.test-container').appendChild(container);
+            console.log('✅ 대시보드 렌더링 완료');
+        }
+        
+        // 라이브러리 로딩 시작
+        waitForLibraries();
+    </script>
+    
+    <!-- External Libraries -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+</body>
+</html>

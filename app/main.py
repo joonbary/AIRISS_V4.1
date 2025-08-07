@@ -248,6 +248,15 @@ async def serve_hr_dashboard():
         return FileResponse(template_path)
     return {"message": "HR Dashboard not found"}
 
+# HR Dashboard Simple Test route
+@app.get("/hr-dashboard-test")
+async def serve_hr_dashboard_test():
+    """Serve HR Dashboard Test page for debugging"""
+    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_simple.html")
+    if os.path.exists(template_path):
+        return FileResponse(template_path)
+    return {"message": "HR Dashboard Test not found"}
+
 # Executive Dashboard route (alternative path)
 @app.get("/executive-dashboard")
 async def serve_executive_dashboard():
@@ -277,7 +286,7 @@ async def serve_spa(request: Request, full_path: str):
         raise HTTPException(status_code=404, detail="API endpoint not found")
     
     # Skip specific routes that have their own handlers
-    if full_path in ["docs", "redoc", "openapi.json", "hr-dashboard", "executive-dashboard"]:
+    if full_path in ["docs", "redoc", "openapi.json", "hr-dashboard", "hr-dashboard-test", "executive-dashboard"]:
         raise HTTPException(status_code=404, detail="Not found")
     
     # Check if static path exists
