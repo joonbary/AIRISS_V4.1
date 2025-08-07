@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR 대시보드 - AIRISS v4.0</title>
+    
+    <!-- Ant Design CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .hr-dashboard {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .section {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02);
+            margin-bottom: 24px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin: 20px 0;
+        }
+        
+        .employee-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .employee-table th,
+        .employee-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            text-align: left;
+        }
+        
+        .employee-table th {
+            background: #fafafa;
+            font-weight: 600;
+        }
+        
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        
+        .tag-blue { background: #e6f7ff; color: #1890ff; }
+        .tag-purple { background: #f9f0ff; color: #722ed1; }
+        .tag-red { background: #fff1f0; color: #ff4d4f; }
+        .tag-orange { background: #fff7e6; color: #fa8c16; }
+        .tag-green { background: #f6ffed; color: #52c41a; }
+        
+        .progress-bar {
+            background: #f5f5f5;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-success { background: #52c41a; }
+        .progress-warning { background: #faad14; }
+        .progress-error { background: #ff4d4f; }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            margin-left: 8px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+        
+        .alert {
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        
+        .alert-info {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            color: #1890ff;
+        }
+    </style>
+</head>
+<body>
+    <div id="hr-dashboard-root">
+        <div class="loading">HR 대시보드 로딩 중...</div>
+    </div>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <script>
+        const { useState, useEffect, createElement: h } = React;
+        
+        function HRDashboard() {
+            const [loading, setLoading] = useState(true);
+            const [data, setData] = useState(null);
+            const [error, setError] = useState(null);
+            
+            useEffect(() => {
+                fetchData();
+            }, []);
+            
+            const fetchData = async () => {
+                try {
+                    console.log('API 호출 시작...');
+                    const response = await fetch('/api/v1/hr-dashboard/stats');
+                    if (!response.ok) throw new Error('API 호출 실패');
+                    const result = await response.json();
+                    console.log('API 데이터:', result);
+                    setData(result);
+                    setError(null);
+                } catch (err) {
+                    console.error('오류:', err);
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const downloadPdf = async () => {
+                try {
+                    const response = await fetch('/api/v1/hr-dashboard/export/pdf');
+                    if (!response.ok) throw new Error('PDF 다운로드 실패');
+                    
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `HR_Dashboard_${new Date().toISOString().slice(0, 10)}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } catch (err) {
+                    alert('PDF 다운로드 실패: ' + err.message);
+                }
+            };
+            
+            const renderPromotionCandidates = () => {
+                if (!data?.promotion_candidates) return null;
+                
+                const { count, candidates, has_candidates } = data.promotion_candidates;
+                
+                if (!has_candidates) {
+                    return h('div', { className: 'section' },
+                        h('h3', { className: 'section-title' }, '승진 후보자 예측'),
+                        h('div', { className: 'alert alert-info' },
+                            h('strong', null, '현재 승진 후보자가 없습니다'),
+                            h('br'),
+                            '평가등급, 근속연수, 역량점수, 리더십 등을 종합 평가한 결과 현재 승진 기준(70점 이상)을 충족하는 직원이 없습니다.'
+                        )
+                    );
+                }
+                
+                return h('div', { className: 'section' },
+                    h('h3', { className: 'section-title' }, `승진 후보자 예측 (${count}명)`),
+                    h('table', { className: 'employee-table' },
+                        h('thead',
+                            h('tr',
+                                h('th', null, '직원명'),
+                                h('th', null, '부서'),
+                                h('th', null, '직급'),
+                                h('th', null, '점수'),
+                                h('th', null, '판단 사유')
+                            )
+                        ),
+                        h('tbody',
+                            candidates.map(emp => 
+                                h('tr', { key: emp.uid },
+                                    h('td', null, emp.name),
+                                    h('td', null, emp.department),
+                                    h('td', null, emp.position),
+                                    h('td', null, 
+                                        h('div', { className: 'progress-bar' },
+                                            h('div', { 
+                                                className: `progress-fill ${emp.score >= 90 ? 'progress-success' : emp.score >= 70 ? 'progress-warning' : 'progress-error'}`,
+                                                style: { width: `${emp.score}%` }
+                                            })
+                                        ),
+                                        h('small', null, `${emp.score}점`)
+                                    ),
+                                    h('td', null,
+                                        emp.reasons.map((reason, idx) =>
+                                            h('span', { key: idx, className: 'tag tag-blue' }, reason)
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                );
+            };
+            
+            const renderTopTalents = () => {
+                if (!data?.top_talents) return null;
+                
+                const { count, employees } = data.top_talents;
+                
+                return h('div', { className: 'section' },
+                    h('h3', { className: 'section-title' }, `Top Talent (${count}명)`),
+                    h('table', { className: 'employee-table' },
+                        h('thead',
+                            h('tr',
+                                h('th', null, '순위'),
+                                h('th', null, '직원명'),
+                                h('th', null, '부서'),
+                                h('th', null, '등급'),
+                                h('th', null, '점수'),
+                                h('th', null, '판단 사유')
+                            )
+                        ),
+                        h('tbody',
+                            employees.map((emp, idx) => 
+                                h('tr', { key: emp.uid },
+                                    h('td', null, idx + 1),
+                                    h('td', null, emp.name),
+                                    h('td', null, emp.department),
+                                    h('td', null, 
+                                        h('span', { 
+                                            className: `tag ${emp.grade === 'S' ? 'tag-green' : emp.grade === 'A' ? 'tag-blue' : 'tag-orange'}` 
+                                        }, emp.grade)
+                                    ),
+                                    h('td', null, `${emp.score}점`),
+                                    h('td', null,
+                                        emp.reasons.slice(0, 2).map((reason, ridx) =>
+                                            h('span', { key: ridx, className: 'tag tag-purple' }, reason)
+                                        ),
+                                        emp.reasons.length > 2 && h('span', { className: 'tag' }, `+${emp.reasons.length - 2}개`)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                );
+            };
+            
+            const renderRiskEmployees = () => {
+                if (!data?.risk_employees) return null;
+                
+                const { count, employees, high_risk_count, medium_risk_count } = data.risk_employees;
+                
+                return h('div', { className: 'section' },
+                    h('h3', { className: 'section-title' }, 
+                        `관리 필요 인력 (총 ${count}명)`,
+                        h('span', { style: { fontSize: '14px', fontWeight: 'normal', marginLeft: '10px' } },
+                            h('span', { className: 'tag tag-red' }, `고위험 ${high_risk_count}명`),
+                            h('span', { className: 'tag tag-orange' }, `중위험 ${medium_risk_count}명`)
+                        )
+                    ),
+                    h('p', { style: { color: '#666', marginBottom: '16px' } },
+                        '성과, 근태, 이직위험도, 역량 등을 종합 평가하여 관리가 필요한 인력을 식별합니다.'
+                    ),
+                    h('table', { className: 'employee-table' },
+                        h('thead',
+                            h('tr',
+                                h('th', null, '직원명'),
+                                h('th', null, '부서'),
+                                h('th', null, '위험도'),
+                                h('th', null, '위험점수'),
+                                h('th', null, '관리 필요 사유')
+                            )
+                        ),
+                        h('tbody',
+                            employees.slice(0, 10).map(emp => 
+                                h('tr', { key: emp.uid },
+                                    h('td', null, emp.name),
+                                    h('td', null, emp.department),
+                                    h('td', null, 
+                                        h('span', { 
+                                            className: `tag ${emp.risk_level === 'high' ? 'tag-red' : 'tag-orange'}` 
+                                        }, emp.risk_level === 'high' ? '높음' : '보통')
+                                    ),
+                                    h('td', null, 
+                                        h('div', { className: 'progress-bar' },
+                                            h('div', { 
+                                                className: 'progress-fill progress-error',
+                                                style: { width: `${emp.risk_score}%` }
+                                            })
+                                        ),
+                                        h('small', null, `${emp.risk_score}점`)
+                                    ),
+                                    h('td', null,
+                                        emp.reasons.map((reason, ridx) =>
+                                            h('span', { 
+                                                key: ridx, 
+                                                className: `tag ${reason.includes('부진') || reason.includes('위험') ? 'tag-red' : 'tag-orange'}` 
+                                            }, reason)
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                );
+            };
+            
+            const renderGradeChart = () => {
+                if (!data?.grade_distribution) return null;
+                
+                useEffect(() => {
+                    const ctx = document.getElementById('gradeChart');
+                    if (ctx && data.grade_distribution) {
+                        const existingChart = Chart.getChart(ctx);
+                        if (existingChart) existingChart.destroy();
+                        
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: data.grade_distribution.map(g => `${g.grade}등급`),
+                                datasets: [{
+                                    label: '인원수',
+                                    data: data.grade_distribution.map(g => g.count),
+                                    backgroundColor: ['#ffd700', '#4CAF50', '#2196F3', '#FF9800', '#9E9E9E'],
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { display: false },
+                                    title: { display: true, text: '등급별 인원 분포' }
+                                },
+                                scales: {
+                                    y: { beginAtZero: true }
+                                }
+                            }
+                        });
+                    }
+                }, [data]);
+                
+                return h('div', { className: 'section' },
+                    h('h3', { className: 'section-title' }, '평가 등급 분포'),
+                    h('div', { className: 'chart-container' },
+                        h('canvas', { id: 'gradeChart' })
+                    ),
+                    h('div', { className: 'stats-grid' },
+                        data.grade_distribution.map(grade =>
+                            h('div', { key: grade.grade, className: 'stat-card' },
+                                h('div', { className: 'stat-number' }, grade.count),
+                                h('div', { className: 'stat-label' }, `${grade.grade}등급 (${grade.percentage}%)`)
+                            )
+                        )
+                    )
+                );
+            };
+            
+            if (loading) {
+                return h('div', { className: 'loading' }, 'HR 대시보드 로딩 중...');
+            }
+            
+            if (error) {
+                return h('div', { className: 'hr-dashboard' },
+                    h('div', { className: 'alert', style: { background: '#fff2f0', color: '#ff4d4f', border: '1px solid #ffccc7' } },
+                        h('strong', null, '데이터 로드 실패: '), error
+                    )
+                );
+            }
+            
+            return h('div', { className: 'hr-dashboard' },
+                // Header
+                h('div', { className: 'header' },
+                    h('div', null,
+                        h('h1', null, 'HR 대시보드'),
+                        h('p', { style: { color: '#666', margin: 0 } }, 'AI 기반 인재 분석 및 예측 시스템')
+                    ),
+                    h('div', null,
+                        h('button', { 
+                            className: 'btn', 
+                            onClick: fetchData 
+                        }, '🔄 새로고침'),
+                        h('button', { 
+                            className: 'btn btn-primary', 
+                            onClick: downloadPdf 
+                        }, '📄 PDF 다운로드')
+                    )
+                ),
+                
+                // Stats Overview
+                h('div', { className: 'stats-grid' },
+                    h('div', { className: 'stat-card' },
+                        h('div', { className: 'stat-number', style: { color: '#1890ff' } }, data.total_employees),
+                        h('div', { className: 'stat-label' }, '총 직원')
+                    ),
+                    h('div', { className: 'stat-card' },
+                        h('div', { className: 'stat-number', style: { color: '#52c41a' } }, data.promotion_candidates.count),
+                        h('div', { className: 'stat-label' }, '승진 후보자')
+                    ),
+                    h('div', { className: 'stat-card' },
+                        h('div', { className: 'stat-number', style: { color: '#722ed1' } }, data.top_talents.count),
+                        h('div', { className: 'stat-label' }, '핵심 인재')
+                    ),
+                    h('div', { className: 'stat-card' },
+                        h('div', { className: 'stat-number', style: { color: '#ff4d4f' } }, data.risk_employees.count),
+                        h('div', { className: 'stat-label' }, '관리 필요')
+                    )
+                ),
+                
+                // Sections
+                renderPromotionCandidates(),
+                renderTopTalents(),
+                renderRiskEmployees(),
+                renderGradeChart()
+            );
+        }
+        
+        // Wait for libraries and render
+        function initDashboard() {
+            let attempts = 0;
+            const checkLibraries = () => {
+                attempts++;
+                if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined' && typeof Chart !== 'undefined') {
+                    console.log('✅ 모든 라이브러리 로드 완료');
+                    Chart.register(...Chart.registerables);
+                    
+                    const root = ReactDOM.createRoot(document.getElementById('hr-dashboard-root'));
+                    root.render(React.createElement(HRDashboard));
+                } else if (attempts < 50) {
+                    setTimeout(checkLibraries, 100);
+                } else {
+                    console.error('❌ 라이브러리 로드 실패');
+                    document.getElementById('hr-dashboard-root').innerHTML = 
+                        '<div class="loading" style="color: red;">라이브러리 로드 실패</div>';
+                }
+            };
+            checkLibraries();
+        }
+        
+        initDashboard();
+    </script>
+</body>
+</html>

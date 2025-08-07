@@ -239,11 +239,11 @@ if os.path.exists(static_path):
 else:
     logger.warning(f"⚠️ Static path not found: {static_path}")
 
-# HR Dashboard route
+# HR Dashboard route - Working version
 @app.get("/hr-dashboard")
 async def serve_hr_dashboard():
     """Serve HR Dashboard page"""
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard.html")
+    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_working.html")
     if os.path.exists(template_path):
         return FileResponse(template_path)
     return {"message": "HR Dashboard not found"}
