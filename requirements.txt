@@ -16,6 +16,10 @@ numpy>=1.24.0
 scipy>=1.11.0
 openpyxl==3.1.2
 
+# PDF generation
+reportlab>=4.0.0
+matplotlib>=3.7.0
+
 # API and utilities
 pydantic[email]>=2.5.0
 email-validator>=2.0.0

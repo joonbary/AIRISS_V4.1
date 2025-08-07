@@ -1,8 +1,9 @@
 // HR Dashboard React Component
 const { useState, useEffect } = React;
-const { Card, Row, Col, Statistic, Table, Tag, Progress, Spin, Alert, Typography, Divider, Space, Tooltip } = antd;
+const { Card, Row, Col, Statistic, Table, Tag, Progress, Spin, Alert, Typography, Divider, Space, Tooltip, Button } = antd;
 const { Title, Text, Paragraph } = Typography;
 const { Column, ColumnGroup } = Table;
+const { DownloadOutlined, ReloadOutlined } = antd;
 const { Chart, registerables } = ChartJS;
 
 // Chart.js 등록
@@ -13,6 +14,7 @@ const HRDashboard = () => {
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [downloadingPdf, setDownloadingPdf] = useState(false);
 
     useEffect(() => {
         fetchDashboardData();
@@ -30,6 +32,40 @@ const HRDashboard = () => {
             setError(err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const downloadPdf = async () => {
+        try {
+            setDownloadingPdf(true);
+            const response = await fetch('/api/v1/hr-dashboard/export/pdf');
+            
+            if (!response.ok) {
+                throw new Error('PDF 다운로드 실패');
+            }
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `HR_Dashboard_${new Date().toISOString().slice(0, 10)}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            antd.notification.success({
+                message: 'PDF 다운로드 완료',
+                description: 'HR 대시보드 리포트가 다운로드되었습니다.',
+            });
+        } catch (err) {
+            antd.notification.error({
+                message: 'PDF 다운로드 실패',
+                description: err.message,
+            });
+        } finally {
+            setDownloadingPdf(false);
         }
     };
 
@@ -459,10 +495,31 @@ const HRDashboard = () => {
 
     return (
         <div className="hr-dashboard">
-            <Title level={2}>HR 대시보드</Title>
-            <Paragraph>
-                AI 기반 인재 분석 및 예측 시스템
-            </Paragraph>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div>
+                    <Title level={2}>HR 대시보드</Title>
+                    <Paragraph>
+                        AI 기반 인재 분석 및 예측 시스템
+                    </Paragraph>
+                </div>
+                <Space>
+                    <Button 
+                        icon={React.createElement(ReloadOutlined)}
+                        onClick={fetchDashboardData}
+                        loading={loading}
+                    >
+                        새로고침
+                    </Button>
+                    <Button 
+                        type="primary"
+                        icon={React.createElement(DownloadOutlined)}
+                        onClick={downloadPdf}
+                        loading={downloadingPdf}
+                    >
+                        PDF 다운로드
+                    </Button>
+                </Space>
+            </div>
             
             <Row gutter={[16, 16]}>
                 <Col span={24}>

@@ -8,6 +8,20 @@ from datetime import datetime, timedelta
 from app.db import get_db
 import logging
 import random
+from io import BytesIO
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from fastapi.responses import StreamingResponse
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+import base64
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -261,4 +275,200 @@ async def get_employee_detail(uid: str, db: Session = Depends(get_db)):
         }
     except Exception as e:
         logger.error(f"Employee detail error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/export/pdf")
+async def export_dashboard_pdf(db: Session = Depends(get_db)):
+    """HR 대시보드를 PDF로 내보내기"""
+    try:
+        # 대시보드 데이터 가져오기
+        stats_response = await get_hr_dashboard_stats(db)
+        
+        # PDF 생성
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
+        story = []
+        styles = getSampleStyleSheet()
+        
+        # 제목 스타일
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#333333'),
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        
+        # 부제목 스타일
+        subtitle_style = ParagraphStyle(
+            'CustomSubtitle',
+            parent=styles['Heading2'],
+            fontSize=16,
+            textColor=colors.HexColor('#666666'),
+            spaceAfter=20,
+            alignment=TA_LEFT
+        )
+        
+        # 제목 추가
+        story.append(Paragraph("HR 대시보드 리포트", title_style))
+        story.append(Paragraph(f"생성일시: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal']))
+        story.append(Spacer(1, 0.5*inch))
+        
+        # 요약 통계
+        summary_data = [
+            ['구분', '인원수', '비율'],
+            ['전체 직원', stats_response['total_employees'], '100%'],
+            ['승진 후보자', stats_response['promotion_candidates']['count'], 
+             f"{stats_response['promotion_candidates']['count']/stats_response['total_employees']*100:.1f}%"],
+            ['핵심 인재', stats_response['top_talents']['count'],
+             f"{stats_response['top_talents']['count']/stats_response['total_employees']*100:.1f}%"],
+            ['관리 필요 인력', stats_response['risk_employees']['count'],
+             f"{stats_response['risk_employees']['count']/stats_response['total_employees']*100:.1f}%"],
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[3*inch, 2*inch, 2*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        
+        story.append(Paragraph("인력 현황 요약", subtitle_style))
+        story.append(summary_table)
+        story.append(PageBreak())
+        
+        # 승진 후보자 섹션
+        if stats_response['promotion_candidates']['candidates']:
+            story.append(Paragraph("승진 후보자 상세", subtitle_style))
+            
+            promotion_data = [['이름', '부서', '직급', '점수', '판단 사유']]
+            for candidate in stats_response['promotion_candidates']['candidates'][:5]:
+                promotion_data.append([
+                    candidate['name'],
+                    candidate['department'],
+                    candidate['position'],
+                    f"{candidate['score']}점",
+                    ', '.join(candidate['reasons'][:2])
+                ])
+            
+            promotion_table = Table(promotion_data, colWidths=[1.5*inch, 1.5*inch, 1*inch, 1*inch, 3*inch])
+            promotion_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            story.append(promotion_table)
+            story.append(Spacer(1, 0.3*inch))
+        
+        # Top Talent 섹션
+        if stats_response['top_talents']['employees']:
+            story.append(Paragraph("핵심 인재 (Top Talent)", subtitle_style))
+            
+            talent_data = [['순위', '이름', '부서', '등급', '점수', '핵심 역량']]
+            for idx, talent in enumerate(stats_response['top_talents']['employees'][:10], 1):
+                talent_data.append([
+                    str(idx),
+                    talent['name'],
+                    talent['department'],
+                    talent['grade'],
+                    f"{talent['score']}점",
+                    ', '.join(talent['reasons'][:2])
+                ])
+            
+            talent_table = Table(talent_data, colWidths=[0.7*inch, 1.3*inch, 1.5*inch, 0.7*inch, 1*inch, 3*inch])
+            talent_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#764ba2')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            story.append(talent_table)
+            story.append(PageBreak())
+        
+        # 관리 필요 인력 섹션
+        if stats_response['risk_employees']['employees']:
+            story.append(Paragraph("관리 필요 인력", subtitle_style))
+            
+            risk_data = [['이름', '부서', '위험도', '점수', '관리 필요 사유']]
+            for emp in stats_response['risk_employees']['employees'][:10]:
+                risk_data.append([
+                    emp['name'],
+                    emp['department'],
+                    '높음' if emp['risk_level'] == 'high' else '보통',
+                    f"{emp['risk_score']}점",
+                    ', '.join(emp['reasons'][:2])
+                ])
+            
+            risk_table = Table(risk_data, colWidths=[1.5*inch, 1.5*inch, 1*inch, 1*inch, 3.5*inch])
+            risk_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#ff4d4f')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            story.append(risk_table)
+            story.append(Spacer(1, 0.3*inch))
+        
+        # 등급 분포 차트 생성
+        fig, ax = plt.subplots(figsize=(8, 4))
+        grades = [g['grade'] for g in stats_response['grade_distribution']]
+        counts = [g['count'] for g in stats_response['grade_distribution']]
+        colors_list = ['#FFD700', '#4CAF50', '#2196F3', '#FF9800', '#9E9E9E']
+        
+        ax.bar(grades, counts, color=colors_list[:len(grades)])
+        ax.set_xlabel('평가 등급')
+        ax.set_ylabel('인원수')
+        ax.set_title('평가 등급별 인원 분포')
+        
+        # 각 막대 위에 값 표시
+        for i, (grade, count) in enumerate(zip(grades, counts)):
+            percentage = stats_response['grade_distribution'][i]['percentage']
+            ax.text(i, count + 0.5, f'{count}명\n({percentage}%)', 
+                   ha='center', va='bottom')
+        
+        # 차트를 이미지로 저장
+        chart_buffer = BytesIO()
+        plt.savefig(chart_buffer, format='png', bbox_inches='tight', dpi=100)
+        chart_buffer.seek(0)
+        plt.close()
+        
+        # PDF에 차트 추가
+        story.append(Paragraph("평가 등급 분포", subtitle_style))
+        img = Image(chart_buffer, width=6*inch, height=3*inch)
+        story.append(img)
+        
+        # PDF 빌드
+        doc.build(story)
+        buffer.seek(0)
+        
+        # 응답 반환
+        return StreamingResponse(
+            buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=HR_Dashboard_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"PDF export error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
