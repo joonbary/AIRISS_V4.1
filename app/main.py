@@ -156,36 +156,63 @@ async def api_root():
     """API root endpoint"""
     return {"message": "AIRISS v4.0 API", "version": "4.0.2"}
 
+# Simple test to check which files exist
+@app.get("/api/check-files")
+async def check_files():
+    """Simple file check"""
+    templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+    files = {}
+    
+    for filename in ["hr_dashboard_2025_01_07.html", "hr_dashboard_v3.html", "hr_dashboard_v2.html"]:
+        filepath = os.path.join(templates_dir, filename)
+        if os.path.exists(filepath):
+            with open(filepath, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+                title_line = "Not found"
+                for line in lines[:10]:
+                    if "<title>" in line:
+                        title_line = line.strip()
+                        break
+            files[filename] = {"exists": True, "title": title_line}
+        else:
+            files[filename] = {"exists": False}
+    
+    return files
+
 # Test endpoint to verify file content
 @app.get("/api/test-file-content")
 async def test_file_content():
     """Check actual file content on server"""
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_2025_01_07.html")
-    
-    result = {
-        "file_exists": os.path.exists(template_path),
-        "file_path": template_path,
-    }
-    
-    if os.path.exists(template_path):
-        with open(template_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-            # 처음 500자와 title 태그 찾기
-            result["first_500_chars"] = content[:500]
-            
-            # title 태그 내용 찾기
-            import re
-            title_match = re.search(r'<title>(.*?)</title>', content)
-            if title_match:
-                result["title_tag"] = title_match.group(1)
-            
-            result["file_size"] = len(content)
-            
-            # 파일 수정 시간
-            import os.path
-            result["last_modified"] = datetime.fromtimestamp(os.path.getmtime(template_path)).isoformat()
-    
-    return result
+    try:
+        import re
+        from datetime import datetime
+        
+        template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_2025_01_07.html")
+        
+        result = {
+            "file_exists": os.path.exists(template_path),
+            "file_path": template_path,
+        }
+        
+        if os.path.exists(template_path):
+            with open(template_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                # 처음 500자와 title 태그 찾기
+                result["first_500_chars"] = content[:500]
+                
+                # title 태그 내용 찾기
+                title_match = re.search(r'<title>(.*?)</title>', content)
+                if title_match:
+                    result["title_tag"] = title_match.group(1)
+                
+                result["file_size"] = len(content)
+                
+                # 파일 수정 시간
+                result["last_modified"] = datetime.fromtimestamp(os.path.getmtime(template_path)).isoformat()
+        
+        return result
+    except Exception as e:
+        return {"error": str(e), "type": type(e).__name__}
 
 # API-based HR Dashboard - Bypass React completely
 @app.get("/api/hr-dashboard-html")
