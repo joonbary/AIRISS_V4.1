@@ -411,7 +411,7 @@ except ImportError as e:
 # OpenAI Proxy endpoints (Railway 환경용)
 try:
     from app.api.v1.endpoints.openai_proxy import router as proxy_router
-    app.include_router(proxy_router, prefix="/api/v1/proxy/openai", tags=["OpenAI Proxy"])
+    app.include_router(proxy_router, prefix="/api/v1", tags=["OpenAI Proxy"])
     logger.info("OpenAI Proxy router registered - Railway 연결 문제 해결용")
 except ImportError as e:
     logger.error(f"Failed to import OpenAI proxy router: {e}")
