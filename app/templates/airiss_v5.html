@@ -971,13 +971,22 @@
                 document.getElementById('analysis-status').style.display = 'block';
                 
                 try {
-                    const data = await this.api.request('POST', `/analysis/analyze/${fileId}`);
+                    const requestBody = {
+                        sample_size: 10,
+                        analysis_mode: "hybrid",
+                        enable_ai_feedback: true,
+                        openai_model: "gpt-3.5-turbo",
+                        max_tokens: 1200
+                    };
+                    
+                    const data = await this.api.request('POST', `/analysis/analyze/${fileId}`, requestBody);
                     this.state.analysisJobId = data.job_id;
                     
                     // 상태 체크
                     this.checkAnalysisStatus();
                 } catch (error) {
                     console.error('Analysis start failed:', error);
+                    document.getElementById('analysis-status').innerHTML = '<p style="color: var(--danger-color); text-align: center;">❌ 분석 시작 실패</p>';
                 }
             },
             
@@ -1009,18 +1018,41 @@
                 }
                 
                 try {
-                    const data = await this.api.request('POST', '/analysis/opinion/analyze', { text });
+                    const requestBody = {
+                        uid: "temp_user",
+                        opinions: {
+                            "2024": text
+                        }
+                    };
                     
+                    const data = await this.api.request('POST', '/analysis/opinion/analyze', requestBody);
+                    
+                    const result = data.result || data;
                     document.getElementById('opinion-results').innerHTML = `
                         <div class="card">
                             <h3>분석 결과</h3>
-                            <p><strong>감정:</strong> ${data.sentiment || 'neutral'}</p>
-                            <p><strong>키워드:</strong> ${(data.keywords || []).join(', ')}</p>
-                            <p><strong>인사이트:</strong> ${data.insights || '분석 중...'}</p>
+                            <p><strong>AI 점수:</strong> ${result.ai_score || 0}</p>
+                            <p><strong>텍스트 점수:</strong> ${result.text_score || 0}</p>
+                            <p><strong>등급:</strong> ${result.grade || 'C'}</p>
+                            <p><strong>감정 분석:</strong> ${result.sentiment_analysis || '중립적'}</p>
+                            <div style="margin-top: 15px;">
+                                <h4>강점</h4>
+                                <ul>${(result.strengths || ['분석 중']).map(s => `<li>${s}</li>`).join('')}</ul>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <h4>개선점</h4>
+                                <ul>${(result.improvements || ['분석 중']).map(i => `<li>${i}</li>`).join('')}</ul>
+                            </div>
                         </div>
                     `;
                 } catch (error) {
                     console.error('Opinion analysis failed:', error);
+                    document.getElementById('opinion-results').innerHTML = `
+                        <div class="card" style="color: var(--danger-color);">
+                            <h3>❌ 분석 실패</h3>
+                            <p>의견 분석 중 오류가 발생했습니다.</p>
+                        </div>
+                    `;
                 }
             },
             
