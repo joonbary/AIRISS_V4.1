@@ -183,6 +183,8 @@
             const [activeTab, setActiveTab] = useState('dashboard');
             const [employees, setEmployees] = useState([]);
             const [searchQuery, setSearchQuery] = useState('');
+            const [selectedEmployee, setSelectedEmployee] = useState(null);
+            const [employeeDetail, setEmployeeDetail] = useState(null);
             
             useEffect(() => {
                 fetchData();
@@ -464,23 +466,21 @@
                 );
             }
             
+            const fetchEmployeeDetail = async (employeeId) => {
+                try {
+                    const response = await fetch(`/api/v1/employees/${employeeId}/ai-analysis`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setEmployeeDetail(data);
+                        setSelectedEmployee(employeeId);
+                    }
+                } catch (err) {
+                    console.error('직원 상세 조회 실패:', err);
+                }
+            };
+            
             // 전직원분석 탭 렌더링
             const renderEmployeeAnalysis = () => {
-                const [selectedEmployee, setSelectedEmployee] = useState(null);
-                const [employeeDetail, setEmployeeDetail] = useState(null);
-                
-                const fetchEmployeeDetail = async (employeeId) => {
-                    try {
-                        const response = await fetch(`/api/v1/employees/${employeeId}/ai-analysis`);
-                        if (response.ok) {
-                            const data = await response.json();
-                            setEmployeeDetail(data);
-                            setSelectedEmployee(employeeId);
-                        }
-                    } catch (err) {
-                        console.error('직원 상세 조회 실패:', err);
-                    }
-                };
                 
                 const filteredEmployees = employees.filter(emp => 
                     emp.uid?.toLowerCase().includes(searchQuery.toLowerCase()) ||
