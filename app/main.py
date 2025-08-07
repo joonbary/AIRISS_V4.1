@@ -126,7 +126,29 @@ async def startup_event():
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    import subprocess
+    
+    # Git 커밋 정보 가져오기
+    try:
+        git_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()[:8]
+    except:
+        git_hash = "unknown"
+    
+    # 템플릿 파일 확인
+    templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+    hr_files = []
+    if os.path.exists(templates_dir):
+        for f in os.listdir(templates_dir):
+            if "hr_dashboard" in f:
+                hr_files.append(f)
+    
+    return {
+        "status": "healthy", 
+        "timestamp": datetime.now().isoformat(),
+        "git_commit": git_hash,
+        "hr_dashboard_files": hr_files,
+        "deployment_version": "2025-01-07-v4"
+    }
 
 # API endpoint for root - return JSON for API calls
 @app.get("/api")
