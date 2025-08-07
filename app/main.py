@@ -244,26 +244,77 @@ else:
 async def serve_hr_dashboard():
     """Serve HR Dashboard page"""
     import random
+    from fastapi.responses import FileResponse, JSONResponse
+    
+    # 디버깅을 위한 파일 체크
+    templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+    available_files = []
+    
     # v3 파일 우선 사용
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_v3.html")
-    if os.path.exists(template_path):
-        # 캐시 방지를 위한 헤더 추가
-        from fastapi.responses import FileResponse
-        response = FileResponse(template_path)
+    v3_path = os.path.join(templates_dir, "hr_dashboard_v3.html")
+    if os.path.exists(v3_path):
+        available_files.append("v3 exists")
+        response = FileResponse(v3_path)
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
         response.headers["X-Version"] = f"v3-{random.randint(1000, 9999)}"
+        response.headers["X-File-Served"] = "hr_dashboard_v3.html"
+        logger.info(f"Serving: hr_dashboard_v3.html from {v3_path}")
         return response
+    
     # v2 fallback
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_v2.html")
-    if os.path.exists(template_path):
-        return FileResponse(template_path)
-    # Fallback to old file
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard.html")
-    if os.path.exists(template_path):
-        return FileResponse(template_path)
-    return {"message": "HR Dashboard not found"}
+    v2_path = os.path.join(templates_dir, "hr_dashboard_v2.html")
+    if os.path.exists(v2_path):
+        available_files.append("v2 exists")
+        response = FileResponse(v2_path)
+        response.headers["X-File-Served"] = "hr_dashboard_v2.html"
+        logger.info(f"Serving: hr_dashboard_v2.html from {v2_path}")
+        return response
+    
+    # Return debug info
+    return JSONResponse({
+        "message": "HR Dashboard not found",
+        "templates_dir": templates_dir,
+        "available_files": available_files,
+        "v3_path": v3_path,
+        "v2_path": v2_path
+    })
+
+# Debug endpoint to check which file is being served
+@app.get("/hr-dashboard-debug")
+async def debug_hr_dashboard():
+    """Debug endpoint to check template files"""
+    templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+    files = []
+    
+    if os.path.exists(templates_dir):
+        for f in os.listdir(templates_dir):
+            if "hr_dashboard" in f:
+                file_path = os.path.join(templates_dir, f)
+                file_size = os.path.getsize(file_path)
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    first_line = file.readline()
+                    for _ in range(5):
+                        line = file.readline()
+                        if '<title>' in line:
+                            title = line.strip()
+                            break
+                    else:
+                        title = "No title found"
+                
+                files.append({
+                    "name": f,
+                    "size": file_size,
+                    "title": title,
+                    "path": file_path
+                })
+    
+    return {
+        "templates_dir": templates_dir,
+        "files": files,
+        "current_working_dir": os.getcwd()
+    }
 
 # HR Dashboard Simple Test route
 @app.get("/hr-dashboard-test")
@@ -303,7 +354,8 @@ async def serve_spa(request: Request, full_path: str):
         raise HTTPException(status_code=404, detail="API endpoint not found")
     
     # Skip specific routes that have their own handlers
-    if full_path in ["docs", "redoc", "openapi.json", "hr-dashboard", "hr-dashboard-test", "executive-dashboard"]:
+    # hr-dashboard는 위에서 처리되므로 여기서 제외하지 않음
+    if full_path in ["docs", "redoc", "openapi.json"]:
         raise HTTPException(status_code=404, detail="Not found")
     
     # Check if static path exists
