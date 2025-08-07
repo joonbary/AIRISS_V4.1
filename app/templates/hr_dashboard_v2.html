@@ -217,26 +217,77 @@
                         const empResponse = await fetch('/api/v1/employees');
                         if (empResponse.ok) {
                             const empData = await empResponse.json();
-                            employeeData = empData.results || empData || [];
+                            console.log('/api/v1/employees 응답:', empData);
+                            
+                            // 다양한 응답 구조 처리
+                            if (Array.isArray(empData)) {
+                                employeeData = empData;
+                            } else if (empData.results && Array.isArray(empData.results)) {
+                                employeeData = empData.results;
+                            } else if (empData.data && Array.isArray(empData.data)) {
+                                employeeData = empData.data;
+                            }
                         }
                     } catch (e) {
-                        console.log('/api/v1/employees 실패, 다른 엔드포인트 시도');
+                        console.log('/api/v1/employees 실패:', e);
                     }
                     
                     // 2차: /api/v1/employees/ai-analysis/list
-                    if (employeeData.length === 0) {
+                    if (!Array.isArray(employeeData) || employeeData.length === 0) {
                         try {
                             const listResponse = await fetch('/api/v1/employees/ai-analysis/list');
                             if (listResponse.ok) {
                                 const listData = await listResponse.json();
-                                employeeData = listData.results || [];
+                                console.log('/api/v1/employees/ai-analysis/list 응답:', listData);
+                                
+                                if (Array.isArray(listData)) {
+                                    employeeData = listData;
+                                } else if (listData.results && Array.isArray(listData.results)) {
+                                    employeeData = listData.results;
+                                } else if (listData.data && Array.isArray(listData.data)) {
+                                    employeeData = listData.data;
+                                }
                             }
                         } catch (e) {
-                            console.log('/api/v1/employees/ai-analysis/list 실패');
+                            console.log('/api/v1/employees/ai-analysis/list 실패:', e);
                         }
                     }
                     
-                    setEmployees(employeeData);
+                    // 3차: HR 대시보드 데이터에서 직원 정보 추출
+                    if (!Array.isArray(employeeData) || employeeData.length === 0) {
+                        if (statsData) {
+                            const allEmployees = [];
+                            
+                            // 승진 후보자
+                            if (statsData.promotion_candidates?.candidates) {
+                                allEmployees.push(...statsData.promotion_candidates.candidates);
+                            }
+                            
+                            // Top Talent
+                            if (statsData.top_talents?.employees) {
+                                allEmployees.push(...statsData.top_talents.employees);
+                            }
+                            
+                            // 관리 필요 인력
+                            if (statsData.risk_employees?.employees) {
+                                allEmployees.push(...statsData.risk_employees.employees);
+                            }
+                            
+                            // 중복 제거
+                            const uniqueEmployees = {};
+                            allEmployees.forEach(emp => {
+                                if (emp.uid && !uniqueEmployees[emp.uid]) {
+                                    uniqueEmployees[emp.uid] = emp;
+                                }
+                            });
+                            
+                            employeeData = Object.values(uniqueEmployees);
+                            console.log('HR 대시보드 데이터에서 추출한 직원:', employeeData.length);
+                        }
+                    }
+                    
+                    // 배열 확인 후 설정
+                    setEmployees(Array.isArray(employeeData) ? employeeData : []);
                     setError(null);
                 } catch (err) {
                     console.error('데이터 로딩 오류:', err);
@@ -420,7 +471,10 @@
             
             // 전직원분석 렌더링
             const renderEmployeeAnalysis = () => {
-                const filteredEmployees = employees.filter(emp => {
+                // employees가 배열인지 확인
+                const employeeList = Array.isArray(employees) ? employees : [];
+                
+                const filteredEmployees = employeeList.filter(emp => {
                     const query = searchQuery.toLowerCase();
                     return (emp.uid || '').toLowerCase().includes(query) ||
                            (emp.employee_name || '').toLowerCase().includes(query) ||
@@ -464,8 +518,12 @@
                             placeholder: '직원 검색 (이름, 사번)',
                             value: searchQuery,
                             onChange: (e) => setSearchQuery(e.target.value)
-                        })
+                        }),
+                        h('span', { style: { marginLeft: '20px', color: '#666' } }, 
+                            `총 ${employeeList.length}명의 직원 데이터`)
                     ),
+                    employeeList.length === 0 ? 
+                        h('div', { className: 'info' }, '직원 데이터를 불러오는 중이거나 데이터가 없습니다.') :
                     h('table', { className: 'employee-table' },
                         h('thead',
                             h('tr',
