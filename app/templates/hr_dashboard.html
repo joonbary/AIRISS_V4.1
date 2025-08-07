@@ -466,43 +466,125 @@
             
             // 전직원분석 탭 렌더링
             const renderEmployeeAnalysis = () => {
+                const [selectedEmployee, setSelectedEmployee] = useState(null);
+                const [employeeDetail, setEmployeeDetail] = useState(null);
+                
+                const fetchEmployeeDetail = async (employeeId) => {
+                    try {
+                        const response = await fetch(`/api/v1/employees/${employeeId}/ai-analysis`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            setEmployeeDetail(data);
+                            setSelectedEmployee(employeeId);
+                        }
+                    } catch (err) {
+                        console.error('직원 상세 조회 실패:', err);
+                    }
+                };
+                
                 const filteredEmployees = employees.filter(emp => 
                     emp.uid?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    emp.employee_name?.toLowerCase().includes(searchQuery.toLowerCase())
+                    emp.employee_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    emp.id?.toLowerCase().includes(searchQuery.toLowerCase())
                 );
                 
+                // 개인별 상세 보고서 모달
+                if (selectedEmployee && employeeDetail) {
+                    return h('div', { className: 'section' },
+                        h('div', { style: { marginBottom: '20px' } },
+                            h('button', {
+                                className: 'btn',
+                                onClick: () => {
+                                    setSelectedEmployee(null);
+                                    setEmployeeDetail(null);
+                                }
+                            }, '← 목록으로')
+                        ),
+                        h('div', { style: { padding: '20px', background: '#f9f9f9', borderRadius: '8px' } },
+                            h('h2', null, `${employeeDetail.employee_name || selectedEmployee} AI 분석 보고서`),
+                            h('div', { className: 'stats-grid', style: { marginTop: '20px' } },
+                                h('div', { className: 'stat-card' },
+                                    h('div', { className: 'stat-number' }, Math.round(employeeDetail.ai_score || 0)),
+                                    h('div', { className: 'stat-label' }, 'AI 종합점수')
+                                ),
+                                h('div', { className: 'stat-card' },
+                                    h('div', { className: 'stat-number' }, employeeDetail.grade || 'C'),
+                                    h('div', { className: 'stat-label' }, 'AI 등급')
+                                ),
+                                h('div', { className: 'stat-card' },
+                                    h('div', { className: 'stat-number' }, Math.round(employeeDetail.text_score || 0)),
+                                    h('div', { className: 'stat-label' }, '정성평가')
+                                ),
+                                h('div', { className: 'stat-card' },
+                                    h('div', { className: 'stat-number' }, Math.round(employeeDetail.quantitative_score || 0)),
+                                    h('div', { className: 'stat-label' }, '정량평가')
+                                )
+                            ),
+                            employeeDetail.strengths && h('div', { style: { marginTop: '20px' } },
+                                h('h3', null, '강점'),
+                                h('ul', null,
+                                    employeeDetail.strengths.map(s => h('li', { key: s }, s))
+                                )
+                            ),
+                            employeeDetail.improvements && h('div', { style: { marginTop: '20px' } },
+                                h('h3', null, '개선점'),
+                                h('ul', null,
+                                    employeeDetail.improvements.map(i => h('li', { key: i }, i))
+                                )
+                            ),
+                            employeeDetail.ai_comment && h('div', { style: { marginTop: '20px' } },
+                                h('h3', null, 'AI 종합 평가'),
+                                h('p', { style: { background: 'white', padding: '15px', borderRadius: '4px' } },
+                                    employeeDetail.ai_comment)
+                            )
+                        )
+                    );
+                }
+                
                 return h('div', { className: 'section' },
-                    h('div', { style: { marginBottom: '20px' } },
+                    h('div', { style: { marginBottom: '20px', display: 'flex', gap: '10px' } },
                         h('input', {
                             type: 'text',
-                            placeholder: '직원 검색 (이름 또는 사번)',
+                            placeholder: '직원 검색 (이름, 사번, ID)',
                             value: searchQuery,
                             onChange: (e) => setSearchQuery(e.target.value),
                             style: {
-                                width: '300px',
+                                flex: 1,
+                                maxWidth: '400px',
                                 padding: '8px 12px',
                                 border: '1px solid #d9d9d9',
                                 borderRadius: '4px',
                                 fontSize: '14px'
                             }
-                        })
+                        }),
+                        h('button', {
+                            className: 'btn',
+                            onClick: () => setSearchQuery('')
+                        }, '초기화')
+                    ),
+                    h('div', { style: { marginBottom: '10px', color: '#666' } },
+                        `전체 ${employees.length}명 중 ${filteredEmployees.length}명 표시`
                     ),
                     h('table', { className: 'employee-table' },
                         h('thead',
                             h('tr',
-                                h('th', null, '사번'),
+                                h('th', null, '순번'),
+                                h('th', null, '사번/ID'),
                                 h('th', null, '이름'),
                                 h('th', null, '부서'),
                                 h('th', null, '직급'),
-                                h('th', null, '등급'),
+                                h('th', null, 'AI 등급'),
                                 h('th', null, 'AI 점수'),
-                                h('th', null, '상세')
+                                h('th', null, '정성평가'),
+                                h('th', null, '정량평가'),
+                                h('th', null, '상세보고서')
                             )
                         ),
                         h('tbody',
-                            filteredEmployees.slice(0, 20).map(emp =>
+                            filteredEmployees.slice(0, 50).map((emp, idx) =>
                                 h('tr', { key: emp.id },
-                                    h('td', null, emp.uid || emp.id.slice(0, 8)),
+                                    h('td', null, idx + 1),
+                                    h('td', null, emp.uid || emp.id?.slice(0, 8) || '-'),
                                     h('td', null, emp.employee_name || '익명'),
                                     h('td', null, emp.department || '미정'),
                                     h('td', null, emp.position || '미정'),
@@ -513,24 +595,23 @@
                                                            emp.grade === 'B' ? 'tag-orange' : 'tag-red'}`
                                         }, emp.grade || 'C')
                                     ),
-                                    h('td', null, Math.round(emp.overall_score || 70)),
+                                    h('td', null, Math.round(emp.overall_score || 0)),
+                                    h('td', null, Math.round(emp.text_score || 0)),
+                                    h('td', null, Math.round(emp.quantitative_score || 0)),
                                     h('td', null,
-                                        h('a', {
-                                            href: `#`,
-                                            onClick: (e) => {
-                                                e.preventDefault();
-                                                alert(`직원 상세 정보: ${emp.uid || emp.id}`);
-                                            },
-                                            style: { color: '#1890ff', cursor: 'pointer' }
-                                        }, '보기')
+                                        h('button', {
+                                            className: 'btn btn-primary',
+                                            onClick: () => fetchEmployeeDetail(emp.id),
+                                            style: { padding: '4px 12px', fontSize: '12px' }
+                                        }, 'AI 보고서')
                                     )
                                 )
                             )
                         )
                     ),
-                    filteredEmployees.length > 20 && 
+                    filteredEmployees.length > 50 && 
                         h('div', { style: { marginTop: '10px', textAlign: 'center', color: '#666' } },
-                            `${filteredEmployees.length}명 중 20명 표시`)
+                            `${filteredEmployees.length}명 중 50명만 표시 (검색으로 필터링하세요)`)
                 );
             };
             
