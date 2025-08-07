@@ -33,7 +33,7 @@ async def get_employees_list(db: Session = Depends(get_db)):
         result = service.get_employees_ai_analysis_list(
             filters={},
             sort_options={"field": "ai_score", "order": "desc"},
-            pagination={"page": 1, "page_size": 1000}
+            pagination={"page": 1, "page_size": 100}  # 최대값 100으로 수정
         )
         return result
     except Exception as e:
