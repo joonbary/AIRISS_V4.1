@@ -243,9 +243,17 @@ else:
 @app.get("/hr-dashboard")
 async def serve_hr_dashboard():
     """Serve HR Dashboard page"""
+    import random
     template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_v2.html")
     if os.path.exists(template_path):
-        return FileResponse(template_path)
+        # 캐시 방지를 위한 헤더 추가
+        from fastapi.responses import FileResponse
+        response = FileResponse(template_path)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        response.headers["X-Version"] = f"v3-{random.randint(1000, 9999)}"
+        return response
     # Fallback to old file if v2 doesn't exist
     template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard.html")
     if os.path.exists(template_path):
