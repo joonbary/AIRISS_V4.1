@@ -243,6 +243,10 @@ else:
 @app.get("/hr-dashboard")
 async def serve_hr_dashboard():
     """Serve HR Dashboard page"""
+    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_v2.html")
+    if os.path.exists(template_path):
+        return FileResponse(template_path)
+    # Fallback to old file if v2 doesn't exist
     template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard.html")
     if os.path.exists(template_path):
         return FileResponse(template_path)
