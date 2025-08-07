@@ -214,32 +214,47 @@ async def test_file_content():
     except Exception as e:
         return {"error": str(e), "type": type(e).__name__}
 
-# API-based HR Dashboard - Bypass React completely
+# API-based HR Dashboard - FORCE NEW VERSION
 @app.get("/api/hr-dashboard-html")
 async def api_hr_dashboard():
-    """Serve HR Dashboard as API response"""
-    from fastapi.responses import HTMLResponse
+    """Serve HR Dashboard as API response - FORCE READ FROM FILE"""
+    from fastapi.responses import Response
     import hashlib
+    
+    # ALWAYS read the 2025 version
     template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_2025_01_07.html")
     
-    if os.path.exists(template_path):
-        with open(template_path, 'r', encoding='utf-8') as f:
-            html_content = f.read()
-        
-        # 파일 해시 계산
-        file_hash = hashlib.md5(html_content.encode()).hexdigest()[:8]
-        
-        # HTML에 메타 정보 주입
-        meta_info = f"\n<!-- File: hr_dashboard_2025_01_07.html -->\n<!-- Hash: {file_hash} -->\n<!-- Served: {datetime.now().isoformat()} -->\n"
-        html_content = html_content.replace("<head>", f"<head>{meta_info}")
-        
-        return HTMLResponse(content=html_content, headers={
-            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
-            "X-Served-By": "API-Endpoint",
-            "X-File-Hash": file_hash
-        })
+    if not os.path.exists(template_path):
+        return {"error": "File not found", "path": template_path}
     
-    return {"error": "Dashboard not found", "path": template_path}
+    # Force fresh read every time
+    with open(template_path, 'r', encoding='utf-8') as f:
+        html_content = f.read()
+    
+    # Generate unique response each time
+    import random
+    timestamp = datetime.now().isoformat()
+    unique_id = random.randint(1000, 9999)
+    
+    # Inject timestamp into HTML to prevent any caching
+    html_content = html_content.replace(
+        "</title>",
+        f" - {timestamp}</title>"
+    )
+    
+    # Return with strict no-cache headers
+    return Response(
+        content=html_content,
+        media_type="text/html",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+            "X-Timestamp": timestamp,
+            "X-Unique-ID": str(unique_id),
+            "X-File": "hr_dashboard_2025_01_07.html"
+        }
+    )
 
 # Register all API routers
 try:
