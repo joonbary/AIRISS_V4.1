@@ -239,7 +239,7 @@ if os.path.exists(static_path):
 else:
     logger.warning(f"⚠️ Static path not found: {static_path}")
 
-# HR Dashboard route
+# HR Dashboard route - MUST BE BEFORE CATCH-ALL
 @app.get("/hr-dashboard")
 async def serve_hr_dashboard():
     """Serve HR Dashboard page"""
@@ -280,6 +280,18 @@ async def serve_hr_dashboard():
         "v3_path": v3_path,
         "v2_path": v2_path
     })
+
+# Direct v3 access for testing
+@app.get("/hr-v3")
+async def serve_hr_v3():
+    """Direct access to v3 dashboard"""
+    from fastapi.responses import FileResponse
+    v3_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_v3.html")
+    if os.path.exists(v3_path):
+        response = FileResponse(v3_path)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        return response
+    return {"error": "v3 not found", "path": v3_path}
 
 # Debug endpoint to check which file is being served
 @app.get("/hr-dashboard-debug")
