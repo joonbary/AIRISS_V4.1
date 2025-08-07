@@ -244,7 +244,8 @@ else:
 async def serve_hr_dashboard():
     """Serve HR Dashboard page"""
     import random
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_v2.html")
+    # v3 파일 우선 사용
+    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_v3.html")
     if os.path.exists(template_path):
         # 캐시 방지를 위한 헤더 추가
         from fastapi.responses import FileResponse
@@ -254,7 +255,11 @@ async def serve_hr_dashboard():
         response.headers["Expires"] = "0"
         response.headers["X-Version"] = f"v3-{random.randint(1000, 9999)}"
         return response
-    # Fallback to old file if v2 doesn't exist
+    # v2 fallback
+    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_v2.html")
+    if os.path.exists(template_path):
+        return FileResponse(template_path)
+    # Fallback to old file
     template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard.html")
     if os.path.exists(template_path):
         return FileResponse(template_path)
