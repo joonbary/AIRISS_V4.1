@@ -281,6 +281,19 @@ async def serve_hr_dashboard():
         "v2_path": v2_path
     })
 
+# NEW DASHBOARD - Completely new path to bypass all caching
+@app.get("/hr-new")
+async def serve_hr_new():
+    """New HR Dashboard with unique filename"""
+    from fastapi.responses import FileResponse
+    new_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_2025_01_07.html")
+    if os.path.exists(new_path):
+        response = FileResponse(new_path)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
+    return {"error": "new dashboard not found", "path": new_path}
+
 # Direct v3 access for testing
 @app.get("/hr-v3")
 async def serve_hr_v3():
