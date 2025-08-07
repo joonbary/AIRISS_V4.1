@@ -55,9 +55,9 @@ except ImportError:
 
 # Create FastAPI app
 app = FastAPI(
-    title="AIRISS v4.0 API",
-    description="OK Financial Group HR Analysis System",
-    version="4.0.2",
+    title="AIRISS v5.0 API",
+    description="AI-Powered HR Intelligence & Risk Scoring System",
+    version="5.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json"
@@ -147,34 +147,50 @@ async def health_check():
         "timestamp": datetime.now().isoformat(),
         "git_commit": git_hash,
         "hr_dashboard_files": hr_files,
-        "deployment_version": "2025-01-07-v4"
+        "deployment_version": "2025-08-07-v5.0.0"
     }
 
 # API endpoint for root - return JSON for API calls
 @app.get("/api")
 async def api_root():
     """API root endpoint"""
-    return {"message": "AIRISS v4.0 API", "version": "4.0.2"}
+    return {"message": "AIRISS v5.0 API", "version": "5.0.0"}
 
-# HR Dashboard Final - Production Ready
+# AIRISS v5.0 Dashboard - Brand New System
 @app.get("/hr")
-async def hr_dashboard_final():
-    """Production-ready HR Dashboard"""
-    from fastapi.responses import FileResponse
+async def airiss_v5_dashboard():
+    """AIRISS v5.0 Dashboard with unified 6-tab interface"""
+    from fastapi.responses import Response
+    import random
     
-    filepath = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_final.html")
+    filepath = os.path.join(os.path.dirname(__file__), "templates", "airiss_v5.html")
     
-    if os.path.exists(filepath):
-        return FileResponse(
-            filepath,
-            media_type="text/html",
-            headers={
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "X-Version": "2025.08.07"
-            }
-        )
+    if not os.path.exists(filepath):
+        return {"error": "AIRISS v5.0 dashboard not found", "path": filepath}
     
-    return {"error": "Dashboard not found"}
+    with open(filepath, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # 버전 정보와 빌드 타임스탬프 주입
+    timestamp = datetime.now().isoformat()
+    build_id = random.randint(1000, 9999)
+    
+    # 메타 태그 업데이트
+    content = content.replace('content="2025-08-07"', f'content="{timestamp}"')
+    content = content.replace('v5.0.0-2025.08.07', f'v5.0.0-{build_id}')
+    
+    return Response(
+        content=content,
+        media_type="text/html",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache", 
+            "Expires": "0",
+            "X-Version": f"5.0.0-{build_id}",
+            "X-Build-Time": timestamp,
+            "X-System": "AIRISS-v5.0"
+        }
+    )
 
 # COMPLETELY NEW ENDPOINT - Never cached before
 @app.get("/dashboard/latest")
