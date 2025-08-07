@@ -203,9 +203,10 @@
                     console.log('HR 대시보드 데이터 로딩...');
                     
                     // HR 대시보드 통계
+                    let statsData = null;
                     const statsResponse = await fetch('/api/v1/hr-dashboard/stats');
                     if (statsResponse.ok) {
-                        const statsData = await statsResponse.json();
+                        statsData = await statsResponse.json();
                         setData(statsData);
                     }
                     
