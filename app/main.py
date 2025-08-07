@@ -156,19 +156,60 @@ async def api_root():
     """API root endpoint"""
     return {"message": "AIRISS v4.0 API", "version": "4.0.2"}
 
+# Test endpoint to verify file content
+@app.get("/api/test-file-content")
+async def test_file_content():
+    """Check actual file content on server"""
+    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_2025_01_07.html")
+    
+    result = {
+        "file_exists": os.path.exists(template_path),
+        "file_path": template_path,
+    }
+    
+    if os.path.exists(template_path):
+        with open(template_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            # 처음 500자와 title 태그 찾기
+            result["first_500_chars"] = content[:500]
+            
+            # title 태그 내용 찾기
+            import re
+            title_match = re.search(r'<title>(.*?)</title>', content)
+            if title_match:
+                result["title_tag"] = title_match.group(1)
+            
+            result["file_size"] = len(content)
+            
+            # 파일 수정 시간
+            import os.path
+            result["last_modified"] = datetime.fromtimestamp(os.path.getmtime(template_path)).isoformat()
+    
+    return result
+
 # API-based HR Dashboard - Bypass React completely
 @app.get("/api/hr-dashboard-html")
 async def api_hr_dashboard():
     """Serve HR Dashboard as API response"""
     from fastapi.responses import HTMLResponse
+    import hashlib
     template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_2025_01_07.html")
     
     if os.path.exists(template_path):
         with open(template_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
+        
+        # 파일 해시 계산
+        file_hash = hashlib.md5(html_content.encode()).hexdigest()[:8]
+        
+        # HTML에 메타 정보 주입
+        meta_info = f"\n<!-- File: hr_dashboard_2025_01_07.html -->\n<!-- Hash: {file_hash} -->\n<!-- Served: {datetime.now().isoformat()} -->\n"
+        html_content = html_content.replace("<head>", f"<head>{meta_info}")
+        
         return HTMLResponse(content=html_content, headers={
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "X-Served-By": "API-Endpoint"
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+            "X-Served-By": "API-Endpoint",
+            "X-File-Hash": file_hash
         })
     
     return {"error": "Dashboard not found", "path": template_path}
