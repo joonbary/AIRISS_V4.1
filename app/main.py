@@ -156,6 +156,23 @@ async def api_root():
     """API root endpoint"""
     return {"message": "AIRISS v4.0 API", "version": "4.0.2"}
 
+# API-based HR Dashboard - Bypass React completely
+@app.get("/api/hr-dashboard-html")
+async def api_hr_dashboard():
+    """Serve HR Dashboard as API response"""
+    from fastapi.responses import HTMLResponse
+    template_path = os.path.join(os.path.dirname(__file__), "templates", "hr_dashboard_2025_01_07.html")
+    
+    if os.path.exists(template_path):
+        with open(template_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content, headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "X-Served-By": "API-Endpoint"
+        })
+    
+    return {"error": "Dashboard not found", "path": template_path}
+
 # Register all API routers
 try:
     from app.api.v1.endpoints.analysis import router as analysis_router
@@ -399,6 +416,11 @@ async def serve_spa(request: Request, full_path: str):
     if full_path.startswith("api/") or full_path.startswith("ws"):
         # Return 404 for undefined API routes
         raise HTTPException(status_code=404, detail="API endpoint not found")
+    
+    # Skip HR dashboard routes - IMPORTANT
+    if full_path.startswith("hr-") or full_path == "hr":
+        # Let the specific hr- routes handle these
+        raise HTTPException(status_code=404, detail="Not a React route")
     
     # Skip specific routes that have their own handlers
     # hr-dashboard는 위에서 처리되므로 여기서 제외하지 않음
