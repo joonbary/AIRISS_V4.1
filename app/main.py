@@ -267,8 +267,8 @@ async def serve_spa(request: Request, full_path: str):
         # Return 404 for undefined API routes
         raise HTTPException(status_code=404, detail="API endpoint not found")
     
-    # Skip docs and openapi
-    if full_path in ["docs", "redoc", "openapi.json"]:
+    # Skip specific routes that have their own handlers
+    if full_path in ["docs", "redoc", "openapi.json", "hr-dashboard"]:
         raise HTTPException(status_code=404, detail="Not found")
     
     # Check if static path exists
