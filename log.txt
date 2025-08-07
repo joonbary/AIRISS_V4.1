@@ -1,0 +1,221 @@
+1. 분석이 끝나서 결과확인을 누르고 엑셀다운로드를 누르면 반응이 없음. 콘솔로그는 아래와 같음
+websocket_v4.ts:64 WebSocket connection to 'wss://web-production-4066.up.railway.app/api/connect?client_id=client-1754528084595' failed: 
+connect @ websocket_v4.ts:64
+(anonymous) @ websocket_v4.ts:131Understand this error
+websocket_v4.ts:114 ❌ WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ websocket_v4.ts:114Understand this error
+websocket_v4.ts:119 🔌 WebSocket closed: CloseEvent {isTrusted: true, wasClean: false, code: 1006, reason: '', type: 'close', …}
+websocket_v4.ts:130 🔄 Reconnecting in 30000ms... (attempt 8/10)
+api.config.ts:128 ❌ API 경로 중복 감지: /api/api/v1/analysis/download/9a4d02b4-9968-41e3-aa1a-4d7d4fbba065/excel
+Sf @ api.config.ts:128
+(anonymous) @ api.ts:25
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Lp.forEach.cf.<computed> @ Axios.js:213
+(anonymous) @ bind.js:5
+Uf @ api.ts:186
+B @ UnifiedDashboard.tsx:320
+onClick @ UnifiedDashboard.tsx:658
+Me @ react-dom.production.min.js:54
+De @ react-dom.production.min.js:54
+(anonymous) @ react-dom.production.min.js:55
+Or @ react-dom.production.min.js:105
+jr @ react-dom.production.min.js:106
+(anonymous) @ react-dom.production.min.js:117
+ll @ react-dom.production.min.js:273
+Le @ react-dom.production.min.js:52
+Kr @ react-dom.production.min.js:109
+qt @ react-dom.production.min.js:74
+Wt @ react-dom.production.min.js:73Understand this error
+api.config.ts:129 디버깅용 스택 트레이스:
+Sf @ api.config.ts:129
+(anonymous) @ api.ts:25
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Lp.forEach.cf.<computed> @ Axios.js:213
+(anonymous) @ bind.js:5
+Uf @ api.ts:186
+B @ UnifiedDashboard.tsx:320
+onClick @ UnifiedDashboard.tsx:658
+Me @ react-dom.production.min.js:54
+De @ react-dom.production.min.js:54
+(anonymous) @ react-dom.production.min.js:55
+Or @ react-dom.production.min.js:105
+jr @ react-dom.production.min.js:106
+(anonymous) @ react-dom.production.min.js:117
+ll @ react-dom.production.min.js:273
+Le @ react-dom.production.min.js:52
+Kr @ react-dom.production.min.js:109
+qt @ react-dom.production.min.js:74
+Wt @ react-dom.production.min.js:73
+api.ts:33 🚀 API Request: GET /api/api/v1/analysis/download/9a4d02b4-9968-41e3-aa1a-4d7d4fbba065/excel
+api.ts:186  GET https://web-production-4066.up.railway.app/api/api/v1/analysis/download/9a4d02b4-9968-41e3-aa1a-4d7d4fbba065/excel 404 (Not Found)
+(anonymous) @ xhr.js:195
+xhr @ xhr.js:15
+rf @ dispatchRequest.js:51
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Lp.forEach.cf.<computed> @ Axios.js:213
+(anonymous) @ bind.js:5
+Uf @ api.ts:186
+B @ UnifiedDashboard.tsx:320
+onClick @ UnifiedDashboard.tsx:658
+Me @ react-dom.production.min.js:54
+De @ react-dom.production.min.js:54
+(anonymous) @ react-dom.production.min.js:55
+Or @ react-dom.production.min.js:105
+jr @ react-dom.production.min.js:106
+(anonymous) @ react-dom.production.min.js:117
+ll @ react-dom.production.min.js:273
+Le @ react-dom.production.min.js:52
+Kr @ react-dom.production.min.js:109
+qt @ react-dom.production.min.js:74
+Wt @ react-dom.production.min.js:73Understand this error
+api.ts:49 ❌ API Error: {url: '/api/api/v1/analysis/download/9a4d02b4-9968-41e3-aa1a-4d7d4fbba065/excel', status: 404, data: Blob, message: 'Request failed with status code 404'}
+(anonymous) @ api.ts:49
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Lp.forEach.cf.<computed> @ Axios.js:213
+(anonymous) @ bind.js:5
+Uf @ api.ts:186
+B @ UnifiedDashboard.tsx:320
+onClick @ UnifiedDashboard.tsx:658
+Me @ react-dom.production.min.js:54
+De @ react-dom.production.min.js:54
+(anonymous) @ react-dom.production.min.js:55
+Or @ react-dom.production.min.js:105
+jr @ react-dom.production.min.js:106
+(anonymous) @ react-dom.production.min.js:117
+ll @ react-dom.production.min.js:273
+Le @ react-dom.production.min.js:52
+Kr @ react-dom.production.min.js:109
+qt @ react-dom.production.min.js:74
+Wt @ react-dom.production.min.js:73Understand this error
+api.ts:58 🚨 API 경로 중복 문제가 감지되었습니다!
+(anonymous) @ api.ts:58
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Lp.forEach.cf.<computed> @ Axios.js:213
+(anonymous) @ bind.js:5
+Uf @ api.ts:186
+B @ UnifiedDashboard.tsx:320
+onClick @ UnifiedDashboard.tsx:658
+Me @ react-dom.production.min.js:54
+De @ react-dom.production.min.js:54
+(anonymous) @ react-dom.production.min.js:55
+Or @ react-dom.production.min.js:105
+jr @ react-dom.production.min.js:106
+(anonymous) @ react-dom.production.min.js:117
+ll @ react-dom.production.min.js:273
+Le @ react-dom.production.min.js:52
+Kr @ react-dom.production.min.js:109
+qt @ react-dom.production.min.js:74
+Wt @ react-dom.production.min.js:73Understand this error
+api.ts:59 문제 URL: /api/api/v1/analysis/download/9a4d02b4-9968-41e3-aa1a-4d7d4fbba065/excel
+(anonymous) @ api.ts:59
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Lp.forEach.cf.<computed> @ Axios.js:213
+(anonymous) @ bind.js:5
+Uf @ api.ts:186
+B @ UnifiedDashboard.tsx:320
+onClick @ UnifiedDashboard.tsx:658
+Me @ react-dom.production.min.js:54
+De @ react-dom.production.min.js:54
+(anonymous) @ react-dom.production.min.js:55
+Or @ react-dom.production.min.js:105
+jr @ react-dom.production.min.js:106
+(anonymous) @ react-dom.production.min.js:117
+ll @ react-dom.production.min.js:273
+Le @ react-dom.production.min.js:52
+Kr @ react-dom.production.min.js:109
+qt @ react-dom.production.min.js:74
+Wt @ react-dom.production.min.js:73Understand this error
+api.ts:60 buildApiUrl 함수를 사용하여 올바른 URL을 생성하세요.
+(anonymous) @ api.ts:60
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Lp.forEach.cf.<computed> @ Axios.js:213
+(anonymous) @ bind.js:5
+Uf @ api.ts:186
+B @ UnifiedDashboard.tsx:320
+onClick @ UnifiedDashboard.tsx:658
+Me @ react-dom.production.min.js:54
+De @ react-dom.production.min.js:54
+(anonymous) @ react-dom.production.min.js:55
+Or @ react-dom.production.min.js:105
+jr @ react-dom.production.min.js:106
+(anonymous) @ react-dom.production.min.js:117
+ll @ react-dom.production.min.js:273
+Le @ react-dom.production.min.js:52
+Kr @ react-dom.production.min.js:109
+qt @ react-dom.production.min.js:74
+Wt @ react-dom.production.min.js:73Understand this error
+UnifiedDashboard.tsx:344 다운로드 실패: _p {message: 'Request failed with status code 404', name: 'AxiosError', code: 'ERR_BAD_REQUEST', config: {…}, request: XMLHttpRequest, …}
+
+2. 개인분석리포트 PDF다운로드를 누르면 팝업창은 뜨는데 내용은 없고 '직원을 찾을 수 없습니다.'라고 나옴
+
+3. 개인분석결과가 이미지로 구현되는 데 이름옆에 괄호 안에 UID가 나와야 하는데 Undefined 라고 나오고 AI종합점수가 NA라고 나옴
+
+관련 콘솔로그는 분석 통계 가져오기 시작...
+UnifiedDashboard.tsx:179 📊 API 응답: 200 true
+UnifiedDashboard.tsx:183 📊 받은 작업 목록: (62) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:185 📊 완료된 작업: (51) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:213 📊 계산된 통계: {totalAnalyzed: 25, employeeCount: 11, averageScore: 68.69999999999997, confidence: 92.3}
+websocket_v4.ts:62 🔌 Connecting to WebSocket: /api/connect?client_id=client-1754528115108
+websocket_v4.ts:64 WebSocket connection to 'wss://web-production-4066.up.railway.app/api/connect?client_id=client-1754528115108' failed: 
+connect @ websocket_v4.ts:64
+(anonymous) @ websocket_v4.ts:131Understand this error
+websocket_v4.ts:114 ❌ WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ websocket_v4.ts:114Understand this error
+websocket_v4.ts:119 🔌 WebSocket closed: CloseEvent {isTrusted: true, wasClean: false, code: 1006, reason: '', type: 'close', …}
+websocket_v4.ts:130 🔄 Reconnecting in 30000ms... (attempt 9/10)
+UnifiedDashboard.tsx:169 📊 분석 통계 가져오기 시작...
+UnifiedDashboard.tsx:179 📊 API 응답: 200 true
+UnifiedDashboard.tsx:183 📊 받은 작업 목록: (62) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:185 📊 완료된 작업: (51) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:213 📊 계산된 통계: {totalAnalyzed: 25, employeeCount: 11, averageScore: 68.69999999999997, confidence: 92.3}
+websocket_v4.ts:62 🔌 Connecting to WebSocket: /api/connect?client_id=client-1754528145578
+websocket_v4.ts:64 WebSocket connection to 'wss://web-production-4066.up.railway.app/api/connect?client_id=client-1754528145578' failed: 
+connect @ websocket_v4.ts:64
+(anonymous) @ websocket_v4.ts:131Understand this error
+websocket_v4.ts:114 ❌ WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ websocket_v4.ts:114Understand this error
+websocket_v4.ts:119 🔌 WebSocket closed: CloseEvent {isTrusted: true, wasClean: false, code: 1006, reason: '', type: 'close', …}
+websocket_v4.ts:130 🔄 Reconnecting in 30000ms... (attempt 10/10)
+UnifiedDashboard.tsx:359 PDF 창 열림: {employeeId: 'undefined', url: '/employee/undefined/pdf?download=true'}
+UnifiedDashboard.tsx:169 📊 분석 통계 가져오기 시작...
+UnifiedDashboard.tsx:179 📊 API 응답: 200 true
+UnifiedDashboard.tsx:183 📊 받은 작업 목록: (62) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:185 📊 완료된 작업: (51) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:213 📊 계산된 통계: {totalAnalyzed: 25, employeeCount: 11, averageScore: 68.69999999999997, confidence: 92.3}
+UnifiedDashboard.tsx:359 PDF 창 열림: {employeeId: 'undefined', url: '/employee/undefined/pdf?download=true'}
+websocket_v4.ts:62 🔌 Connecting to WebSocket: /api/connect?client_id=client-1754528176086
+websocket_v4.ts:64 WebSocket connection to 'wss://web-production-4066.up.railway.app/api/connect?client_id=client-1754528176086' failed: 
+connect @ websocket_v4.ts:64
+(anonymous) @ websocket_v4.ts:131Understand this error
+websocket_v4.ts:114 ❌ WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ websocket_v4.ts:114Understand this error
+websocket_v4.ts:119 🔌 WebSocket closed: CloseEvent {isTrusted: true, wasClean: false, code: 1006, reason: '', type: 'close', …}
+UnifiedDashboard.tsx:169 📊 분석 통계 가져오기 시작...
+UnifiedDashboard.tsx:179 📊 API 응답: 200 true
+UnifiedDashboard.tsx:183 📊 받은 작업 목록: (62) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:185 📊 완료된 작업: (51) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:213 📊 계산된 통계: {totalAnalyzed: 25, employeeCount: 11, averageScore: 68.69999999999997, confidence: 92.3}
+UnifiedDashboard.tsx:169 📊 분석 통계 가져오기 시작...
+UnifiedDashboard.tsx:179 📊 API 응답: 200 true
+UnifiedDashboard.tsx:183 📊 받은 작업 목록: (62) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:185 📊 완료된 작업: (51) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:213 📊 계산된 통계: {totalAnalyzed: 25, employeeCount: 11, averageScore: 68.69999999999997, confidence: 92.3}
+UnifiedDashboard.tsx:169 📊 분석 통계 가져오기 시작...
+UnifiedDashboard.tsx:179 📊 API 응답: 200 true
+UnifiedDashboard.tsx:183 📊 받은 작업 목록: (62) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:185 📊 완료된 작업: (51) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+UnifiedDashboard.tsx:213 📊 계산된 통계: {totalAnalyzed: 25, employeeCount: 11, averageScore: 68.69999999999997, confidence: 92.3}

@@ -11,7 +11,13 @@
       "Bash(python:*)",
       "Bash(set PORT=8001)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git merge:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }
