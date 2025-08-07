@@ -180,6 +180,9 @@
             const [loading, setLoading] = useState(true);
             const [data, setData] = useState(null);
             const [error, setError] = useState(null);
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [employees, setEmployees] = useState([]);
+            const [searchQuery, setSearchQuery] = useState('');
             
             useEffect(() => {
                 fetchData();
@@ -194,6 +197,13 @@
                     console.log('API 데이터:', result);
                     setData(result);
                     setError(null);
+                    
+                    // 전체 직원 데이터도 가져오기
+                    const empResponse = await fetch('/api/v1/employees');
+                    if (empResponse.ok) {
+                        const empData = await empResponse.json();
+                        setEmployees(empData.results || []);
+                    }
                 } catch (err) {
                     console.error('오류:', err);
                     setError(err.message);
@@ -454,6 +464,76 @@
                 );
             }
             
+            // 전직원분석 탭 렌더링
+            const renderEmployeeAnalysis = () => {
+                const filteredEmployees = employees.filter(emp => 
+                    emp.uid?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    emp.employee_name?.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+                
+                return h('div', { className: 'section' },
+                    h('div', { style: { marginBottom: '20px' } },
+                        h('input', {
+                            type: 'text',
+                            placeholder: '직원 검색 (이름 또는 사번)',
+                            value: searchQuery,
+                            onChange: (e) => setSearchQuery(e.target.value),
+                            style: {
+                                width: '300px',
+                                padding: '8px 12px',
+                                border: '1px solid #d9d9d9',
+                                borderRadius: '4px',
+                                fontSize: '14px'
+                            }
+                        })
+                    ),
+                    h('table', { className: 'employee-table' },
+                        h('thead',
+                            h('tr',
+                                h('th', null, '사번'),
+                                h('th', null, '이름'),
+                                h('th', null, '부서'),
+                                h('th', null, '직급'),
+                                h('th', null, '등급'),
+                                h('th', null, 'AI 점수'),
+                                h('th', null, '상세')
+                            )
+                        ),
+                        h('tbody',
+                            filteredEmployees.slice(0, 20).map(emp =>
+                                h('tr', { key: emp.id },
+                                    h('td', null, emp.uid || emp.id.slice(0, 8)),
+                                    h('td', null, emp.employee_name || '익명'),
+                                    h('td', null, emp.department || '미정'),
+                                    h('td', null, emp.position || '미정'),
+                                    h('td', null,
+                                        h('span', {
+                                            className: `tag ${emp.grade === 'S' ? 'tag-green' : 
+                                                           emp.grade === 'A' ? 'tag-blue' : 
+                                                           emp.grade === 'B' ? 'tag-orange' : 'tag-red'}`
+                                        }, emp.grade || 'C')
+                                    ),
+                                    h('td', null, Math.round(emp.overall_score || 70)),
+                                    h('td', null,
+                                        h('a', {
+                                            href: `#`,
+                                            onClick: (e) => {
+                                                e.preventDefault();
+                                                alert(`직원 상세 정보: ${emp.uid || emp.id}`);
+                                            },
+                                            style: { color: '#1890ff', cursor: 'pointer' }
+                                        }, '보기')
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    filteredEmployees.length > 20 && 
+                        h('div', { style: { marginTop: '10px', textAlign: 'center', color: '#666' } },
+                            `${filteredEmployees.length}명 중 20명 표시`)
+                );
+            };
+            
             return h('div', { className: 'hr-dashboard' },
                 // Header
                 h('div', { className: 'header' },
@@ -473,31 +553,69 @@
                     )
                 ),
                 
-                // Stats Overview
-                h('div', { className: 'stats-grid' },
-                    h('div', { className: 'stat-card' },
-                        h('div', { className: 'stat-number', style: { color: '#1890ff' } }, data.total_employees),
-                        h('div', { className: 'stat-label' }, '총 직원')
-                    ),
-                    h('div', { className: 'stat-card' },
-                        h('div', { className: 'stat-number', style: { color: '#52c41a' } }, data.promotion_candidates.count),
-                        h('div', { className: 'stat-label' }, '승진 후보자')
-                    ),
-                    h('div', { className: 'stat-card' },
-                        h('div', { className: 'stat-number', style: { color: '#722ed1' } }, data.top_talents.count),
-                        h('div', { className: 'stat-label' }, '핵심 인재')
-                    ),
-                    h('div', { className: 'stat-card' },
-                        h('div', { className: 'stat-number', style: { color: '#ff4d4f' } }, data.risk_employees.count),
-                        h('div', { className: 'stat-label' }, '관리 필요')
-                    )
+                // 탭 메뉴
+                h('div', { style: { 
+                    borderBottom: '2px solid #f0f0f0', 
+                    marginBottom: '20px',
+                    display: 'flex',
+                    gap: '20px'
+                } },
+                    h('button', {
+                        onClick: () => setActiveTab('dashboard'),
+                        style: {
+                            padding: '10px 20px',
+                            background: 'none',
+                            border: 'none',
+                            borderBottom: activeTab === 'dashboard' ? '2px solid #1890ff' : '2px solid transparent',
+                            color: activeTab === 'dashboard' ? '#1890ff' : '#666',
+                            fontSize: '16px',
+                            cursor: 'pointer',
+                            marginBottom: '-2px'
+                        }
+                    }, '경영진 대시보드'),
+                    h('button', {
+                        onClick: () => setActiveTab('analysis'),
+                        style: {
+                            padding: '10px 20px',
+                            background: 'none',
+                            border: 'none',
+                            borderBottom: activeTab === 'analysis' ? '2px solid #1890ff' : '2px solid transparent',
+                            color: activeTab === 'analysis' ? '#1890ff' : '#666',
+                            fontSize: '16px',
+                            cursor: 'pointer',
+                            marginBottom: '-2px'
+                        }
+                    }, '전직원 분석')
                 ),
                 
-                // Sections
-                renderPromotionCandidates(),
-                renderTopTalents(),
-                renderRiskEmployees(),
-                renderGradeChart()
+                // 탭에 따른 콘텐츠 렌더링
+                activeTab === 'dashboard' ? h('div', null,
+                    // Stats Overview
+                    h('div', { className: 'stats-grid' },
+                        h('div', { className: 'stat-card' },
+                            h('div', { className: 'stat-number', style: { color: '#1890ff' } }, data.total_employees),
+                            h('div', { className: 'stat-label' }, '총 직원')
+                        ),
+                        h('div', { className: 'stat-card' },
+                            h('div', { className: 'stat-number', style: { color: '#52c41a' } }, data.promotion_candidates.count),
+                            h('div', { className: 'stat-label' }, '승진 후보자')
+                        ),
+                        h('div', { className: 'stat-card' },
+                            h('div', { className: 'stat-number', style: { color: '#722ed1' } }, data.top_talents.count),
+                            h('div', { className: 'stat-label' }, '핵심 인재')
+                        ),
+                        h('div', { className: 'stat-card' },
+                            h('div', { className: 'stat-number', style: { color: '#ff4d4f' } }, data.risk_employees.count),
+                            h('div', { className: 'stat-label' }, '관리 필요')
+                        )
+                    ),
+                    
+                    // Sections
+                    renderPromotionCandidates(),
+                    renderTopTalents(),
+                    renderRiskEmployees(),
+                    renderGradeChart()
+                ) : renderEmployeeAnalysis()
             );
         }
         

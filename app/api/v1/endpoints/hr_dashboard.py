@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 from app.db import get_db
+from app.models.employee import EmployeeResult
 import logging
 import random
 from io import BytesIO
@@ -172,24 +173,35 @@ def identify_risk_employees(employees):
 async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
     """HR 대시보드 통계 조회"""
     try:
-        # 실제 데이터베이스에서 직원 정보를 가져오는 로직
-        # 여기서는 예시 데이터 생성
+        # 실제 데이터베이스에서 직원 정보를 가져오기
+        employee_results = db.query(EmployeeResult).all()
+        
         employees = []
-        for i in range(100):
+        for emp in employee_results:
+            # 실제 DB 데이터를 활용
+            metadata = emp.employee_metadata or {}
+            dim_scores = emp.dimension_scores or {}
+            
+            # 이름 처리 (실제 이름 또는 익명처리)
+            employee_name = metadata.get('name', emp.uid if emp.uid else f'직원{emp.id[:8]}')
+            
             employees.append({
-                'uid': f'EMP{i:04d}',
-                'name': f'직원{i}',
-                'department': ['영업부', '기술부', '인사부', '재무부', '마케팅부'][i % 5],
-                'position': ['사원', '대리', '과장', '차장', '부장'][i % 5],
-                'grade': ['S', 'A', 'B', 'C', 'D'][min(i % 6, 4)],
-                'performance_score': random.randint(50, 100),
-                'potential_score': random.randint(60, 100),
-                'competency_score': random.randint(55, 100),
-                'innovation_score': random.randint(50, 95),
-                'leadership_score': random.randint(40, 95),
-                'tenure_years': random.randint(1, 15),
-                'attendance_score': random.randint(85, 100),
-                'turnover_risk': random.randint(10, 80)
+                'uid': emp.uid or emp.id,
+                'name': employee_name,
+                'department': metadata.get('department', '미정'),
+                'position': metadata.get('position', '미정'),
+                'grade': emp.grade or 'C',
+                'performance_score': emp.overall_score or 70,
+                'potential_score': dim_scores.get('potential', 70),
+                'competency_score': dim_scores.get('competency', 70),
+                'innovation_score': dim_scores.get('innovation', 70),
+                'leadership_score': dim_scores.get('leadership', 60),
+                'tenure_years': metadata.get('tenure_years', 1),
+                'attendance_score': metadata.get('attendance', 95),
+                'turnover_risk': metadata.get('turnover_risk', 30),
+                'ai_score': emp.overall_score or 70,
+                'text_score': emp.text_score or 70,
+                'quantitative_score': emp.quantitative_score or 70
             })
         
         # 승진 후보자 계산
