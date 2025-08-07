@@ -22,6 +22,24 @@ from app.services.employee_service import EmployeeService
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+@router.get("")
+@router.get("/")
+async def get_employees_list(db: Session = Depends(get_db)):
+    """
+    전체 직원 목록 간단 조회
+    """
+    try:
+        service = EmployeeService(db)
+        result = service.get_employees_ai_analysis_list(
+            filters={},
+            sort_options={"field": "ai_score", "order": "desc"},
+            pagination={"page": 1, "page_size": 1000}
+        )
+        return result
+    except Exception as e:
+        logger.error(f"직원 목록 조회 실패: {e}")
+        return {"results": [], "total": 0}
+
 @router.get("/{employee_id}/ai-analysis", response_model=EmployeeAIAnalysis)
 async def get_employee_ai_analysis(
     employee_id: str,
