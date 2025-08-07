@@ -156,6 +156,47 @@ async def api_root():
     """API root endpoint"""
     return {"message": "AIRISS v4.0 API", "version": "4.0.2"}
 
+# COMPLETELY NEW ENDPOINT - Never cached before
+@app.get("/dashboard/latest")
+async def dashboard_latest():
+    """Brand new dashboard endpoint"""
+    from fastapi.responses import Response
+    
+    filepath = os.path.join(os.path.dirname(__file__), "templates", "dashboard_latest.html")
+    
+    if not os.path.exists(filepath):
+        # 파일이 없으면 직접 HTML 생성
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Dashboard Latest - {datetime.now().isoformat()}</title>
+        </head>
+        <body>
+            <h1>최신 대시보드 - 직접 생성</h1>
+            <p>생성 시간: {datetime.now().isoformat()}</p>
+            <p>파일 경로: {filepath}</p>
+            <p>파일 존재: False</p>
+        </body>
+        </html>
+        """
+        return Response(content=html, media_type="text/html")
+    
+    with open(filepath, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # 타임스탬프 주입
+    content = content.replace("</body>", f"<script>console.log('Served at: {datetime.now().isoformat()}')</script></body>")
+    
+    return Response(
+        content=content,
+        media_type="text/html",
+        headers={
+            "Cache-Control": "no-store",
+            "X-Accel-Expires": "0"
+        }
+    )
+
 # Simple test to check which files exist
 @app.get("/api/check-files")
 async def check_files():

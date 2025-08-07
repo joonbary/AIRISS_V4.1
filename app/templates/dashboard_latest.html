@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR 대시보드 최신버전</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <script>
+        // 페이지 로드 시 즉시 실행
+        console.log('Dashboard Latest Version Loaded at:', new Date().toISOString());
+        
+        // 캐시 방지를 위한 강제 새로고침
+        if (performance.navigation.type === 2) {
+            location.reload(true);
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .version-banner {
+            background: #52c41a;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .timestamp {
+            background: #1890ff;
+            color: white;
+            padding: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="version-banner">
+        🎉 최신 버전 HR 대시보드 - 2025년 1월 7일 15:00 배포
+    </div>
+    <div class="timestamp" id="timestamp"></div>
+    
+    <div id="hr-dashboard-root">
+        <div style="padding: 20px; text-align: center;">
+            <h1>HR 대시보드가 로딩 중입니다...</h1>
+            <p>이 메시지가 보인다면 최신 버전이 성공적으로 로드되었습니다!</p>
+        </div>
+    </div>
+    
+    <script>
+        // 타임스탬프 표시
+        document.getElementById('timestamp').innerText = '페이지 로드 시간: ' + new Date().toLocaleString('ko-KR');
+        
+        // 기존 React 코드는 여기에 추가...
+    </script>
+</body>
+</html>
