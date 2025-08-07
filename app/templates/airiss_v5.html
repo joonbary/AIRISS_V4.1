@@ -1243,44 +1243,109 @@
                 });
             },
             
-            // 직원 데이터 로드
+            // 직원 데이터 로드 (개선된 버전)
             async loadEmployeesData() {
                 try {
+                    console.log('🔄 직원 데이터 로딩 시작...');
                     const data = await this.api.request('GET', '/employees');
-                    this.state.employees = data.results || [];
-                    this.renderEmployees(this.state.employees);
+                    console.log('📊 받은 데이터:', data);
+                    
+                    if (data && (data.items || data.results)) {
+                        // EmployeeService가 반환하는 형태에 맞춤
+                        this.state.employees = data.items || data.results || [];
+                        console.log('👥 로드된 직원 수:', this.state.employees.length);
+                        this.renderEmployees(this.state.employees);
+                    } else if (data && Array.isArray(data)) {
+                        // 배열로 직접 반환되는 경우
+                        this.state.employees = data;
+                        this.renderEmployees(this.state.employees);
+                    } else {
+                        console.warn('⚠️ 예상치 못한 데이터 형식:', data);
+                        this.renderEmployees([]);
+                    }
                 } catch (error) {
-                    console.error('Employees data load failed:', error);
+                    console.error('❌ 직원 데이터 로딩 실패:', error);
+                    
+                    // 오류 상태 표시
+                    const tbody = document.getElementById('employees-table');
+                    if (tbody) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 40px; color: var(--danger-color);">
+                                    <h3>❌ 데이터 로딩 실패</h3>
+                                    <p style="margin-top: 10px;">직원 분석 데이터를 불러올 수 없습니다.</p>
+                                    <button class="btn btn-primary" onclick="AIRISS.loadEmployeesData()" style="margin-top: 15px;">
+                                        🔄 다시 시도
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }
                 }
             },
             
-            // 직원 목록 렌더링
+            // 직원 목록 렌더링 (개선된 버전)
             renderEmployees(employees) {
                 const tbody = document.getElementById('employees-table');
+                if (!tbody) return;
+                
                 tbody.innerHTML = '';
                 
-                employees.slice(0, 50).forEach(emp => {
+                // 데이터가 없는 경우
+                if (!employees || employees.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <div style="opacity: 0.6;">
+                                    <h3>📊 분석 데이터가 없습니다</h3>
+                                    <p style="margin: 15px 0;">아직 AI 분석이 완료된 직원이 없습니다.</p>
+                                    <button class="btn btn-primary" onclick="AIRISS.switchTab('upload')" style="margin-top: 10px;">
+                                        📤 데이터 업로드하기
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                console.log('🖼️ 직원 목록 렌더링:', employees.length + '명');
+                
+                employees.slice(0, 50).forEach((emp, index) => {
                     const row = tbody.insertRow();
                     const gradeColor = {
                         'S': 'success',
-                        'A': 'primary',
+                        'A': 'primary', 
                         'B': 'warning',
-                        'C': 'danger'
+                        'C': 'danger',
+                        'D': 'danger'
                     }[emp.grade] || 'secondary';
                     
+                    // EmployeeService의 반환 구조에 맞춤
+                    const employeeId = emp.employee_id || emp.uid || emp.id;
+                    const employeeName = emp.name || emp.employee_name || '익명';
+                    const department = emp.department || '-';
+                    const position = emp.position || '-';
+                    const grade = emp.grade || 'C';
+                    const score = emp.ai_score || emp.overall_score || 0;
+                    
                     row.innerHTML = `
-                        <td>${emp.uid || emp.id?.slice(0, 8) || '-'}</td>
-                        <td>${emp.employee_name || '익명'}</td>
-                        <td>${emp.department || '-'}</td>
-                        <td>${emp.position || '-'}</td>
-                        <td><span class="btn btn-${gradeColor}" style="padding: 4px 12px; font-size: 12px;">${emp.grade || 'C'}</span></td>
-                        <td>${Math.round(emp.overall_score || emp.ai_score || 0)}</td>
+                        <td style="font-weight: 500;">${employeeId?.slice(0, 8) || (index + 1)}</td>
+                        <td style="font-weight: 600;">${employeeName}</td>
+                        <td>${department}</td>
+                        <td>${position}</td>
+                        <td><span class="btn btn-${gradeColor}" style="padding: 6px 12px; font-size: 12px; font-weight: 700;">${grade}</span></td>
+                        <td style="font-weight: 600; color: var(--chanel-orange);">${Math.round(score)}</td>
                         <td>
-                            <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;" 
-                                    onclick="AIRISS.viewEmployeeDetail('${emp.id}')">상세</button>
+                            <button class="btn btn-primary" style="padding: 8px 16px; font-size: 12px;" 
+                                    onclick="AIRISS.viewEmployeeDetail('${employeeId}')">
+                                📊 상세보기
+                            </button>
                         </td>
                     `;
                 });
+                
+                console.log('✅ 직원 목록 렌더링 완료');
             },
             
             // 직원 상세 보기
@@ -1550,10 +1615,36 @@
                 document.getElementById('analysis-progress-fill').style.background = 'var(--danger-color)';
             },
             
-            // 분석 결과 보기
-            viewAnalysisResults() {
+            // 분석 결과 보기 (개선된 버전)
+            async viewAnalysisResults() {
+                // 탭 전환
                 this.switchTab('employees');
-                this.showNotification('전직원 분석 탭에서 결과를 확인하세요', 'success');
+                
+                // 로딩 상태 표시
+                const employeesTable = document.getElementById('employees-table');
+                if (employeesTable) {
+                    employeesTable.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <div class="spinner"></div>
+                                <p style="margin-top: 20px;">최신 분석 결과를 불러오는 중...</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                try {
+                    // 직원 데이터 강제 새로고침
+                    await this.loadEmployeesData();
+                    
+                    // 대시보드 통계도 업데이트
+                    await this.loadDashboardData();
+                    
+                    this.showNotification('✅ 최신 분석 결과를 불러왔습니다', 'success');
+                } catch (error) {
+                    console.error('Failed to load analysis results:', error);
+                    this.showNotification('분석 결과 로딩에 실패했습니다', 'error');
+                }
             },
             
             // 분석 리포트 다운로드
