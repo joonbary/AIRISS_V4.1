@@ -156,10 +156,11 @@ async def api_root():
     """API root endpoint"""
     return {"message": "AIRISS v5.0 API", "version": "5.0.0"}
 
-# AIRISS v5.0 Dashboard - Brand New System
+# AIRISS v5.0 Dashboard - Legacy route (kept for backward compatibility)
+# Note: Main dashboard is now served at root "/" for MSA integration
 @app.get("/hr")
 async def airiss_v5_dashboard():
-    """AIRISS v5.0 Dashboard with unified 6-tab interface"""
+    """AIRISS v5.0 Dashboard - Legacy route (redirects to main)"""
     from fastapi.responses import Response
     import random
     
@@ -558,15 +559,27 @@ async def serve_executive_dashboard():
         return FileResponse(template_path)
     return {"message": "Executive Dashboard not found"}
 
-# Serve React app - This MUST come after all other routes
+# Serve AIRISS v5.0 Dashboard as main page - MSA integration for EHR
 @app.get("/")
 async def serve_root():
-    """Serve React app for root path"""
+    """Serve AIRISS v5.0 Dashboard for root path - MSA integrated version"""
+    from fastapi.responses import Response
+    
+    # AIRISS v5.0 대시보드를 메인으로 서빙
+    filepath = os.path.join(os.path.dirname(__file__), "templates", "airiss_v5.html")
+    
+    if os.path.exists(filepath):
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(content=content, media_type="text/html; charset=utf-8")
+    
+    # Fallback: React 앱이 있으면 서빙 (하위 호환성)
     if os.path.exists(static_path):
         index_path = os.path.join(static_path, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
-    return {"message": "AIRISS v4.0 API - HR Analysis System"}
+    
+    return {"message": "AIRISS v5.0 API - HR Analysis System"}
 
 # Catch-all for React Router - MUST BE ABSOLUTE LAST
 @app.get("/{full_path:path}")
