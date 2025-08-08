@@ -1401,6 +1401,7 @@
                 console.log(`AIRISS v${this.version} initialized at ${this.buildTime}`);
                 this.attachEventListeners();
                 this.loadDashboardData();
+                this.loadEmployeesData();
                 this.checkVersion();
             },
             
@@ -1514,7 +1515,7 @@
             async loadEmployeesData() {
                 try {
                     console.log('🔄 직원 데이터 로딩 시작...');
-                    const response = await this.api.request('GET', '/employees');
+                    const response = await this.api.request('GET', '/employees/list');
                     console.log('📊 받은 응답:', response);
                     
                     // 에러 응답 체크
@@ -1529,7 +1530,17 @@
                     }
                     
                     // 성공 응답 처리
-                    if (response && response.data) {
+                    if (response && response.employees) {
+                        if (response.employees.length > 0) {
+                            this.state.employees = response.employees;
+                            console.log('👥 로드된 직원 수:', this.state.employees.length);
+                            this.renderEmployees(this.state.employees);
+                        } else {
+                            console.log('📭 데이터가 비어있음');
+                            this.renderNoDataMessage('분석된 직원 데이터가 없습니다');
+                        }
+                    } else if (response && response.data) {
+                        // 다른 형식의 응답 처리
                         const data = response.data;
                         if (data.items && data.items.length > 0) {
                             this.state.employees = data.items;

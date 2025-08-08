@@ -156,6 +156,119 @@ async def api_root():
     """API root endpoint"""
     return {"message": "AIRISS v5.0 API", "version": "5.0.0"}
 
+# HR Dashboard Stats API
+@app.get("/api/v1/hr-dashboard/stats")
+async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
+    """Get HR Dashboard statistics from database"""
+    try:
+        from sqlalchemy import text
+        
+        # employee_results 테이블에서 데이터 조회
+        result = db.execute(text("""
+            SELECT COUNT(DISTINCT uid) as total_employees,
+                   COUNT(CASE WHEN ai_score >= 80 THEN 1 END) as high_performers,
+                   COUNT(CASE WHEN ai_score < 60 THEN 1 END) as risk_employees
+            FROM employee_results
+        """)).first()
+        
+        total = result.total_employees if result else 0
+        high_performers = result.high_performers if result else 0
+        risk_count = result.risk_employees if result else 0
+        
+        # 위험 직원 목록 조회
+        risk_employees = []
+        if risk_count > 0:
+            risk_results = db.execute(text("""
+                SELECT uid, employee_name as name, department, ai_score,
+                       CASE 
+                           WHEN ai_score < 40 THEN 'high'
+                           WHEN ai_score < 60 THEN 'medium'
+                           ELSE 'low'
+                       END as risk_level,
+                       '성과 개선 필요' as reason
+                FROM employee_results
+                WHERE ai_score < 60
+                ORDER BY ai_score ASC
+                LIMIT 10
+            """)).fetchall()
+            
+            risk_employees = [
+                {
+                    "uid": r.uid,
+                    "name": r.name or "익명",
+                    "department": r.department or "-",
+                    "score": r.ai_score,
+                    "risk_level": r.risk_level,
+                    "reason": r.reason
+                }
+                for r in risk_results
+            ]
+        
+        return {
+            "total_employees": total,
+            "promotion_candidates": {
+                "count": max(0, high_performers // 3),
+                "employees": []
+            },
+            "top_talents": {
+                "count": high_performers,
+                "employees": []
+            },
+            "risk_employees": {
+                "count": risk_count,
+                "employees": risk_employees
+            }
+        }
+    except Exception as e:
+        logger.error(f"Failed to get dashboard stats: {e}")
+        return {
+            "total_employees": 0,
+            "promotion_candidates": {"count": 0, "employees": []},
+            "top_talents": {"count": 0, "employees": []},
+            "risk_employees": {"count": 0, "employees": []}
+        }
+
+# Get Employees List API
+@app.get("/api/v1/employees/list")
+async def get_employees_list(db: Session = Depends(get_db)):
+    """Get list of all employees with AI analysis results"""
+    try:
+        from sqlalchemy import text
+        
+        # employee_results 테이블에서 모든 직원 조회
+        results = db.execute(text("""
+            SELECT uid, employee_name, department, position, 
+                   ai_score, ai_grade, created_at
+            FROM employee_results
+            ORDER BY created_at DESC
+            LIMIT 100
+        """)).fetchall()
+        
+        employees = []
+        for r in results:
+            score = r.ai_score or 0
+            # Grade 계산
+            if score >= 90: grade = "S"
+            elif score >= 80: grade = "A"
+            elif score >= 70: grade = "B"
+            elif score >= 60: grade = "C"
+            else: grade = "D"
+            
+            employees.append({
+                "uid": r.uid,
+                "employee_name": r.employee_name or "익명",
+                "department": r.department or "-",
+                "position": r.position or "-",
+                "ai_score": score,
+                "ai_grade": r.ai_grade or grade,
+                "analysis_date": r.created_at.isoformat() if r.created_at else None
+            })
+        
+        return {"employees": employees, "total": len(employees)}
+    except Exception as e:
+        logger.error(f"Failed to get employees list: {e}")
+        return {"employees": [], "total": 0, "error": str(e)}
+
 # AIRISS v5.0 Test Dashboard - Debug version
 @app.get("/test")
 async def airiss_v5_test():
@@ -170,6 +283,21 @@ async def airiss_v5_test():
         return Response(content=content, media_type="text/html; charset=utf-8")
     
     return {"error": "Test dashboard not found"}
+
+# Responsive Layout Test Page
+@app.get("/responsive-test")
+async def responsive_test():
+    """Responsive layout test page"""
+    from fastapi.responses import Response
+    
+    filepath = os.path.join(os.path.dirname(__file__), "templates", "responsive_test.html")
+    
+    if os.path.exists(filepath):
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(content=content, media_type="text/html; charset=utf-8")
+    
+    return {"error": "Responsive test page not found"}
 
 # AIRISS v5.0 Dashboard - Legacy route (kept for backward compatibility)
 # Note: Main dashboard is now served at root "/" for MSA integration
