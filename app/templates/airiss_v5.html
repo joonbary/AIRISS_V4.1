@@ -1409,34 +1409,39 @@
             async loadEmployeesData() {
                 try {
                     console.log('🔄 직원 데이터 로딩 시작...');
-                    const data = await this.api.request('GET', '/employees');
-                    console.log('📊 받은 데이터:', data);
+                    const response = await this.api.request('GET', '/employees');
+                    console.log('📊 받은 응답:', response);
                     
-                    if (data && (data.items || data.results)) {
-                        // EmployeeService가 반환하는 형태에 맞춤
-                        this.state.employees = data.items || data.results || [];
-                        console.log('👥 로드된 직원 수:', this.state.employees.length);
-                        this.renderEmployees(this.state.employees);
-                    } else if (data && Array.isArray(data)) {
-                        // 배열로 직접 반환되는 경우
-                        this.state.employees = data;
-                        this.renderEmployees(this.state.employees);
+                    // 에러 응답 체크
+                    if (response && response.success === false) {
+                        console.error('❌ 서버 에러:', response.error);
+                        this.showNotification(
+                            `데이터 로드 실패: ${response.error?.message || '서버 오류가 발생했습니다'}`, 
+                            'error'
+                        );
+                        this.renderNoDataMessage(response.error?.message || '데이터베이스 조회에 실패했습니다');
+                        return;
+                    }
+                    
+                    // 성공 응답 처리
+                    if (response && response.data) {
+                        const data = response.data;
+                        if (data.items && data.items.length > 0) {
+                            this.state.employees = data.items;
+                            console.log('👥 로드된 직원 수:', this.state.employees.length);
+                            this.renderEmployees(this.state.employees);
+                        } else {
+                            console.log('📭 데이터가 비어있음');
+                            this.renderNoDataMessage('분석된 직원 데이터가 없습니다');
+                        }
                     } else {
-                        console.warn('⚠️ 예상치 못한 데이터 형식:', data);
-                        this.renderEmployees([]);
+                        console.warn('⚠️ 예상치 못한 데이터 형식:', response);
+                        this.renderNoDataMessage('예상치 못한 응답 형식입니다');
                     }
                 } catch (error) {
                     console.error('❌ 직원 데이터 로딩 실패:', error);
-                    
-                    // API 실패 시 더미 데이터로 대체
-                    console.log('📋 더미 데이터로 대체 중...');
-                    
-                    const dummyEmployees = [
-                        {
-                            employee_id: 'DEMO001',
-                            name: '김철수',
-                            department: '개발팀',
-                            position: '선임연구원',
+                    this.showNotification('서버 연결에 실패했습니다', 'error');
+                    this.renderNoDataMessage('서버 연결에 실패했습니다');
                             ai_score: 87,
                             grade: 'A',
                             primary_strength: '문제 해결 능력과 창의적 사고',
@@ -1495,6 +1500,38 @@
                 }
             },
             
+            // 데이터 없음 메시지 표시
+            renderNoDataMessage(message) {
+                const tbody = document.getElementById('employees-table');
+                if (!tbody) return;
+                
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 60px 20px;">
+                            <div style="opacity: 0.7;">
+                                <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+                                <h3 style="margin-bottom: 15px; color: var(--text-primary);">${message}</h3>
+                                ${message.includes('실패') ? `
+                                    <p style="margin: 15px 0; color: var(--text-secondary);">
+                                        서버 연결을 확인하거나 잠시 후 다시 시도해주세요.
+                                    </p>
+                                    <button class="btn btn-secondary" onclick="AIRISS.loadEmployeesData()" style="margin-top: 10px;">
+                                        🔄 다시 시도
+                                    </button>
+                                ` : `
+                                    <p style="margin: 15px 0; color: var(--text-secondary);">
+                                        직원 데이터를 업로드하여 AI 분석을 시작하세요.
+                                    </p>
+                                    <button class="btn btn-primary" onclick="AIRISS.switchTab('upload')" style="margin-top: 10px;">
+                                        📤 데이터 업로드하기
+                                    </button>
+                                `}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            },
+            
             // 직원 목록 렌더링 (개선된 버전)
             renderEmployees(employees) {
                 const tbody = document.getElementById('employees-table');
@@ -1504,19 +1541,7 @@
                 
                 // 데이터가 없는 경우
                 if (!employees || employees.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px;">
-                                <div style="opacity: 0.6;">
-                                    <h3>📊 분석 데이터가 없습니다</h3>
-                                    <p style="margin: 15px 0;">아직 AI 분석이 완료된 직원이 없습니다.</p>
-                                    <button class="btn btn-primary" onclick="AIRISS.switchTab('upload')" style="margin-top: 10px;">
-                                        📤 데이터 업로드하기
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
+                    this.renderNoDataMessage('분석된 직원 데이터가 없습니다');
                     return;
                 }
                 

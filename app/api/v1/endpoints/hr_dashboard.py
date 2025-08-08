@@ -301,35 +301,17 @@ async def get_employees_list(db: Session = Depends(get_db)):
         }
     except Exception as e:
         logger.error(f"Employee list error: {e}")
-        # 에러 시 더미 데이터 반환
+        # 에러 시 명확한 에러 메시지 반환
         return {
-            "success": True,
+            "success": False,
+            "error": {
+                "message": "데이터베이스 조회에 실패했습니다.",
+                "detail": str(e),
+                "type": "DATABASE_ERROR"
+            },
             "data": {
-                "items": [
-                    {
-                        "employee_id": f"EMP00{i}",
-                        "name": f"직원_{i}",
-                        "department": ["개발팀", "마케팅팀", "영업팀", "인사팀"][i % 4],
-                        "position": ["대리", "과장", "차장", "부장"][i % 4],
-                        "ai_score": 75 + (i * 3) % 20,
-                        "grade": ["A", "B", "S", "A"][i % 4],
-                        "primary_strength": "업무 역량 우수",
-                        "primary_improvement": "리더십 개발 필요",
-                        "competencies": {
-                            "실행력": 75,
-                            "성장지향": 80,
-                            "협업": 70,
-                            "고객지향": 85,
-                            "전문성": 75,
-                            "혁신성": 70,
-                            "리더십": 65,
-                            "커뮤니케이션": 75
-                        },
-                        "analyzed_at": datetime.now().isoformat()
-                    }
-                    for i in range(1, 11)
-                ],
-                "total": 10,
+                "items": [],
+                "total": 0,
                 "page": 1,
                 "page_size": 50
             }
