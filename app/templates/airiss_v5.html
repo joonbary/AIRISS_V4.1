@@ -159,10 +159,18 @@
         
         /* ===== 레이아웃 ===== */
         .app-container {
-            max-width: 1600px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
             padding: 32px;
             position: relative;
+            overflow-x: hidden;
+        }
+        
+        @media (min-width: 1920px) {
+            .app-container {
+                padding: 32px 48px;
+            }
         }
         
         /* ===== 프리미엄 카드 시스템 - 미니멀하고 세련된 디자인 ===== */
@@ -314,6 +322,15 @@
             border: none;
             position: relative;
             z-index: var(--z-dropdown);
+            width: 100%;
+        }
+        
+        @media (max-width: 1200px) {
+            .tab-navigation {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
         }
         
         .tab-button {
@@ -387,6 +404,8 @@
         .tab-content {
             display: none;
             animation: fadeIn 0.5s ease-out;
+            width: 100%;
+            min-height: calc(100vh - 300px);
         }
         
         .tab-content.active {
@@ -409,6 +428,13 @@
             border: none;
             position: relative;
             overflow: hidden;
+            width: 100%;
+        }
+        
+        @media (min-width: 1920px) {
+            .card {
+                padding: 48px;
+            }
         }
         
         .card::before {
@@ -465,8 +491,15 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            gap: 24px;
             margin-bottom: 30px;
+            width: 100%;
+        }
+        
+        @media (min-width: 1920px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            }
         }
         
         .stat-card {
@@ -638,6 +671,13 @@
             box-shadow: var(--shadow-neumorphic);
         }
         
+        /* 테이블 컨테이너 - 반응형 스크롤 지원 */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 20px;
+        }
+        
         .data-table thead {
             background: var(--primary-gradient);
         }
@@ -651,6 +691,7 @@
             text-transform: none;
             letter-spacing: var(--letter-spacing-base);
             font-family: var(--font-pretendard);
+            white-space: nowrap;
         }
         
         .data-table td {
@@ -669,6 +710,22 @@
         .data-table tbody tr:hover {
             background: var(--primary-orange-light);
             transform: scale(1.01);
+        }
+        
+        /* 모바일 반응형 테이블 */
+        @media (max-width: 768px) {
+            .data-table {
+                font-size: 14px;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 12px 8px;
+            }
+            
+            .data-table tbody tr:hover {
+                transform: none;
+            }
         }
         
         /* ===== OK금융 프리미엄 파일 업로드 (Neumorphism) ===== */
@@ -860,12 +917,52 @@
                 gap: 20px;
             }
             
+            .app-container {
+                padding: 16px;
+            }
+            
             .stats-grid {
                 grid-template-columns: 1fr;
             }
             
             .tab-navigation {
-                justify-content: center;
+                justify-content: flex-start;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding: 8px;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .tab-button {
+                min-width: 120px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            
+            .card {
+                padding: 24px;
+            }
+        }
+        
+        @media (min-width: 768px) and (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .card {
+                padding: 32px;
+            }
+        }
+        
+        @media (min-width: 1200px) and (max-width: 1600px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (min-width: 1600px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
         }
     </style>
@@ -961,22 +1058,24 @@
                         📄 PDF 다운로드
                     </button>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>사번</th>
-                            <th>이름</th>
-                            <th>부서</th>
-                            <th>위험도</th>
-                            <th>점수</th>
-                            <th>관리 사유</th>
-                            <th>액션</th>
-                        </tr>
-                    </thead>
-                    <tbody id="risk-employees-table">
-                        <!-- 동적으로 생성됨 -->
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>사번</th>
+                                <th>이름</th>
+                                <th>부서</th>
+                                <th>위험도</th>
+                                <th>점수</th>
+                                <th>관리 사유</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="risk-employees-table">
+                            <!-- 동적으로 생성됨 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         
@@ -995,22 +1094,24 @@
                         </button>
                     </div>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>사번</th>
-                            <th>이름</th>
-                            <th>부서</th>
-                            <th>직급</th>
-                            <th>AI 등급</th>
-                            <th>AI 점수</th>
-                            <th>상세보기</th>
-                        </tr>
-                    </thead>
-                    <tbody id="employees-table">
-                        <!-- 동적으로 생성됨 -->
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>사번</th>
+                                <th>이름</th>
+                                <th>부서</th>
+                                <th>직급</th>
+                                <th>AI 등급</th>
+                                <th>AI 점수</th>
+                                <th>상세보기</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employees-table">
+                            <!-- 동적으로 생성됨 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         
@@ -1248,11 +1349,13 @@
     </div>
     
     <script>
-        // AIRISS v5.0 Main Application
+        // AIRISS v5.0 Main Application - Debug Version
+        console.log('🚀 AIRISS v5.0 초기화 시작...');
+        
         window.AIRISS = {
             // 버전 정보
-            version: '5.0.0',
-            buildDate: '2025-08-07',
+            version: '5.0.1-debug',
+            buildDate: '2025-08-08',
             buildTime: new Date().toISOString(),
             
             // API 설정

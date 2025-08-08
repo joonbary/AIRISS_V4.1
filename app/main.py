@@ -156,6 +156,21 @@ async def api_root():
     """API root endpoint"""
     return {"message": "AIRISS v5.0 API", "version": "5.0.0"}
 
+# AIRISS v5.0 Test Dashboard - Debug version
+@app.get("/test")
+async def airiss_v5_test():
+    """AIRISS v5.0 Test Dashboard for debugging"""
+    from fastapi.responses import Response
+    
+    filepath = os.path.join(os.path.dirname(__file__), "templates", "airiss_v5_test.html")
+    
+    if os.path.exists(filepath):
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(content=content, media_type="text/html; charset=utf-8")
+    
+    return {"error": "Test dashboard not found"}
+
 # AIRISS v5.0 Dashboard - Legacy route (kept for backward compatibility)
 # Note: Main dashboard is now served at root "/" for MSA integration
 @app.get("/hr")
