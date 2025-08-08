@@ -3,7 +3,7 @@
 AIRISS v4.0 Main Application - Fixed Version v2
 OK Financial Group HR Analysis System
 """
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
