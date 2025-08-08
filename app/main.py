@@ -228,46 +228,248 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
             "risk_employees": {"count": 0, "employees": []}
         }
 
-# Get Employees List API
+# Get Employees List API - 모든 분석 결과 테이블 통합 조회
 @app.get("/api/v1/employees/list")
 async def get_employees_list(db: Session = Depends(get_db)):
-    """Get list of all employees with AI analysis results"""
+    """Get list of all employees with AI analysis results from all tables"""
     try:
         from sqlalchemy import text
         
-        # employee_results 테이블에서 모든 직원 조회
+        # 여러 테이블에서 통합 조회 (UNION ALL 사용)
         results = db.execute(text("""
-            SELECT uid, employee_name, department, position, 
-                   ai_score, ai_grade, created_at
-            FROM employee_results
-            ORDER BY created_at DESC
-            LIMIT 100
+            WITH all_employees AS (
+                -- employee_results 테이블
+                SELECT DISTINCT
+                    uid,
+                    COALESCE(employee_name, employee_metadata->>'name') as employee_name,
+                    COALESCE(employee_metadata->>'department', department) as department,
+                    COALESCE(employee_metadata->>'position', position) as position,
+                    COALESCE(overall_score, ai_score) as ai_score,
+                    COALESCE(grade, ai_grade) as ai_grade,
+                    created_at,
+                    'employee_results' as source
+                FROM employee_results
+                WHERE uid IS NOT NULL
+                
+                UNION ALL
+                
+                -- employee_scores 테이블
+                SELECT DISTINCT
+                    uid,
+                    metadata->>'name' as employee_name,
+                    metadata->>'department' as department,
+                    metadata->>'position' as position,
+                    hybrid_score as ai_score,
+                    ok_grade as ai_grade,
+                    created_at,
+                    'employee_scores' as source
+                FROM employee_scores
+                WHERE uid IS NOT NULL
+                
+                UNION ALL
+                
+                -- analysis_results 테이블
+                SELECT DISTINCT
+                    uid,
+                    metadata->>'name' as employee_name,
+                    metadata->>'department' as department,
+                    metadata->>'position' as position,
+                    hybrid_score as ai_score,
+                    grade as ai_grade,
+                    created_at,
+                    'analysis_results' as source
+                FROM analysis_results
+                WHERE uid IS NOT NULL
+            )
+            SELECT DISTINCT ON (uid)
+                uid,
+                employee_name,
+                department,
+                position,
+                ai_score,
+                ai_grade,
+                created_at,
+                source
+            FROM all_employees
+            ORDER BY uid, created_at DESC NULLS LAST
+            LIMIT 200
         """)).fetchall()
         
         employees = []
         for r in results:
             score = r.ai_score or 0
-            # Grade 계산
-            if score >= 90: grade = "S"
-            elif score >= 80: grade = "A"
-            elif score >= 70: grade = "B"
-            elif score >= 60: grade = "C"
-            else: grade = "D"
+            # Grade 계산 및 정규화
+            grade = r.ai_grade
+            if not grade:
+                if score >= 90: grade = "S"
+                elif score >= 80: grade = "A"
+                elif score >= 70: grade = "B"
+                elif score >= 60: grade = "C"
+                else: grade = "D"
+            # OK 등급 변환
+            elif grade.startswith("OK"):
+                if "★★★" in grade: grade = "S"
+                elif "★★" in grade: grade = "A"
+                elif "★" in grade: grade = "B"
+                elif "A" in grade: grade = "A"
+                elif "B+" in grade: grade = "B"
+                elif "B" in grade: grade = "B"
+                elif "C" in grade: grade = "C"
+                else: grade = "D"
             
             employees.append({
                 "uid": r.uid,
                 "employee_name": r.employee_name or "익명",
                 "department": r.department or "-",
                 "position": r.position or "-",
-                "ai_score": score,
-                "ai_grade": r.ai_grade or grade,
-                "analysis_date": r.created_at.isoformat() if r.created_at else None
+                "ai_score": round(score, 1) if score else 0,
+                "ai_grade": grade,
+                "analysis_date": r.created_at.isoformat() if r.created_at else None,
+                "source": r.source
             })
         
+        logger.info(f"Found {len(employees)} employees from database")
         return {"employees": employees, "total": len(employees)}
     except Exception as e:
         logger.error(f"Failed to get employees list: {e}")
-        return {"employees": [], "total": 0, "error": str(e)}
+        # 에러 발생 시 단순 쿼리로 폴백
+        try:
+            simple_results = db.execute(text("""
+                SELECT uid, employee_name, department, position, 
+                       overall_score as ai_score, grade as ai_grade, created_at
+                FROM employee_results
+                WHERE uid IS NOT NULL
+                ORDER BY created_at DESC
+                LIMIT 100
+            """)).fetchall()
+            
+            employees = []
+            for r in simple_results:
+                score = r.ai_score or 0
+                grade = r.ai_grade or ("S" if score >= 90 else "A" if score >= 80 else "B" if score >= 70 else "C" if score >= 60 else "D")
+                
+                employees.append({
+                    "uid": r.uid,
+                    "employee_name": r.employee_name or "익명",
+                    "department": r.department or "-",
+                    "position": r.position or "-",
+                    "ai_score": round(score, 1) if score else 0,
+                    "ai_grade": grade,
+                    "analysis_date": r.created_at.isoformat() if r.created_at else None,
+                    "source": "employee_results"
+                })
+            
+            return {"employees": employees, "total": len(employees)}
+        except:
+            return {"employees": [], "total": 0, "error": str(e)}
+
+# Get Employee Detail API
+@app.get("/api/v1/employees/{employee_uid}")
+async def get_employee_detail(employee_uid: str, db: Session = Depends(get_db)):
+    """Get detailed information for a specific employee"""
+    try:
+        from sqlalchemy import text
+        
+        # 여러 테이블에서 직원 정보 조회
+        result = db.execute(text("""
+            WITH employee_data AS (
+                SELECT 
+                    uid,
+                    COALESCE(employee_name, employee_metadata->>'name') as employee_name,
+                    COALESCE(employee_metadata->>'department', department) as department,
+                    COALESCE(employee_metadata->>'position', position) as position,
+                    COALESCE(overall_score, ai_score) as ai_score,
+                    COALESCE(grade, ai_grade) as ai_grade,
+                    text_score,
+                    quantitative_score,
+                    confidence,
+                    dimension_scores,
+                    ai_feedback,
+                    created_at,
+                    'employee_results' as source
+                FROM employee_results
+                WHERE uid = :uid
+                
+                UNION ALL
+                
+                SELECT 
+                    uid,
+                    metadata->>'name' as employee_name,
+                    metadata->>'department' as department,
+                    metadata->>'position' as position,
+                    hybrid_score as ai_score,
+                    ok_grade as ai_grade,
+                    text_score,
+                    quantitative_score,
+                    confidence,
+                    dimension_scores,
+                    ai_feedback,
+                    created_at,
+                    'employee_scores' as source
+                FROM employee_scores
+                WHERE uid = :uid
+            )
+            SELECT * FROM employee_data
+            ORDER BY created_at DESC
+            LIMIT 1
+        """), {"uid": employee_uid}).first()
+        
+        if not result:
+            return {"error": "Employee not found", "uid": employee_uid}
+        
+        # Opinion 데이터 조회
+        opinion_result = db.execute(text("""
+            SELECT summary, key_strengths, areas_for_improvement, 
+                   sentiment_score, recommendation
+            FROM opinion_results
+            WHERE uid = :uid
+            ORDER BY created_at DESC
+            LIMIT 1
+        """), {"uid": employee_uid}).first()
+        
+        # Grade 정규화
+        grade = result.ai_grade
+        if grade and grade.startswith("OK"):
+            if "★★★" in grade: grade = "S"
+            elif "★★" in grade: grade = "A"
+            elif "★" in grade: grade = "B"
+            elif "A" in grade: grade = "A"
+            elif "B+" in grade: grade = "B"
+            elif "B" in grade: grade = "B"
+            elif "C" in grade: grade = "C"
+            else: grade = "D"
+        
+        employee_detail = {
+            "uid": result.uid,
+            "employee_name": result.employee_name or "익명",
+            "department": result.department or "-",
+            "position": result.position or "-",
+            "ai_score": round(result.ai_score, 1) if result.ai_score else 0,
+            "ai_grade": grade or "C",
+            "text_score": round(result.text_score, 1) if result.text_score else 0,
+            "quantitative_score": round(result.quantitative_score, 1) if result.quantitative_score else 0,
+            "confidence": round(result.confidence * 100, 1) if result.confidence else 0,
+            "dimension_scores": result.dimension_scores or {},
+            "ai_feedback": result.ai_feedback or {},
+            "analysis_date": result.created_at.isoformat() if result.created_at else None,
+            "source": result.source
+        }
+        
+        # Opinion 데이터 추가
+        if opinion_result:
+            employee_detail.update({
+                "opinion_summary": opinion_result.summary,
+                "key_strengths": opinion_result.key_strengths,
+                "areas_for_improvement": opinion_result.areas_for_improvement,
+                "sentiment_score": round(opinion_result.sentiment_score, 2) if opinion_result.sentiment_score else 0,
+                "recommendation": opinion_result.recommendation
+            })
+        
+        return employee_detail
+        
+    except Exception as e:
+        logger.error(f"Failed to get employee detail: {e}")
+        return {"error": str(e), "uid": employee_uid}
 
 # AIRISS v5.0 Test Dashboard - Debug version
 @app.get("/test")
