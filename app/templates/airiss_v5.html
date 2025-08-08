@@ -354,7 +354,8 @@
         }
         
         .tab-button.active {
-            color: var(--text-inverse);
+            color: #FFFFFF;  /* 흰색으로 명확히 표시 */
+            font-weight: 600;
             position: relative;
         }
         
@@ -365,6 +366,7 @@
         .tab-button.active * {
             position: relative;
             z-index: 1;
+            color: inherit;  /* 부모 색상 상속 */
         }
         
         .tab-button .badge {
@@ -1247,7 +1249,7 @@
     
     <script>
         // AIRISS v5.0 Main Application
-        const AIRISS = {
+        window.AIRISS = {
             // 버전 정보
             version: '5.0.0',
             buildDate: '2025-08-07',
@@ -2065,6 +2067,79 @@
                 } catch (error) {
                     console.error('PDF export failed:', error);
                 }
+            },
+            
+            // 직원 상세 보기
+            viewDetail(employeeId) {
+                console.log('직원 상세 보기:', employeeId);
+                // 모달 또는 새 탭에서 상세 정보 표시
+                this.showNotification(`직원 ${employeeId}의 상세 정보를 불러오는 중...`, 'info');
+                
+                // 상세 정보 모달 표시 (추후 구현)
+                alert(`직원 ID: ${employeeId}\n\n상세 정보 기능은 준비 중입니다.`);
+            },
+            
+            // 데이터 내보내기
+            async exportData(format = 'excel') {
+                try {
+                    console.log(`데이터 내보내기: ${format} 형식`);
+                    
+                    if (format === 'excel') {
+                        // Excel 내보내기
+                        const response = await fetch('/api/v1/hr-dashboard/export/excel');
+                        const blob = await response.blob();
+                        
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `AIRISS_직원분석_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        
+                        this.showNotification('Excel 다운로드 완료', 'success');
+                    } else if (format === 'csv') {
+                        // CSV 내보내기
+                        const csvContent = this.convertToCSV(this.state.employees);
+                        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `AIRISS_직원분석_${new Date().toISOString().slice(0, 10)}.csv`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        
+                        this.showNotification('CSV 다운로드 완료', 'success');
+                    }
+                } catch (error) {
+                    console.error('Export failed:', error);
+                    this.showNotification('데이터 내보내기 실패', 'error');
+                }
+            },
+            
+            // CSV 변환 헬퍼
+            convertToCSV(data) {
+                if (!data || data.length === 0) return '';
+                
+                const headers = ['사번', '이름', '부서', '직급', 'AI점수', '등급', '주요강점', '개선사항'];
+                const rows = data.map(emp => [
+                    emp.employee_id || '',
+                    emp.name || '',
+                    emp.department || '',
+                    emp.position || '',
+                    emp.ai_score || 0,
+                    emp.grade || '',
+                    emp.primary_strength || '',
+                    emp.primary_improvement || ''
+                ]);
+                
+                const csvContent = [
+                    headers.join(','),
+                    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+                ].join('\n');
+                
+                return '\uFEFF' + csvContent; // UTF-8 BOM 추가
             },
             
             // 모달 닫기
