@@ -1341,8 +1341,14 @@
                 document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
                 document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
                 
-                // 선택된 탭 활성화
-                event.target.classList.add('active');
+                // 선택된 탭 버튼 찾아서 활성화
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    if (btn.onclick && btn.onclick.toString().includes(`'${tabName}'`)) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // 선택된 탭 컨텐츠 활성화
                 document.getElementById(`${tabName}-tab`).classList.add('active');
                 
                 // 상태 업데이트
