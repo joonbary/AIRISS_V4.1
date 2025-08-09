@@ -3811,13 +3811,19 @@
                 employees.forEach(emp => {
                     const dept = emp.department || emp.부서 || '미지정';
                     if (!deptData[dept]) {
-                        deptData[dept] = { count: 0, totalScore: 0, grades: {} };
+                        deptData[dept] = { 
+                            count: 0, 
+                            totalScore: 0, 
+                            grades: { 'S': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'D': 0 }
+                        };
                     }
                     deptData[dept].count++;
                     deptData[dept].totalScore += emp.ai_score || emp.overall_score || emp.AIRISS_v2_종합점수 || 0;
                     
-                    const grade = emp.grade || emp.OK등급 || 'C';
-                    deptData[dept].grades[grade] = (deptData[dept].grades[grade] || 0) + 1;
+                    const grade = emp.ai_grade || emp.grade || emp.OK등급 || 'C';
+                    if (deptData[dept].grades.hasOwnProperty(grade)) {
+                        deptData[dept].grades[grade]++;
+                    }
                 });
                 
                 // 평균 계산
@@ -4514,14 +4520,95 @@
             generatePerformanceReport(dashboardData, employees) {
                 const avgScore = this.calculateAverageScore(employees);
                 const gradeDistribution = this.calculateGradeDistribution(employees);
+                const deptAnalysis = this.analyzeDepartments(employees);
+                
+                // 성과 지표 계산
+                const excellentPerf = (gradeDistribution['S'] + gradeDistribution['A+']);
+                const goodPerf = gradeDistribution['A'];
+                const needsImprovement = (gradeDistribution['B'] + gradeDistribution['C'] + gradeDistribution['D']);
+                const perfRate = Math.round((excellentPerf / employees.length) * 100);
+                
+                // 부서별 최고/최저 성과
+                const deptScores = Object.entries(deptAnalysis).map(([dept, data]) => ({
+                    dept: dept,
+                    score: data.avgScore || 0,
+                    count: data.count
+                })).sort((a, b) => b.score - a.score);
+                
+                const topDept = deptScores[0];
+                const bottomDept = deptScores[deptScores.length - 1];
                 
                 return `
                     <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
-                        <h1 style="color: #FF6200; border-bottom: 3px solid #FF6200; padding-bottom: 15px;">
-                            📈 성과 분석 리포트
-                        </h1>
-                        <p>총 ${employees.length}명 직원의 평균 AI 점수는 ${avgScore}점입니다.</p>
-                        <p>성과 분석 상세 리포트가 준비 중입니다...</p>
+                        <div style="background: linear-gradient(135deg, #FF6200 0%, #FF8A00 50%, #FFA500 100%); color: #000; padding: 30px; border-radius: 12px; margin-bottom: 30px;">
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 700;">📈 조직 성과 분석 리포트</h1>
+                            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;"><strong>작성 부서:</strong> OK홀딩스 인사부</p>
+                            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.8;">작성일: ${new Date().toLocaleDateString('ko-KR')}</p>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border-left: 4px solid #28a745;">
+                                <h3 style="margin: 0 0 10px 0; color: #28a745;">우수 성과자</h3>
+                                <div style="font-size: 24px; font-weight: bold;">${excellentPerf}명 (${perfRate}%)</div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border-left: 4px solid #007bff;">
+                                <h3 style="margin: 0 0 10px 0; color: #007bff;">평균 성과</h3>
+                                <div style="font-size: 24px; font-weight: bold;">${avgScore}점</div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border-left: 4px solid #dc3545;">
+                                <h3 style="margin: 0 0 10px 0; color: #dc3545;">개선 필요</h3>
+                                <div style="font-size: 24px; font-weight: bold;">${needsImprovement}명</div>
+                            </div>
+                        </div>
+
+                        <h2 style="color: #FF6200; border-bottom: 2px solid #FF6200; padding-bottom: 10px;">🎯 성과 분포 분석</h2>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #e9ecef;">
+                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">등급</th>
+                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">인원수</th>
+                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">비율</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${Object.entries(gradeDistribution).map(([grade, count]) => {
+                                        const percentage = Math.round((count / employees.length) * 100);
+                                        return `
+                                        <tr>
+                                            <td style="padding: 12px; border: 1px solid #dee2e6; font-weight: bold;">${grade}등급</td>
+                                            <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">${count}명</td>
+                                            <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">${percentage}%</td>
+                                        </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h2 style="color: #FF6200; border-bottom: 2px solid #FF6200; padding-bottom: 10px;">🏢 부서별 성과 순위</h2>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                            <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745;">
+                                <h3 style="margin: 0 0 10px 0; color: #28a745;">🥇 최고 성과 부서</h3>
+                                <div style="font-size: 18px; font-weight: bold;">${topDept?.dept}</div>
+                                <div style="color: #666;">평균 점수: ${topDept?.score}점 (${topDept?.count}명)</div>
+                            </div>
+                            <div style="background: #ffe6e6; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                                <h3 style="margin: 0 0 10px 0; color: #dc3545;">📈 개선 필요 부서</h3>
+                                <div style="font-size: 18px; font-weight: bold;">${bottomDept?.dept}</div>
+                                <div style="color: #666;">평균 점수: ${bottomDept?.score}점 (${bottomDept?.count}명)</div>
+                            </div>
+                        </div>
+
+                        <h2 style="color: #FF6200; border-bottom: 2px solid #FF6200; padding-bottom: 10px;">💡 개선 제안</h2>
+                        <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                            <ul style="margin: 0; padding-left: 20px;">
+                                <li><strong>우수 인재 관리:</strong> S/A+ 등급 ${excellentPerf}명에 대한 리텐션 전략 수립</li>
+                                <li><strong>성과 개선:</strong> ${needsImprovement}명의 개선 필요 인력에 대한 맞춤형 교육 프로그램 실시</li>
+                                <li><strong>부서별 격차 해소:</strong> ${bottomDept?.dept} 부서의 성과 개선을 위한 지원책 마련</li>
+                                <li><strong>벤치마킹:</strong> ${topDept?.dept} 부서의 우수 사례를 전사 공유</li>
+                            </ul>
+                        </div>
                     </div>
                 `;
             },
@@ -4542,19 +4629,145 @@
             generateExecutiveReport(dashboardData, employees) {
                 const avgScore = this.calculateAverageScore(employees);
                 const gradeDistribution = this.calculateGradeDistribution(employees);
+                const deptAnalysis = this.analyzeDepartments(employees);
+                
+                // 핵심 지표 계산
+                const topTalents = (gradeDistribution['S'] + gradeDistribution['A+']);
+                const riskEmployees = (gradeDistribution['C'] + gradeDistribution['D']);
+                const retentionRate = Math.round(((employees.length - riskEmployees) / employees.length) * 100);
+                const talentDensity = Math.round((topTalents / employees.length) * 100);
+                
+                // 부서별 성과
+                const deptScores = Object.entries(deptAnalysis).map(([dept, data]) => ({
+                    dept: dept,
+                    score: data.avgScore || 0,
+                    count: data.count,
+                    topTalents: (data.grades['S'] + data.grades['A+'])
+                })).sort((a, b) => b.score - a.score);
+                
+                // 위험도 평가
+                const riskLevel = riskEmployees > employees.length * 0.2 ? 'HIGH' : 
+                                riskEmployees > employees.length * 0.1 ? 'MEDIUM' : 'LOW';
                 
                 return `
                     <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
-                        <h1 style="color: #FF6200; border-bottom: 3px solid #FF6200; padding-bottom: 15px;">
-                            💼 경영진 브리핑 리포트
-                        </h1>
-                        <h2>핵심 요약</h2>
-                        <ul>
-                            <li>전체 인원: ${employees.length}명</li>
-                            <li>평균 점수: ${avgScore}점</li>
-                            <li>최우수 인재: ${gradeDistribution['S'] + gradeDistribution['A+']}명</li>
-                        </ul>
-                        <p>경영진 브리핑 상세 리포트가 준비 중입니다...</p>
+                        <div style="background: linear-gradient(135deg, #FF6200 0%, #FF8A00 50%, #FFA500 100%); color: #000; padding: 30px; border-radius: 12px; margin-bottom: 30px;">
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 700;">💼 경영진 브리핑</h1>
+                            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;"><strong>작성 부서:</strong> OK홀딩스 인사부</p>
+                            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.8;">보고일: ${new Date().toLocaleDateString('ko-KR')}</p>
+                        </div>
+
+                        <div style="background: #e3f2fd; padding: 25px; border-radius: 8px; margin-bottom: 30px; border-left: 5px solid #2196f3;">
+                            <h2 style="margin: 0 0 15px 0; color: #1976d2;">📊 경영 핵심 지표 (Executive Summary)</h2>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #1976d2;">${employees.length}명</div>
+                                    <div style="color: #666;">전체 인력</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: ${avgScore >= 700 ? '#28a745' : avgScore >= 600 ? '#ffc107' : '#dc3545'};">${avgScore}점</div>
+                                    <div style="color: #666;">평균 성과 점수</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #28a745;">${topTalents}명 (${talentDensity}%)</div>
+                                    <div style="color: #666;">핵심 인재</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: ${retentionRate >= 90 ? '#28a745' : retentionRate >= 80 ? '#ffc107' : '#dc3545'};">${retentionRate}%</div>
+                                    <div style="color: #666;">예상 리텐션</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                                <h3 style="margin: 0 0 15px 0; color: #FF6200;">🎯 전략적 우선순위</h3>
+                                <ul style="margin: 0; padding-left: 20px;">
+                                    <li style="margin-bottom: 8px;"><strong>인재 확보:</strong> ${talentDensity < 15 ? '핵심 인재 비율 확대 필요' : '우수한 인재 보유율'}</li>
+                                    <li style="margin-bottom: 8px;"><strong>성과 관리:</strong> ${avgScore < 600 ? '전반적 성과 개선 시급' : avgScore < 700 ? '성과 향상 여지 존재' : '우수한 성과 수준 유지'}</li>
+                                    <li style="margin-bottom: 8px;"><strong>리스크 관리:</strong> ${riskLevel === 'HIGH' ? '고위험 인력 다수 존재' : riskLevel === 'MEDIUM' ? '중간 수준 리스크' : '안정적 조직 상태'}</li>
+                                </ul>
+                            </div>
+                            
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                                <h3 style="margin: 0 0 15px 0; color: #FF6200;">📈 조직 건강도</h3>
+                                <div style="margin-bottom: 10px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                        <span>인재 밀도</span>
+                                        <span style="font-weight: bold;">${talentDensity}%</span>
+                                    </div>
+                                    <div style="background: #e0e0e0; height: 8px; border-radius: 4px;">
+                                        <div style="background: ${talentDensity >= 20 ? '#28a745' : talentDensity >= 15 ? '#ffc107' : '#dc3545'}; width: ${Math.min(talentDensity, 100)}%; height: 100%; border-radius: 4px;"></div>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                        <span>성과 수준</span>
+                                        <span style="font-weight: bold;">${Math.round((avgScore/1000)*100)}%</span>
+                                    </div>
+                                    <div style="background: #e0e0e0; height: 8px; border-radius: 4px;">
+                                        <div style="background: ${avgScore >= 700 ? '#28a745' : avgScore >= 600 ? '#ffc107' : '#dc3545'}; width: ${Math.min((avgScore/1000)*100, 100)}%; height: 100%; border-radius: 4px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h2 style="color: #FF6200; border-bottom: 2px solid #FF6200; padding-bottom: 10px;">🏢 부서별 성과 현황</h2>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #e9ecef;">
+                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">부서명</th>
+                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">인원</th>
+                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">평균점수</th>
+                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">핵심인재</th>
+                                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">등급</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${deptScores.slice(0, 5).map((dept, index) => {
+                                        const grade = dept.score >= 750 ? 'A' : dept.score >= 650 ? 'B' : 'C';
+                                        const gradeColor = grade === 'A' ? '#28a745' : grade === 'B' ? '#ffc107' : '#dc3545';
+                                        return `
+                                        <tr>
+                                            <td style="padding: 12px; border: 1px solid #dee2e6;">
+                                                ${index < 3 ? (index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉') : ''} ${dept.dept}
+                                            </td>
+                                            <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">${dept.count}명</td>
+                                            <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">${dept.score}점</td>
+                                            <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">${dept.topTalents}명</td>
+                                            <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+                                                <span style="background: ${gradeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">${grade}</span>
+                                            </td>
+                                        </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h2 style="color: #FF6200; border-bottom: 2px solid #FF6200; padding-bottom: 10px;">⚠️ 경영 이슈 및 권고사항</h2>
+                        <div style="background: ${riskLevel === 'HIGH' ? '#ffe6e6' : riskLevel === 'MEDIUM' ? '#fff3cd' : '#e8f5e8'}; padding: 20px; border-radius: 8px; border-left: 4px solid ${riskLevel === 'HIGH' ? '#dc3545' : riskLevel === 'MEDIUM' ? '#ffc107' : '#28a745'};">
+                            <h3 style="margin: 0 0 15px 0;">즉시 조치 필요 사항</h3>
+                            <ul style="margin: 0; padding-left: 20px;">
+                                ${riskEmployees > employees.length * 0.2 ? 
+                                    '<li><strong>🚨 고위험:</strong> 성과 미달 인력 ' + riskEmployees + '명 (전체 ' + Math.round((riskEmployees/employees.length)*100) + '%) - 즉시 개선 계획 수립 필요</li>' : ''}
+                                ${talentDensity < 15 ? 
+                                    '<li><strong>📈 인재 확보:</strong> 핵심 인재 비율 ' + talentDensity + '% - 업계 평균 20% 달성을 위한 채용/육성 전략 필요</li>' : ''}
+                                ${avgScore < 650 ? 
+                                    '<li><strong>💼 성과 개선:</strong> 조직 평균 성과 ' + avgScore + '점 - 교육 및 개발 투자 확대 권고</li>' : ''}
+                                <li><strong>🎯 전략 실행:</strong> ${deptScores[0].dept} 우수 사례 벤치마킹을 통한 전사 성과 개선</li>
+                                <li><strong>🔄 정기 모니터링:</strong> 월간 성과 리뷰 및 분기별 인재 현황 점검 체계 구축</li>
+                            </ul>
+                        </div>
+
+                        <div style="background: #f1f8e9; padding: 20px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #8bc34a;">
+                            <h3 style="margin: 0 0 10px 0; color: #689f38;">💡 장기 전략 제안</h3>
+                            <p style="margin: 0; color: #666;">
+                                <strong>인재 관리:</strong> 핵심 인재 유지를 위한 맞춤형 보상 체계 및 경력 개발 프로그램 구축을 통해 
+                                조직의 경쟁력을 지속적으로 강화하고 미래 성장 동력을 확보하시기 바랍니다.
+                            </p>
+                        </div>
                     </div>
                 `;
             },
