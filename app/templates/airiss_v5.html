@@ -1903,12 +1903,25 @@
                 
                 // 실제 데이터 기반 등급 분포 계산
                 const gradeDistribution = { 'S': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'D': 0 };
+                
+                // 직원 데이터 확인
+                console.log('📊 차트 렌더링 - 직원 수:', this.state.employees.length);
+                
                 this.state.employees.forEach(emp => {
-                    const grade = emp.grade || 'C';
+                    // 다양한 필드명 확인 (grade, OK등급, ai_grade 등)
+                    const grade = emp.grade || emp.OK등급 || emp.ai_grade || 'C';
+                    
+                    // 첫 몇 개 데이터 로깅
+                    if (gradeDistribution[grade] === 0) {
+                        console.log(`첫 ${grade} 등급 발견:`, emp);
+                    }
+                    
                     if (gradeDistribution.hasOwnProperty(grade)) {
                         gradeDistribution[grade]++;
                     }
                 });
+                
+                console.log('📊 등급 분포:', gradeDistribution);
                 
                 // 등급 분포 차트 - 막대그래프로 변경
                 const gradeCtx = document.getElementById('gradeChart');
@@ -2000,9 +2013,20 @@
                 
                 // 실제 데이터 기반 부서별 평균 점수 계산
                 const departmentScores = {};
-                this.state.employees.forEach(emp => {
-                    const dept = emp.department || '기타';
-                    const score = emp.ai_score || emp.overall_score || 0;
+                
+                console.log('📈 부서별 성과 계산 시작...');
+                
+                this.state.employees.forEach((emp, idx) => {
+                    // 부서명 확인 (department, 부서, dept 등)
+                    const dept = emp.department || emp.부서 || emp.dept || '기타';
+                    // 점수 확인 (ai_score, overall_score, 종합점수 등)
+                    const score = emp.ai_score || emp.overall_score || emp.AIRISS_v2_종합점수 || emp.종합점수 || 0;
+                    
+                    // 첫 몇 개 데이터 로깅
+                    if (idx < 3) {
+                        console.log(`직원 ${idx + 1} - 부서: ${dept}, 점수: ${score}`);
+                    }
+                    
                     if (!departmentScores[dept]) {
                         departmentScores[dept] = { total: 0, count: 0 };
                     }
@@ -2010,20 +2034,26 @@
                     departmentScores[dept].count++;
                 });
                 
+                console.log('📊 부서별 집계:', departmentScores);
+                
                 // 평균 점수 계산 및 정렬
                 const departmentAverages = [];
                 Object.keys(departmentScores).forEach(dept => {
                     if (departmentScores[dept].count > 0) {
+                        const avg = Math.round(departmentScores[dept].total / departmentScores[dept].count);
                         departmentAverages.push({
                             name: dept,
-                            avg: Math.round(departmentScores[dept].total / departmentScores[dept].count)
+                            avg: avg
                         });
+                        console.log(`부서 ${dept}: 평균 ${avg}점 (${departmentScores[dept].count}명)`);
                     }
                 });
                 
                 // 상위 5개 부서만 선택 (점수 기준 정렬)
                 departmentAverages.sort((a, b) => b.avg - a.avg);
                 const topDepartments = departmentAverages.slice(0, 5);
+                
+                console.log('📊 상위 5개 부서:', topDepartments);
                 
                 // 부서별 성과 차트
                 const deptCtx = document.getElementById('departmentChart');
@@ -2053,9 +2083,10 @@
                             scales: {
                                 y: {
                                     beginAtZero: true,
-                                    max: 100,
+                                    // max 값을 데이터에 따라 동적으로 설정
+                                    max: Math.max(...topDepartments.map(d => d.avg)) > 100 ? 1000 : 100,
                                     ticks: {
-                                        stepSize: 20
+                                        stepSize: Math.max(...topDepartments.map(d => d.avg)) > 100 ? 200 : 20
                                     }
                                 }
                             },
