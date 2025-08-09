@@ -200,7 +200,9 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                     "uid": r.uid,
                     "name": r.name or "익명",
                     "department": r.department or "-",
-                    "score": r.overall_score,
+                    "ai_score": r.overall_score,  # ai_score로 변경
+                    "risk_score": r.overall_score,  # risk_score도 추가
+                    "overall_score": r.overall_score,  # overall_score도 추가
                     "risk_level": r.risk_level,
                     "reason": r.reason
                 }
@@ -229,7 +231,8 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                     "name": r.name or "익명",
                     "department": r.department or "-",
                     "position": r.position or "-",
-                    "score": r.overall_score,
+                    "ai_score": r.overall_score,  # ai_score로 변경
+                    "overall_score": r.overall_score,  # overall_score도 추가
                     "grade": r.grade
                 }
                 for r in promotion_results
@@ -257,11 +260,55 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                     "name": r.name or "익명",
                     "department": r.department or "-",
                     "position": r.position or "-",
-                    "score": r.overall_score,
+                    "ai_score": r.overall_score,  # ai_score로 변경
+                    "overall_score": r.overall_score,  # overall_score도 추가
+                    "score": r.overall_score,  # 기존 score도 유지
                     "grade": r.grade
                 }
                 for r in talent_results
             ]
+        
+        # 전체 직원 목록도 조회 (최신 데이터만)
+        all_employees = []
+        try:
+            employees_query = text("""
+                WITH latest_records AS (
+                    SELECT uid, MAX(id::text) as max_id
+                    FROM employee_results
+                    WHERE uid IS NOT NULL
+                    GROUP BY uid
+                )
+                SELECT 
+                    er.uid as employee_id,
+                    er.employee_metadata->>'name' as employee_name,
+                    er.employee_metadata->>'department' as department,
+                    er.employee_metadata->>'position' as position,
+                    er.overall_score as ai_score,
+                    er.grade
+                FROM employee_results er
+                INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
+                ORDER BY er.overall_score DESC
+                LIMIT 100
+            """)
+            
+            emp_results = db.execute(employees_query).fetchall()
+            all_employees = [
+                {
+                    "employee_id": r.employee_id,
+                    "uid": r.employee_id,
+                    "name": r.employee_name or "익명",
+                    "employee_name": r.employee_name or "익명",
+                    "department": r.department or "-",
+                    "position": r.position or "-",
+                    "ai_score": r.ai_score,
+                    "overall_score": r.ai_score,
+                    "grade": r.grade
+                }
+                for r in emp_results
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get all employees: {e}")
+            all_employees = []
         
         return {
             "total_employees": total,
@@ -276,7 +323,8 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
             "risk_employees": {
                 "count": risk_count,
                 "employees": risk_employees
-            }
+            },
+            "employees": all_employees  # 전체 직원 목록 추가
         }
     except Exception as e:
         logger.error(f"Failed to get dashboard stats: {e}")
