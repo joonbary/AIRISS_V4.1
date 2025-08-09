@@ -79,6 +79,7 @@
         
         <div class="test-section">
             <h2>2. 데이터베이스 연결 테스트</h2>
+            <button onclick="testDBConnection()">DB 연결 테스트</button>
             <button onclick="testDashboardStats()">대시보드 통계</button>
             <button onclick="testEmployeesList()">직원 목록 (신규 API)</button>
             <button onclick="testEmployeesOld()">직원 목록 (구 API)</button>
@@ -126,6 +127,16 @@
                 showResult('server-result', data, 'success');
             } catch (error) {
                 showResult('server-result', error.toString(), 'error');
+            }
+        }
+        
+        async function testDBConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/db/test?_t=${Date.now()}`);
+                const data = await response.json();
+                showResult('db-result', data, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult('db-result', error.toString(), 'error');
             }
         }
         

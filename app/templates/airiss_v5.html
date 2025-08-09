@@ -373,9 +373,11 @@
         }
         
         .tab-button.active {
-            color: #FFFFFF;  /* 흰색으로 명확히 표시 */
+            color: #FFFFFF !important;  /* 흰색으로 강제 적용 */
             font-weight: 600;
             position: relative;
+            background-color: var(--primary-color);  /* 배경색 추가 */
+            border-radius: 12px;
         }
         
         .tab-button.active::before {
@@ -385,7 +387,7 @@
         .tab-button.active * {
             position: relative;
             z-index: 1;
-            color: inherit;  /* 부모 색상 상속 */
+            color: #FFFFFF !important;  /* 모든 자식 요소도 흰색 강제 */
         }
         
         .tab-button .badge {

@@ -229,71 +229,107 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
         }
 
 # Get Employees List API - 모든 분석 결과 테이블 통합 조회
+# DB 연결 테스트 엔드포인트
+@app.get("/api/v1/db/test")
+async def test_db_connection(db: Session = Depends(get_db)):
+    """Test database connection and return table info"""
+    try:
+        from sqlalchemy import text
+        
+        # 테이블 존재 확인
+        tables_query = text("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public'
+        """)
+        tables = db.execute(tables_query).fetchall()
+        table_names = [t[0] for t in tables]
+        
+        # 각 테이블의 레코드 수 확인
+        counts = {}
+        for table in ['employee_results', 'employee_scores', 'analysis_results']:
+            if table in table_names:
+                count_query = text(f"SELECT COUNT(*) FROM {table}")
+                count = db.execute(count_query).scalar()
+                counts[table] = count
+        
+        return {
+            "status": "connected",
+            "tables": table_names,
+            "record_counts": counts,
+            "database_url": "Connected to Neon DB"
+        }
+    except Exception as e:
+        logger.error(f"Database test failed: {e}")
+        return {"status": "error", "message": str(e)}
+
 @app.get("/api/v1/employees/list")
 async def get_employees_list(db: Session = Depends(get_db)):
     """Get list of all employees with AI analysis results from all tables"""
     try:
         from sqlalchemy import text
         
-        # 여러 테이블에서 통합 조회 (UNION ALL 사용)
-        results = db.execute(text("""
-            WITH all_employees AS (
-                -- employee_results 테이블
-                SELECT DISTINCT
+        # 먼저 employee_results 테이블 시도
+        results = []
+        try:
+            results = db.execute(text("""
+                SELECT 
                     uid,
-                    COALESCE(employee_name, employee_metadata->>'name') as employee_name,
-                    COALESCE(employee_metadata->>'department', department) as department,
-                    COALESCE(employee_metadata->>'position', position) as position,
-                    COALESCE(overall_score, ai_score) as ai_score,
-                    COALESCE(grade, ai_grade) as ai_grade,
-                    created_at,
-                    'employee_results' as source
+                    employee_name,
+                    department,
+                    position,
+                    ai_score,
+                    ai_grade,
+                    created_at
                 FROM employee_results
                 WHERE uid IS NOT NULL
+                ORDER BY created_at DESC
+                LIMIT 100
+            """)).fetchall()
+            logger.info(f"Found {len(results)} records from employee_results")
+        except Exception as e1:
+            logger.warning(f"employee_results query failed: {e1}")
+            
+            # employee_scores 테이블 시도
+            try:
+                results = db.execute(text("""
+                    SELECT 
+                        uid,
+                        metadata->>'name' as employee_name,
+                        metadata->>'department' as department,
+                        metadata->>'position' as position,
+                        hybrid_score as ai_score,
+                        ok_grade as ai_grade,
+                        created_at
+                    FROM employee_scores
+                    WHERE uid IS NOT NULL
+                    ORDER BY created_at DESC
+                    LIMIT 100
+                """)).fetchall()
+                logger.info(f"Found {len(results)} records from employee_scores")
+            except Exception as e2:
+                logger.warning(f"employee_scores query failed: {e2}")
                 
-                UNION ALL
-                
-                -- employee_scores 테이블
-                SELECT DISTINCT
-                    uid,
-                    metadata->>'name' as employee_name,
-                    metadata->>'department' as department,
-                    metadata->>'position' as position,
-                    hybrid_score as ai_score,
-                    ok_grade as ai_grade,
-                    created_at,
-                    'employee_scores' as source
-                FROM employee_scores
-                WHERE uid IS NOT NULL
-                
-                UNION ALL
-                
-                -- analysis_results 테이블
-                SELECT DISTINCT
-                    uid,
-                    metadata->>'name' as employee_name,
-                    metadata->>'department' as department,
-                    metadata->>'position' as position,
-                    hybrid_score as ai_score,
-                    grade as ai_grade,
-                    created_at,
-                    'analysis_results' as source
-                FROM analysis_results
-                WHERE uid IS NOT NULL
-            )
-            SELECT DISTINCT ON (uid)
-                uid,
-                employee_name,
-                department,
-                position,
-                ai_score,
-                ai_grade,
-                created_at,
-                source
-            FROM all_employees
-            ORDER BY uid, created_at DESC NULLS LAST
-            LIMIT 200
-        """)).fetchall()
+                # analysis_results 테이블 시도
+                try:
+                    results = db.execute(text("""
+                        SELECT 
+                            uid,
+                            metadata->>'name' as employee_name,
+                            metadata->>'department' as department,
+                            metadata->>'position' as position,
+                            hybrid_score as ai_score,
+                            grade as ai_grade,
+                            created_at
+                        FROM analysis_results
+                        WHERE uid IS NOT NULL
+                        ORDER BY created_at DESC
+                        LIMIT 100
+                    """)).fetchall()
+                    logger.info(f"Found {len(results)} records from analysis_results")
+                except Exception as e3:
+                    logger.error(f"All table queries failed: {e3}")
+                    results = []
         
         employees = []
         for r in results:
