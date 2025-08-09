@@ -163,11 +163,11 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
     try:
         from sqlalchemy import text
         
-        # employee_results 테이블에서 데이터 조회
+        # employee_results 테이블에서 데이터 조회 (overall_score 사용)
         result = db.execute(text("""
             SELECT COUNT(DISTINCT uid) as total_employees,
-                   COUNT(CASE WHEN ai_score >= 80 THEN 1 END) as high_performers,
-                   COUNT(CASE WHEN ai_score < 60 THEN 1 END) as risk_employees
+                   COUNT(CASE WHEN overall_score >= 80 THEN 1 END) as high_performers,
+                   COUNT(CASE WHEN overall_score < 60 THEN 1 END) as risk_employees
             FROM employee_results
         """)).first()
         
@@ -179,16 +179,19 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
         risk_employees = []
         if risk_count > 0:
             risk_results = db.execute(text("""
-                SELECT uid, employee_name as name, department, ai_score,
+                SELECT uid, 
+                       employee_metadata->>'name' as name, 
+                       employee_metadata->>'department' as department, 
+                       overall_score,
                        CASE 
-                           WHEN ai_score < 40 THEN 'high'
-                           WHEN ai_score < 60 THEN 'medium'
+                           WHEN overall_score < 40 THEN 'high'
+                           WHEN overall_score < 60 THEN 'medium'
                            ELSE 'low'
                        END as risk_level,
                        '성과 개선 필요' as reason
                 FROM employee_results
-                WHERE ai_score < 60
-                ORDER BY ai_score ASC
+                WHERE overall_score < 60
+                ORDER BY overall_score ASC
                 LIMIT 10
             """)).fetchall()
             
@@ -197,7 +200,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                     "uid": r.uid,
                     "name": r.name or "익명",
                     "department": r.department or "-",
-                    "score": r.ai_score,
+                    "score": r.overall_score,
                     "risk_level": r.risk_level,
                     "reason": r.reason
                 }
@@ -333,68 +336,52 @@ async def get_employees_list(db: Session = Depends(get_db)):
         # 먼저 employee_results 테이블 시도
         results = []
         try:
-            # 먼저 컬럼 확인
-            check_columns = db.execute(text("""
-                SELECT column_name 
-                FROM information_schema.columns 
-                WHERE table_name = 'employee_results'
-                AND column_name IN ('uid', 'employee_name', 'department', 'position', 'ai_score', 'ai_grade')
-            """)).fetchall()
-            
-            available_columns = [c[0] for c in check_columns]
-            logger.info(f"Available columns in employee_results: {available_columns}")
-            
-            # 기본 쿼리
+            # employee_results 테이블 조회 (실제 컬럼 구조 사용)
             results = db.execute(text("""
-                SELECT * FROM employee_results
+                SELECT 
+                    uid,
+                    employee_metadata->>'name' as employee_name,
+                    employee_metadata->>'department' as department,
+                    employee_metadata->>'position' as position,
+                    overall_score,
+                    grade,
+                    text_score,
+                    quantitative_score,
+                    confidence,
+                    dimension_scores,
+                    ai_feedback
+                FROM employee_results
                 WHERE uid IS NOT NULL
-                ORDER BY created_at DESC
+                ORDER BY uid DESC
                 LIMIT 100
             """)).fetchall()
             logger.info(f"Found {len(results)} records from employee_results")
         except Exception as e1:
             logger.warning(f"employee_results query failed: {e1}")
             
-            # employee_scores 테이블 시도
+            # analysis_results 테이블 시도 (구조가 다름)
             try:
                 results = db.execute(text("""
                     SELECT 
                         uid,
-                        metadata->>'name' as employee_name,
-                        metadata->>'department' as department,
-                        metadata->>'position' as position,
-                        hybrid_score as ai_score,
-                        ok_grade as ai_grade,
+                        filename,
+                        hybrid_score,
+                        ok_grade as grade,
+                        text_score,
+                        quantitative_score,
+                        confidence,
+                        dimension_scores,
+                        ai_feedback,
                         created_at
-                    FROM employee_scores
+                    FROM analysis_results
                     WHERE uid IS NOT NULL
                     ORDER BY created_at DESC
                     LIMIT 100
                 """)).fetchall()
-                logger.info(f"Found {len(results)} records from employee_scores")
+                logger.info(f"Found {len(results)} records from analysis_results")
             except Exception as e2:
-                logger.warning(f"employee_scores query failed: {e2}")
-                
-                # analysis_results 테이블 시도
-                try:
-                    results = db.execute(text("""
-                        SELECT 
-                            uid,
-                            metadata->>'name' as employee_name,
-                            metadata->>'department' as department,
-                            metadata->>'position' as position,
-                            hybrid_score as ai_score,
-                            grade as ai_grade,
-                            created_at
-                        FROM analysis_results
-                        WHERE uid IS NOT NULL
-                        ORDER BY created_at DESC
-                        LIMIT 100
-                    """)).fetchall()
-                    logger.info(f"Found {len(results)} records from analysis_results")
-                except Exception as e3:
-                    logger.error(f"All table queries failed: {e3}")
-                    results = []
+                logger.error(f"All table queries failed: {e2}")
+                results = []
         
         # 결과가 없으면 샘플 데이터 조회 시도
         if not results:
@@ -418,13 +405,15 @@ async def get_employees_list(db: Session = Depends(get_db)):
             
             # 필드 안전하게 접근
             uid = row_dict.get('uid', '')
-            name = row_dict.get('employee_name', '') or row_dict.get('name', '') or '익명'
+            name = row_dict.get('employee_name', '') or '익명'
             department = row_dict.get('department', '') or '-'
             position = row_dict.get('position', '') or '-'
-            score = row_dict.get('ai_score', 0) or row_dict.get('overall_score', 0) or 0
+            
+            # 점수 처리 (overall_score 또는 hybrid_score)
+            score = row_dict.get('overall_score', 0) or row_dict.get('hybrid_score', 0) or 0
             
             # Grade 계산 및 정규화
-            grade = row_dict.get('ai_grade', '') or row_dict.get('grade', '')
+            grade = row_dict.get('grade', '') or row_dict.get('ok_grade', '')
             if not grade:
                 if score >= 90: grade = "S"
                 elif score >= 80: grade = "A"
