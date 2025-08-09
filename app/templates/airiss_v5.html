@@ -3797,7 +3797,7 @@
             calculateGradeDistribution(employees) {
                 const distribution = { 'S': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'D': 0 };
                 employees.forEach(emp => {
-                    const grade = emp.grade || emp.OK등급 || 'C';
+                    const grade = emp.grade || emp.OK등급 || emp.ai_grade || 'C';
                     if (distribution.hasOwnProperty(grade)) {
                         distribution[grade]++;
                     }
@@ -4191,29 +4191,29 @@
                             <p style="margin: 0; color: #6c757d;">
                                 <strong>생성일시:</strong> ${new Date().toLocaleString('ko-KR')}<br>
                                 <strong>분석 대상:</strong> 전체 ${employees.length}명<br>
-                                <strong>작성 부서:</strong> 인사전략팀
+                                <strong>작성 부서:</strong> OK홀딩스 인사부
                             </p>
                         </div>
                         
                         <h2 style="color: #FF6200; margin-top: 30px;">📊 Executive Summary</h2>
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; margin: 20px 0;">
+                        <div style="background: linear-gradient(135deg, #FF6200 0%, #FF8A00 50%, #FFA500 100%); color: #000; padding: 25px; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                             <h3 style="margin-top: 0;">핵심 지표</h3>
                             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
                                 <div style="text-align: center;">
                                     <div style="font-size: 32px; font-weight: bold;">${employees.length}</div>
-                                    <div style="font-size: 12px; opacity: 0.9;">전체 직원</div>
+                                    <div style="font-size: 12px; opacity: 0.8; color: #333;">전체 직원</div>
                                 </div>
                                 <div style="text-align: center;">
                                     <div style="font-size: 32px; font-weight: bold;">${avgScore}</div>
-                                    <div style="font-size: 12px; opacity: 0.9;">평균 AI 점수</div>
+                                    <div style="font-size: 12px; opacity: 0.8; color: #333;">평균 AI 점수</div>
                                 </div>
                                 <div style="text-align: center;">
                                     <div style="font-size: 32px; font-weight: bold;">${gradeDistribution['S'] + gradeDistribution['A+']}</div>
-                                    <div style="font-size: 12px; opacity: 0.9;">최우수 인재</div>
+                                    <div style="font-size: 12px; opacity: 0.8; color: #333;">최우수 인재</div>
                                 </div>
                                 <div style="text-align: center;">
                                     <div style="font-size: 32px; font-weight: bold;">${Object.keys(deptAnalysis).length}</div>
-                                    <div style="font-size: 12px; opacity: 0.9;">분석 부서</div>
+                                    <div style="font-size: 12px; opacity: 0.8; color: #333;">분석 부서</div>
                                 </div>
                             </div>
                         </div>
@@ -4245,8 +4245,8 @@
                                 </tr>
                                 <tr>
                                     <td style="padding: 12px; border: 1px solid #dee2e6;">우수 인재 (A/B+)</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${gradeDistribution['A'] + gradeDistribution['B+']}명</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${Math.round((gradeDistribution['A'] + gradeDistribution['B+']) / employees.length * 100)}%</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${(gradeDistribution['A'] || 0) + (gradeDistribution['B+'] || 0)}명</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${Math.round(((gradeDistribution['A'] || 0) + (gradeDistribution['B+'] || 0)) / employees.length * 100) || 0}%</td>
                                     <td style="padding: 12px; border: 1px solid #dee2e6;">승진 후보군</td>
                                 </tr>
                                 <tr>
@@ -4314,8 +4314,8 @@
             generateDepartmentTable(deptAnalysis) {
                 let rows = '';
                 Object.entries(deptAnalysis).forEach(([dept, data]) => {
-                    const avg = Math.round(data.totalScore / data.count);
-                    const topTalents = data.grades['S'] + data.grades['A+'];
+                    const avg = data.avgScore || Math.round(data.totalScore / data.count) || 0;
+                    const topTalents = (data.grades['S'] || 0) + (data.grades['A+'] || 0);
                     rows += `
                         <tr>
                             <td style="padding: 12px; border: 1px solid #dee2e6;">${dept}</td>
@@ -4352,51 +4352,118 @@
                 const talents = dashboardData.top_talents?.employees || [];
                 const promotions = dashboardData.promotion_candidates?.employees || [];
                 
-                let talentList = talents.map(emp => 
-                    `<li>${emp.name} (${emp.department}) - AI 점수: ${Math.round(emp.ai_score || 0)}점</li>`
-                ).join('');
+                let talentCards = talents.map(emp => `
+                    <div style="background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${emp.name}</h4>
+                                <p style="margin: 0; color: #6c757d; font-size: 14px;">${emp.department} / ${emp.position || '직책 미상'}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="background: #FF6200; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 18px;">
+                                    ${Math.round(emp.ai_score || 0)}점
+                                </div>
+                                <div style="color: #28a745; font-weight: bold; margin-top: 5px;">${emp.grade}등급</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
                 
-                let promotionList = promotions.map(emp => 
-                    `<li>${emp.name} (${emp.department}/${emp.position}) - ${emp.grade}등급</li>`
-                ).join('');
+                let promotionCards = promotions.map(emp => `
+                    <div style="background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${emp.name}</h4>
+                                <p style="margin: 0; color: #6c757d; font-size: 14px;">${emp.department} / ${emp.position}</p>
+                            </div>
+                            <div style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold;">
+                                ${emp.grade}등급
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
                 
                 return `
-                    <h2>핵심 인재 분석 리포트</h2>
-                    
-                    <h3>1. 핵심 인재 현황</h3>
-                    <p>AI 점수 85점 이상의 핵심 인재 ${talents.length}명</p>
-                    <ul>${talentList || '<li>해당 없음</li>'}</ul>
-                    
-                    <h3>2. 승진 후보자</h3>
-                    <p>승진 검토 대상 ${promotions.length}명</p>
-                    <ul>${promotionList || '<li>해당 없음</li>'}</ul>
-                    
-                    <h3>3. 인재 관리 제언</h3>
-                    <ul>
-                        <li>핵심 인재 retention 프로그램 강화 필요</li>
-                        <li>승진 후보자 대상 리더십 교육 실시 권장</li>
-                        <li>장기 인재 육성 로드맵 수립 필요</li>
-                    </ul>
+                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
+                        <h2 style="color: #FF6200; border-bottom: 2px solid #FF6200; padding-bottom: 10px;">🌟 핵심 인재 분석 리포트</h2>
+                        
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="color: #2c3e50; margin-bottom: 15px;">🏆 Top Talent (AI 점수 85점 이상)</h3>
+                            <p style="color: #6c757d; margin-bottom: 15px;">총 ${talents.length}명의 핵심 인재가 식별되었습니다.</p>
+                            ${talentCards || '<p style="color: #999;">현재 해당하는 인재가 없습니다.</p>'}
+                        </div>
+                        
+                        <div style="background: #e7f5ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="color: #2c3e50; margin-bottom: 15px;">🚀 승진 후보자</h3>
+                            <p style="color: #6c757d; margin-bottom: 15px;">승진 검토 대상 ${promotions.length}명</p>
+                            ${promotionCards || '<p style="color: #999;">현재 해당하는 인재가 없습니다.</p>'}
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="color: #856404; margin-bottom: 15px;">💡 인재 관리 제언</h3>
+                            <ul style="margin: 0; padding-left: 20px;">
+                                <li style="margin-bottom: 10px;">핵심 인재 retention 프로그램 강화 필요</li>
+                                <li style="margin-bottom: 10px;">승진 후보자 대상 리더십 교육 실시 권장</li>
+                                <li style="margin-bottom: 10px;">장기 인재 육성 로드맵 수립 필요</li>
+                            </ul>
+                        </div>
+                    </div>
                 `;
             },
             
-            // 리스크 리포트 생성
+            // 리스크 리폼트 생성
             generateRiskReport(dashboardData, employees) {
                 const riskEmployees = dashboardData.risk_employees?.employees || [];
                 
-                let riskList = riskEmployees.map(emp => 
-                    `<li>${emp.name} (${emp.department}) - 위험도: ${emp.risk_level}, 사유: ${emp.reason}</li>`
-                ).join('');
+                // 리스크 레벨별 그룹핑
+                const highRisk = riskEmployees.filter(emp => emp.ai_score < 60 || emp.risk_level === 'high');
+                const mediumRisk = riskEmployees.filter(emp => emp.ai_score >= 60 && emp.ai_score < 70 && emp.risk_level !== 'high');
+                
+                let riskCards = riskEmployees.slice(0, 10).map(emp => `
+                    <div style="background: white; border: 2px solid #dc3545; border-radius: 8px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 4px rgba(220,53,69,0.2);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: #dc3545;">${emp.name}</h4>
+                                <p style="margin: 0; color: #6c757d; font-size: 14px;">${emp.department || '부서 미상'}</p>
+                                <p style="margin: 5px 0 0 0; color: #856404; font-size: 13px;">
+                                    <strong>사유:</strong> ${emp.reason || '성과 개선 필요'}
+                                </p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="background: ${emp.ai_score < 60 ? '#dc3545' : '#ffc107'}; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold;">
+                                    ${Math.round(emp.ai_score || emp.risk_score || 0)}점
+                                </div>
+                                <div style="color: #dc3545; font-size: 12px; margin-top: 5px; font-weight: bold;">
+                                    ${emp.risk_level === 'high' ? '고위험' : '주의요망'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
                 
                 return `
-                    <h2>리스크 관리 리포트</h2>
-                    
-                    <h3>1. 관리 필요 인력 현황</h3>
-                    <p>즉시 관리가 필요한 인력 ${riskEmployees.length}명</p>
-                    <ul>${riskList || '<li>해당 없음</li>'}</ul>
-                    
-                    <h3>2. 리스크 분석</h3>
-                    <ul>
+                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
+                        <h2 style="color: #dc3545; border-bottom: 2px solid #dc3545; padding-bottom: 10px;">⚠️ 리스크 관리 리포트</h2>
+                        
+                        <div style="background: #f8d7da; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="color: #721c24; margin-bottom: 15px;">🚨 즉시 관리 필요 인력</h3>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px;">
+                                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 36px; font-weight: bold; color: #dc3545;">${highRisk.length}</div>
+                                    <div style="color: #6c757d; font-size: 14px;">고위험군</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 36px; font-weight: bold; color: #ffc107;">${mediumRisk.length}</div>
+                                    <div style="color: #6c757d; font-size: 14px;">주의요망군</div>
+                                </div>
+                            </div>
+                            <p style="color: #721c24; margin-bottom: 15px;">총 ${riskEmployees.length}명의 관리 필요 인력 (상위 10명 표시)</p>
+                            ${riskCards || '<p style="color: #999;">현재 리스크 인력이 없습니다.</p>'}
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="color: #856404; margin-bottom: 15px;">📊 리스크 분석</h3>
+                            <ul style="margin: 0; padding-left: 20px;">
                         <li>고위험군: ${riskEmployees.filter(e => e.risk_level === 'high').length}명</li>
                         <li>중위험군: ${riskEmployees.filter(e => e.risk_level === 'medium').length}명</li>
                         <li>저위험군: ${riskEmployees.filter(e => e.risk_level === 'low').length}명</li>
