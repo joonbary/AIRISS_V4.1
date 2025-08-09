@@ -1127,7 +1127,7 @@
                 📊 대시보드
             </button>
             <button class="tab-button" onclick="AIRISS.switchTab('employees')">
-                👥 전직원 분석
+                👥 분석 직원 수
             </button>
             <button class="tab-button" onclick="AIRISS.switchTab('upload')">
                 📤 데이터 업로드
@@ -1150,7 +1150,7 @@
                 <div class="stat-card">
                     <div class="stat-icon">👥</div>
                     <div class="stat-value" id="stat-total">0</div>
-                    <div class="stat-label">총 직원 수</div>
+                    <div class="stat-label">분석 직원 수</div>
                     <div class="stat-change positive">
                         <span>↑</span>
                         <span>+5% (전월 대비)</span>
@@ -1309,11 +1309,11 @@
             </div>
         </div>
         
-        <!-- 전직원 분석 탭 -->
+        <!-- 분석 직원 목록 탭 -->
         <div id="employees-tab" class="tab-content">
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">전직원 AI 분석 결과</h2>
+                    <h2 class="card-title">분석 직원 목록</h2>
                     <div style="display: flex; gap: 12px;">
                         <input type="text" id="search-input" placeholder="이름, 사번으로 검색..." 
                                style="padding: 14px 20px; border: 2px solid #E0E0E0; border-radius: 12px; width: 320px; font-size: 16px; transition: all 0.3s; outline: none;" 
@@ -3583,7 +3583,7 @@
                     
                     <h3>1. 전체 현황</h3>
                     <ul>
-                        <li>총 직원 수: ${dashboardData.total_employees || 0}명</li>
+                        <li>분석 직원 수: ${dashboardData.total_employees || 0}명</li>
                         <li>승진 후보자: ${dashboardData.promotion_candidates?.count || 0}명</li>
                         <li>핵심 인재: ${dashboardData.top_talents?.count || 0}명</li>
                         <li>관리 필요 인력: ${dashboardData.risk_employees?.count || 0}명</li>
@@ -3603,7 +3603,7 @@
                     
                     <h3>3. 주요 인사이트</h3>
                     <ul>
-                        <li>전체 직원의 평균 AI 점수는 ${this.calculateAverageScore(employees)}점입니다.</li>
+                        <li>분석 대상 직원의 평균 AI 점수는 ${this.calculateAverageScore(employees)}점입니다.</li>
                         <li>상위 20% 직원이 전체 성과의 주요 부분을 담당하고 있습니다.</li>
                         <li>하위 10% 직원에 대한 집중 관리가 필요합니다.</li>
                     </ul>
@@ -3680,7 +3680,7 @@
                     <h2>맞춤형 HR 분석 리포트</h2>
                     
                     <h3>1. 종합 분석</h3>
-                    <p>전체 ${dashboardData.total_employees || 0}명의 직원에 대한 AI 분석 결과입니다.</p>
+                    <p>분석 대상 ${dashboardData.total_employees || 0}명의 직원에 대한 AI 분석 결과입니다.</p>
                     
                     <h3>2. 부서별 현황</h3>
                     <p>각 부서별 성과 및 인재 분포 분석</p>

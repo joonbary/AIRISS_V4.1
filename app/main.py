@@ -316,7 +316,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 FROM employee_results er
                 INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
                 ORDER BY er.overall_score DESC
-                LIMIT 100
+                LIMIT 1000
             """)
             
             emp_results = db.execute(employees_query).fetchall()
@@ -498,7 +498,7 @@ async def get_employees_list(db: Session = Depends(get_db)):
                 INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
                 WHERE er.employee_metadata->>'name' IS NOT NULL
                 ORDER BY er.overall_score DESC
-                LIMIT 100
+                LIMIT 1000
             """)).fetchall()
             logger.info(f"Found {len(results)} records from employee_results")
         except Exception as e1:
@@ -522,7 +522,7 @@ async def get_employees_list(db: Session = Depends(get_db)):
                     FROM analysis_results
                     WHERE uid IS NOT NULL
                     ORDER BY uid, created_at DESC
-                    LIMIT 100
+                    LIMIT 1000
                 """)).fetchall()
                 logger.info(f"Found {len(results)} records from analysis_results")
             except Exception as e2:
@@ -606,7 +606,7 @@ async def get_employees_list(db: Session = Depends(get_db)):
                 FROM employee_results
                 WHERE uid IS NOT NULL
                 ORDER BY created_at DESC
-                LIMIT 100
+                LIMIT 1000
             """)).fetchall()
             
             employees = []
