@@ -3511,17 +3511,39 @@
                     const buttons = modalContent.querySelectorAll('button');
                     buttons.forEach(btn => btn.style.display = 'none');
                     
-                    // html2canvas를 사용하여 이미지로 캡처
+                    // 현재 스크롤 위치 저장
+                    const originalScrollTop = modalContent.scrollTop;
+                    
+                    // 스크롤을 맨 위로
+                    modalContent.scrollTop = 0;
+                    
+                    // 모달의 실제 전체 높이 계산
+                    const fullHeight = modalContent.scrollHeight;
+                    const fullWidth = modalContent.scrollWidth;
+                    
+                    // 모달의 원래 overflow 스타일 저장
+                    const originalOverflow = modalContent.style.overflow;
+                    modalContent.style.overflow = 'visible';
+                    modalContent.style.height = 'auto';
+                    
+                    // html2canvas를 사용하여 이미지로 캡처 (전체 높이)
                     const canvas = await html2canvas(modalContent, {
                         scale: 2, // 고화질을 위해 2배 스케일
                         useCORS: true,
                         backgroundColor: '#ffffff',
                         logging: false,
-                        windowWidth: modalContent.scrollWidth,
-                        windowHeight: modalContent.scrollHeight,
+                        width: fullWidth,
+                        height: fullHeight,
+                        windowWidth: fullWidth,
+                        windowHeight: fullHeight,
                         scrollX: 0,
-                        scrollY: -window.scrollY
+                        scrollY: 0
                     });
+                    
+                    // 원래 스타일로 복원
+                    modalContent.style.overflow = originalOverflow;
+                    modalContent.style.height = '';
+                    modalContent.scrollTop = originalScrollTop;
                     
                     // 버튼들 다시 표시
                     buttons.forEach(btn => btn.style.display = '');
