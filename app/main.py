@@ -13,7 +13,7 @@ import sys
 import subprocess
 from pathlib import Path
 import uvicorn
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -32,6 +32,224 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# 시간대 설정
+KST = timezone(timedelta(hours=9))
+
+# 개인별 맞춤 사유 생성 함수들
+def generate_risk_reason(score, dimension_scores, position, department):
+    """개별 직원의 위험 요인에 대한 구체적 사유 생성"""
+    import random
+    
+    # 역량별 한글 매핑
+    competency_mapping = {
+        "실행력": "실행력", "execution": "실행력",
+        "성장지향": "성장지향", "growth": "성장지향",
+        "협업": "협업", "collaboration": "협업", "teamwork": "협업",
+        "고객지향": "고객지향", "customer_focus": "고객지향",
+        "전문성": "전문성", "expertise": "전문성", "technical": "전문성",
+        "혁신성": "혁신성", "innovation": "혁신성",
+        "리더십": "리더십", "leadership": "리더십",
+        "커뮤니케이션": "커뮤니케이션", "communication": "커뮤니케이션"
+    }
+    
+    # 역량 데이터 정규화
+    normalized_scores = {}
+    for key, value in dimension_scores.items():
+        mapped_key = competency_mapping.get(key, key)
+        if mapped_key and isinstance(value, (int, float)):
+            normalized_scores[mapped_key] = value
+    
+    # 가장 낮은 역량 찾기
+    if normalized_scores:
+        lowest_competency = min(normalized_scores, key=normalized_scores.get)
+        lowest_score = normalized_scores[lowest_competency]
+    else:
+        lowest_competency = "기본 역량"
+        lowest_score = score
+    
+    # 점수 구간별 기본 사유
+    if score < 40:
+        base_reasons = [
+            f"{lowest_competency} 역량 심각한 저하 - 즉시 집중 관리 필요",
+            f"업무 성과 지속 부진 - {lowest_competency} 개선 시급",
+            f"조직 적응도 낮음 - {lowest_competency} 훈련 및 멘토링 필요"
+        ]
+    else:  # 40-60점
+        base_reasons = [
+            f"{lowest_competency} 역량 개발 필요 - 체계적 훈련 프로그램 참여",
+            f"업무 이해도 부족 - {lowest_competency} 중심 역량 강화 필요",
+            f"팀 내 기여도 개선 필요 - {lowest_competency} 스킬 향상 권장"
+        ]
+    
+    # 부서별 특화 사유 추가
+    department_specific = {
+        "영업": f"고객 응대 및 {lowest_competency} 역량 보완 필요",
+        "마케팅": f"창의적 사고와 {lowest_competency} 능력 향상 필요", 
+        "개발": f"기술 역량 및 {lowest_competency} 스킬 개발 필요",
+        "HR": f"소통 능력 및 {lowest_competency} 역량 강화 필요",
+        "재무": f"분석 역량 및 {lowest_competency} 능력 개선 필요"
+    }
+    
+    # 부서 매칭 시도
+    dept_reason = None
+    if department:
+        for dept_key in department_specific:
+            if dept_key in department:
+                dept_reason = department_specific[dept_key]
+                break
+    
+    # 최종 사유 선택
+    if dept_reason:
+        return dept_reason
+    else:
+        return random.choice(base_reasons)
+
+def generate_promotion_reason(score, dimension_scores, position, department, grade):
+    """개별 직원의 승진 사유 생성"""
+    import random
+    
+    # 역량별 한글 매핑
+    competency_mapping = {
+        "실행력": "실행력", "execution": "실행력",
+        "성장지향": "성장지향", "growth": "성장지향", 
+        "협업": "협업", "collaboration": "협업", "teamwork": "협업",
+        "고객지향": "고객지향", "customer_focus": "고객지향",
+        "전문성": "전문성", "expertise": "전문성", "technical": "전문성",
+        "혁신성": "혁신성", "innovation": "혁신성",
+        "리더십": "리더십", "leadership": "리더십",
+        "커뮤니케이션": "커뮤니케이션", "communication": "커뮤니케이션"
+    }
+    
+    # 역량 데이터 정규화 및 상위 역량 찾기
+    normalized_scores = {}
+    for key, value in dimension_scores.items():
+        mapped_key = competency_mapping.get(key, key)
+        if mapped_key and isinstance(value, (int, float)):
+            normalized_scores[mapped_key] = value
+    
+    if normalized_scores:
+        # 상위 2개 역량 선택
+        top_competencies = sorted(normalized_scores.items(), key=lambda x: x[1], reverse=True)[:2]
+        primary_strength = top_competencies[0][0] if top_competencies else "종합 역량"
+        secondary_strength = top_competencies[1][0] if len(top_competencies) > 1 else "업무 역량"
+    else:
+        primary_strength = "종합 역량"
+        secondary_strength = "업무 역량"
+    
+    # 등급별 승진 사유
+    grade_reasons = {
+        "S": [
+            f"탁월한 {primary_strength}와 {secondary_strength}으로 조직 견인",
+            f"지속적 최고 성과 달성 - {primary_strength} 분야 전문가",
+            f"조직 혁신 주도 - {primary_strength} 기반 탁월한 리더십"
+        ],
+        "A+": [
+            f"우수한 {primary_strength} 역량으로 팀 성과 향상 기여",
+            f"{primary_strength}와 {secondary_strength} 균형잡힌 고성과자",
+            f"지속적 성장세 - {primary_strength} 중심 핵심 역할 수행"
+        ],
+        "A": [
+            f"안정적 고성과 - {primary_strength} 역량 기반 신뢰성 확보",
+            f"{primary_strength} 분야 전문성으로 팀 내 핵심 역할",
+            f"꾸준한 성과 개선 - {primary_strength} 중심 발전 가능성"
+        ]
+    }
+    
+    # 부서별 특화 승진 사유
+    department_reasons = {
+        "영업": f"탁월한 {primary_strength}으로 매출 목표 초과 달성",
+        "마케팅": f"창의적 {primary_strength}과 전략적 사고로 브랜드 가치 향상",
+        "개발": f"뛰어난 {primary_strength}과 기술 혁신으로 프로젝트 성공 견인",
+        "HR": f"우수한 {primary_strength}과 소통 능력으로 조직 화합 증진",
+        "재무": f"정확한 {primary_strength}과 분석 능력으로 경영 의사결정 지원"
+    }
+    
+    # 부서별 사유 우선, 없으면 등급별 사유
+    if department:
+        for dept_key in department_reasons:
+            if dept_key in department:
+                return department_reasons[dept_key]
+    
+    # 등급별 기본 사유
+    grade_specific_reasons = grade_reasons.get(grade, grade_reasons.get("A", []))
+    return random.choice(grade_specific_reasons) if grade_specific_reasons else f"우수한 {primary_strength} 역량으로 승진 추천"
+
+def generate_talent_reason(score, dimension_scores, position, department, grade):
+    """개별 직원의 핵심인재 사유 생성"""
+    import random
+    
+    # 역량별 한글 매핑
+    competency_mapping = {
+        "실행력": "실행력", "execution": "실행력",
+        "성장지향": "성장지향", "growth": "성장지향",
+        "협업": "협업", "collaboration": "협업", "teamwork": "협업", 
+        "고객지향": "고객지향", "customer_focus": "고객지향",
+        "전문성": "전문성", "expertise": "전문성", "technical": "전문성",
+        "혁신성": "혁신성", "innovation": "혁신성",
+        "리더십": "리더십", "leadership": "리더십",
+        "커뮤니케이션": "커뮤니케이션", "communication": "커뮤니케이션"
+    }
+    
+    # 역량 데이터 정규화 및 최고 역량 찾기
+    normalized_scores = {}
+    for key, value in dimension_scores.items():
+        mapped_key = competency_mapping.get(key, key)
+        if mapped_key and isinstance(value, (int, float)):
+            normalized_scores[mapped_key] = value
+    
+    if normalized_scores:
+        # 상위 3개 역량 선택
+        top_competencies = sorted(normalized_scores.items(), key=lambda x: x[1], reverse=True)[:3]
+        primary_talent = top_competencies[0][0] if top_competencies else "종합 역량"
+        secondary_talent = top_competencies[1][0] if len(top_competencies) > 1 else "리더십"
+        tertiary_talent = top_competencies[2][0] if len(top_competencies) > 2 else "협업"
+        
+        # 평균 상위 역량 점수
+        avg_top_score = sum([comp[1] for comp in top_competencies[:2]]) / min(2, len(top_competencies))
+    else:
+        primary_talent = "종합 역량"
+        secondary_talent = "리더십"
+        tertiary_talent = "협업"
+        avg_top_score = score
+    
+    # 점수 구간별 핵심인재 사유 (85점 이상만 해당)
+    if score >= 95:
+        base_reasons = [
+            f"최고 수준의 {primary_talent}와 {secondary_talent}으로 조직 성장 견인",
+            f"탁월한 {primary_talent} 전문성과 혁신적 사고로 업계 리더",
+            f"완벽한 {primary_talent}-{secondary_talent}-{tertiary_talent} 균형으로 차세대 리더"
+        ]
+    elif score >= 90:
+        base_reasons = [
+            f"뛰어난 {primary_talent}과 {secondary_talent}으로 핵심 프로젝트 성공",
+            f"우수한 {primary_talent} 역량과 전략적 사고로 팀 성과 견인",
+            f"지속적 혁신과 {primary_talent} 전문성으로 조직 가치 창출"
+        ]
+    else:  # 85-90점
+        base_reasons = [
+            f"안정적인 {primary_talent}과 {secondary_talent}으로 중요 업무 담당",
+            f"우수한 {primary_talent} 기반 전문성과 성장 잠재력 보유",
+            f"균형잡힌 {primary_talent}-{secondary_talent} 역량으로 신뢰성 확보"
+        ]
+    
+    # 부서별 특화 핵심인재 사유
+    department_reasons = {
+        "영업": f"탁월한 {primary_talent}과 고객 관계 관리로 매출 성장 주도",
+        "마케팅": f"창의적 {primary_talent}과 데이터 분석 능력으로 마케팅 혁신",
+        "개발": f"뛰어난 {primary_talent}과 기술적 통찰력으로 프로덕트 품질 향상",
+        "HR": f"우수한 {primary_talent}과 조직 이해도로 인재 관리 전문가",
+        "재무": f"정밀한 {primary_talent}과 전략적 분석으로 재무 의사결정 지원"
+    }
+    
+    # 부서별 사유 우선 적용
+    if department:
+        for dept_key in department_reasons:
+            if dept_key in department:
+                return department_reasons[dept_key]
+    
+    # 기본 사유에서 랜덤 선택
+    return random.choice(base_reasons)
 
 # Log environment variables for debugging
 env_api_key = os.getenv('OPENAI_API_KEY')
@@ -182,7 +400,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
         high_performers = result.high_performers if result else 0
         risk_count = result.risk_employees if result else 0
         
-        # 위험 직원 목록 조회 (최신 데이터만)
+        # 위험 직원 목록 조회 (최신 데이터만, 역량 데이터 포함)
         risk_employees = []
         if risk_count > 0:
             risk_results = db.execute(text("""
@@ -195,13 +413,15 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 SELECT er.uid, 
                        er.employee_metadata->>'name' as name, 
                        er.employee_metadata->>'department' as department, 
+                       er.employee_metadata->>'position' as position,
                        er.overall_score,
+                       er.dimension_scores,
+                       er.grade,
                        CASE 
                            WHEN er.overall_score < 40 THEN 'high'
                            WHEN er.overall_score < 60 THEN 'medium'
                            ELSE 'low'
-                       END as risk_level,
-                       '성과 개선 필요' as reason
+                       END as risk_level
                 FROM employee_results er
                 INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
                 WHERE er.overall_score < 60
@@ -209,21 +429,33 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 LIMIT 10
             """)).fetchall()
             
-            risk_employees = [
-                {
+            # 개인별 맞춤 사유 생성
+            risk_employees = []
+            for r in risk_results:
+                # 역량 데이터 파싱
+                dimension_scores = r.dimension_scores or {}
+                if isinstance(dimension_scores, str):
+                    import json
+                    try:
+                        dimension_scores = json.loads(dimension_scores)
+                    except:
+                        dimension_scores = {}
+                
+                # 개인별 사유 생성
+                reason = generate_risk_reason(r.overall_score, dimension_scores, r.position, r.department)
+                
+                risk_employees.append({
                     "uid": r.uid,
                     "name": r.name or "익명",
                     "department": r.department or "-",
-                    "ai_score": r.overall_score,  # ai_score로 변경
-                    "risk_score": r.overall_score,  # risk_score도 추가
-                    "overall_score": r.overall_score,  # overall_score도 추가
+                    "ai_score": r.overall_score,
+                    "risk_score": r.overall_score,
+                    "overall_score": r.overall_score,
                     "risk_level": r.risk_level,
-                    "reason": r.reason
-                }
-                for r in risk_results
-            ]
+                    "reason": reason
+                })
         
-        # 승진 후보자 목록 조회 (최신 데이터만, 상위 성과자 중 일부)
+        # 승진 후보자 목록 조회 (최신 데이터만, 역량 데이터 포함)
         promotion_candidates = []
         if high_performers > 0:
             promotion_results = db.execute(text("""
@@ -238,6 +470,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                        er.employee_metadata->>'department' as department,
                        er.employee_metadata->>'position' as position,
                        er.overall_score,
+                       er.dimension_scores,
                        er.grade
                 FROM employee_results er
                 INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
@@ -246,20 +479,33 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 LIMIT 10
             """)).fetchall()
             
-            promotion_candidates = [
-                {
+            # 개인별 맞춤 사유 생성
+            promotion_candidates = []
+            for r in promotion_results:
+                # 역량 데이터 파싱
+                dimension_scores = r.dimension_scores or {}
+                if isinstance(dimension_scores, str):
+                    import json
+                    try:
+                        dimension_scores = json.loads(dimension_scores)
+                    except:
+                        dimension_scores = {}
+                
+                # 개인별 승진 사유 생성
+                reason = generate_promotion_reason(r.overall_score, dimension_scores, r.position, r.department, r.grade)
+                
+                promotion_candidates.append({
                     "uid": r.uid,
                     "name": r.name or "익명",
                     "department": r.department or "-",
                     "position": r.position or "-",
-                    "ai_score": r.overall_score,  # ai_score로 변경
-                    "overall_score": r.overall_score,  # overall_score도 추가
-                    "grade": r.grade
-                }
-                for r in promotion_results
-            ]
+                    "ai_score": r.overall_score,
+                    "overall_score": r.overall_score,
+                    "grade": r.grade,
+                    "reason": reason
+                })
         
-        # 핵심 인재 목록 조회 (최신 데이터만)
+        # 핵심 인재 목록 조회 (최신 데이터만, 역량 데이터 포함)
         top_talents = []
         if high_performers > 0:
             talent_results = db.execute(text("""
@@ -274,6 +520,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                        er.employee_metadata->>'department' as department,
                        er.employee_metadata->>'position' as position,
                        er.overall_score,
+                       er.dimension_scores,
                        er.grade
                 FROM employee_results er
                 INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
@@ -282,19 +529,32 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 LIMIT 10
             """)).fetchall()
             
-            top_talents = [
-                {
+            # 개인별 맞춤 사유 생성
+            top_talents = []
+            for r in talent_results:
+                # 역량 데이터 파싱
+                dimension_scores = r.dimension_scores or {}
+                if isinstance(dimension_scores, str):
+                    import json
+                    try:
+                        dimension_scores = json.loads(dimension_scores)
+                    except:
+                        dimension_scores = {}
+                
+                # 개인별 핵심인재 사유 생성
+                reason = generate_talent_reason(r.overall_score, dimension_scores, r.position, r.department, r.grade)
+                
+                top_talents.append({
                     "uid": r.uid,
                     "name": r.name or "익명",
                     "department": r.department or "-",
                     "position": r.position or "-",
-                    "ai_score": r.overall_score,  # ai_score로 변경
-                    "overall_score": r.overall_score,  # overall_score도 추가
+                    "ai_score": r.overall_score,
+                    "overall_score": r.overall_score,
                     "score": r.overall_score,  # 기존 score도 유지
-                    "grade": r.grade
-                }
-                for r in talent_results
-            ]
+                    "grade": r.grade,
+                    "reason": reason
+                })
         
         # 전체 직원 목록도 조회 (최신 데이터만)
         all_employees = []
