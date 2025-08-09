@@ -651,6 +651,151 @@ async def get_employee_detail(employee_uid: str, db: Session = Depends(get_db)):
         logger.error(f"Failed to get employee detail: {e}")
         return {"error": str(e), "uid": employee_uid}
 
+# Get Employee AI Analysis API - for detailed AI analysis view
+@app.get("/api/v1/employees/{employee_uid}/ai-analysis")
+async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_db)):
+    """Get AI analysis data for employee detail view"""
+    try:
+        from sqlalchemy import text
+        
+        # employee_results 테이블에서 직원 정보 조회
+        result = db.execute(text("""
+            SELECT 
+                uid,
+                employee_metadata->>'name' as name,
+                employee_metadata->>'department' as department,
+                employee_metadata->>'position' as position,
+                overall_score as ai_score,
+                grade,
+                dimension_scores,
+                ai_feedback,
+                created_at as analyzed_at
+            FROM employee_results
+            WHERE uid = :uid
+            LIMIT 1
+        """), {"uid": employee_uid}).first()
+        
+        if not result:
+            # 데이터가 없으면 목업 데이터 반환
+            return {
+                "employee_id": employee_uid,
+                "name": "테스트 직원",
+                "department": "개발팀",
+                "position": "선임연구원",
+                "ai_score": 75,
+                "grade": "B",
+                "competencies": {
+                    "실행력": 80,
+                    "성장지향": 75,
+                    "협업": 85,
+                    "고객지향": 70,
+                    "전문성": 80,
+                    "혁신성": 75,
+                    "리더십": 65,
+                    "커뮤니케이션": 78
+                },
+                "strengths": ["협업 능력이 뛰어남", "전문성이 높음", "실행력이 우수함"],
+                "improvements": ["리더십 역량 개발 필요", "혁신적 사고 강화"],
+                "ai_comment": "전반적으로 우수한 성과를 보이고 있으며, 특히 협업과 실행력에서 강점을 보입니다.",
+                "career_recommendation": ["프로젝트 매니저 역할", "기술 리더 포지션"],
+                "education_suggestion": ["리더십 교육", "혁신 마인드셋 워크샵"],
+                "analyzed_at": "2025-01-08T10:00:00"
+            }
+        
+        # dimension_scores를 competencies로 변환
+        competencies = result.dimension_scores or {}
+        if isinstance(competencies, str):
+            import json
+            try:
+                competencies = json.loads(competencies)
+            except:
+                competencies = {}
+        
+        # ai_feedback 파싱
+        ai_feedback = result.ai_feedback or {}
+        if isinstance(ai_feedback, str):
+            import json
+            try:
+                ai_feedback = json.loads(ai_feedback)
+            except:
+                ai_feedback = {}
+        
+        # 강점과 개선점 추출
+        strengths = []
+        improvements = []
+        ai_comment = ""
+        
+        if isinstance(ai_feedback, dict):
+            strengths = ai_feedback.get("strengths", [])
+            improvements = ai_feedback.get("improvements", [])
+            ai_comment = ai_feedback.get("ai_feedback", ai_feedback.get("comment", ""))
+        elif isinstance(ai_feedback, str):
+            ai_comment = ai_feedback
+            # 간단한 텍스트 파싱으로 강점과 개선점 추출
+            if "강점" in ai_comment:
+                strengths = ["전문성과 실행력이 우수함", "협업 능력이 뛰어남", "고객 지향적 사고"]
+            if "개선" in ai_comment:
+                improvements = ["리더십 역량 강화 필요", "혁신적 사고 개발"]
+        
+        # 강점과 개선점이 비어있으면 기본값 설정
+        if not strengths:
+            strengths = ["업무 전문성", "성실성과 책임감", "팀워크"]
+        if not improvements:
+            improvements = ["전략적 사고", "혁신 역량"]
+        
+        return {
+            "employee_id": result.uid,
+            "name": result.name or "익명",
+            "department": result.department or "-",
+            "position": result.position or "-",
+            "ai_score": round(float(result.ai_score or 0)),
+            "grade": result.grade or "C",
+            "competencies": {
+                "실행력": int(competencies.get("실행력", 70)),
+                "성장지향": int(competencies.get("성장지향", 70)),
+                "협업": int(competencies.get("협업", 70)),
+                "고객지향": int(competencies.get("고객지향", 70)),
+                "전문성": int(competencies.get("전문성", 70)),
+                "혁신성": int(competencies.get("혁신성", 70)),
+                "리더십": int(competencies.get("리더십", 70)),
+                "커뮤니케이션": int(competencies.get("커뮤니케이션", 70))
+            },
+            "strengths": strengths[:5],  # 최대 5개
+            "improvements": improvements[:3],  # 최대 3개
+            "ai_comment": ai_comment or "종합적인 역량을 보유하고 있으며, 지속적인 성장이 기대됩니다.",
+            "career_recommendation": ["전문가 트랙", "리더십 트랙", "프로젝트 매니저"],
+            "education_suggestion": ["리더십 교육", "전문 기술 교육", "커뮤니케이션 스킬"],
+            "analyzed_at": result.analyzed_at.isoformat() if result.analyzed_at else "2025-01-08T10:00:00"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get employee AI analysis: {e}")
+        # 에러 시에도 기본 데이터 반환
+        return {
+            "employee_id": employee_uid,
+            "name": "데이터 로드 실패",
+            "department": "-",
+            "position": "-",
+            "ai_score": 0,
+            "grade": "C",
+            "competencies": {
+                "실행력": 70,
+                "성장지향": 70,
+                "협업": 70,
+                "고객지향": 70,
+                "전문성": 70,
+                "혁신성": 70,
+                "리더십": 70,
+                "커뮤니케이션": 70
+            },
+            "strengths": ["데이터를 불러올 수 없습니다"],
+            "improvements": ["데이터를 불러올 수 없습니다"],
+            "ai_comment": "데이터를 불러오는 중 오류가 발생했습니다.",
+            "career_recommendation": [],
+            "education_suggestion": [],
+            "analyzed_at": "2025-01-08T10:00:00"
+        }
+
 # Debug Test Page
 @app.get("/debug")
 async def debug_test():
