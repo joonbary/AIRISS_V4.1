@@ -336,9 +336,9 @@ async def get_employees_list(db: Session = Depends(get_db)):
         # 먼저 employee_results 테이블 시도
         results = []
         try:
-            # employee_results 테이블 조회 (실제 컬럼 구조 사용)
+            # employee_results 테이블 조회 (중복 제거 및 최신 데이터만)
             results = db.execute(text("""
-                SELECT 
+                SELECT DISTINCT ON (uid)
                     uid,
                     employee_metadata->>'name' as employee_name,
                     employee_metadata->>'department' as department,
@@ -349,10 +349,13 @@ async def get_employees_list(db: Session = Depends(get_db)):
                     quantitative_score,
                     confidence,
                     dimension_scores,
-                    ai_feedback
+                    ai_feedback,
+                    id,
+                    job_id
                 FROM employee_results
-                WHERE uid IS NOT NULL
-                ORDER BY uid DESC
+                WHERE uid IS NOT NULL 
+                  AND employee_metadata->>'name' IS NOT NULL
+                ORDER BY uid, id DESC
                 LIMIT 100
             """)).fetchall()
             logger.info(f"Found {len(results)} records from employee_results")
@@ -362,7 +365,7 @@ async def get_employees_list(db: Session = Depends(get_db)):
             # analysis_results 테이블 시도 (구조가 다름)
             try:
                 results = db.execute(text("""
-                    SELECT 
+                    SELECT DISTINCT ON (uid)
                         uid,
                         filename,
                         hybrid_score,
@@ -372,10 +375,11 @@ async def get_employees_list(db: Session = Depends(get_db)):
                         confidence,
                         dimension_scores,
                         ai_feedback,
-                        created_at
+                        created_at,
+                        id
                     FROM analysis_results
                     WHERE uid IS NOT NULL
-                    ORDER BY created_at DESC
+                    ORDER BY uid, created_at DESC
                     LIMIT 100
                 """)).fetchall()
                 logger.info(f"Found {len(results)} records from analysis_results")
@@ -431,6 +435,12 @@ async def get_employees_list(db: Session = Depends(get_db)):
                 elif "C" in grade: grade = "C"
                 else: grade = "D"
             
+            # 날짜 처리
+            created_at = row_dict.get('created_at')
+            if not created_at:
+                # ID가 UUID 형태면 그걸 기준으로 날짜 추정
+                created_at = None
+            
             employees.append({
                 "uid": uid,
                 "employee_name": name,
@@ -438,7 +448,7 @@ async def get_employees_list(db: Session = Depends(get_db)):
                 "position": position,
                 "ai_score": round(score, 1) if score else 0,
                 "ai_grade": grade,
-                "analysis_date": row_dict.get('created_at').isoformat() if row_dict.get('created_at') else None,
+                "analysis_date": created_at.isoformat() if created_at and hasattr(created_at, 'isoformat') else None,
                 "source": row_dict.get('source', 'employee_results')
             })
         
