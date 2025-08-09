@@ -688,7 +688,7 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
                 grade,
                 dimension_scores,
                 ai_feedback,
-                created_at as analyzed_at
+                CURRENT_TIMESTAMP as analyzed_at
             FROM employee_results
             WHERE uid = :uid
             LIMIT 1
