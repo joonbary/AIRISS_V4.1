@@ -247,16 +247,41 @@ async def test_db_connection(db: Session = Depends(get_db)):
         
         # 각 테이블의 레코드 수 확인
         counts = {}
+        sample_data = {}
         for table in ['employee_results', 'employee_scores', 'analysis_results']:
             if table in table_names:
                 count_query = text(f"SELECT COUNT(*) FROM {table}")
                 count = db.execute(count_query).scalar()
                 counts[table] = count
+                
+                # 샘플 데이터 가져오기
+                if count > 0:
+                    if table == 'employee_results':
+                        sample_query = text(f"""
+                            SELECT uid, employee_name, department, position, ai_score, ai_grade 
+                            FROM {table} 
+                            WHERE uid IS NOT NULL 
+                            LIMIT 2
+                        """)
+                    else:
+                        sample_query = text(f"""
+                            SELECT uid, metadata, hybrid_score, grade 
+                            FROM {table} 
+                            WHERE uid IS NOT NULL 
+                            LIMIT 2
+                        """)
+                    
+                    try:
+                        samples = db.execute(sample_query).fetchall()
+                        sample_data[table] = [dict(row) for row in samples] if samples else []
+                    except Exception as e:
+                        sample_data[table] = f"Error: {str(e)}"
         
         return {
             "status": "connected",
             "tables": table_names,
             "record_counts": counts,
+            "sample_data": sample_data,
             "database_url": "Connected to Neon DB"
         }
     except Exception as e:
@@ -282,7 +307,7 @@ async def get_employees_list(db: Session = Depends(get_db)):
                     ai_grade,
                     created_at
                 FROM employee_results
-                WHERE uid IS NOT NULL
+                WHERE uid IS NOT NULL AND employee_name IS NOT NULL
                 ORDER BY created_at DESC
                 LIMIT 100
             """)).fetchall()
@@ -330,6 +355,21 @@ async def get_employees_list(db: Session = Depends(get_db)):
                 except Exception as e3:
                     logger.error(f"All table queries failed: {e3}")
                     results = []
+        
+        # 결과가 없으면 샘플 데이터 조회 시도
+        if not results:
+            logger.info("No data found, trying to fetch sample data")
+            try:
+                sample_query = text("""
+                    SELECT * FROM employee_results 
+                    LIMIT 5
+                """)
+                sample_results = db.execute(sample_query).fetchall()
+                logger.info(f"Sample query returned {len(sample_results)} rows")
+                if sample_results:
+                    logger.info(f"Sample columns: {sample_results[0].keys() if hasattr(sample_results[0], 'keys') else 'N/A'}")
+            except Exception as e:
+                logger.error(f"Sample query failed: {e}")
         
         employees = []
         for r in results:

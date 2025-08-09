@@ -373,21 +373,23 @@
         }
         
         .tab-button.active {
-            color: #FFFFFF !important;  /* 흰색으로 강제 적용 */
+            background: linear-gradient(135deg, #FF6200 0%, #FF8A00 100%) !important;
+            color: #FFFFFF !important;
             font-weight: 600;
             position: relative;
-            background-color: var(--primary-color);  /* 배경색 추가 */
             border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(255, 98, 0, 0.3);
         }
         
         .tab-button.active::before {
-            opacity: 1;
+            display: none;  /* 그라디언트 오버레이 제거 */
         }
         
+        .tab-button.active span,
+        .tab-button.active i,
         .tab-button.active * {
-            position: relative;
-            z-index: 1;
-            color: #FFFFFF !important;  /* 모든 자식 요소도 흰색 강제 */
+            color: #FFFFFF !important;
+            opacity: 1 !important;
         }
         
         .tab-button .badge {
