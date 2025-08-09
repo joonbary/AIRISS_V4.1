@@ -1317,6 +1317,7 @@ async def serve_executive_dashboard():
 async def serve_root():
     """Serve AIRISS v5.0 Dashboard for root path - MSA integrated version"""
     from fastapi.responses import Response
+    import time
     
     # AIRISS v5.0 대시보드를 메인으로 서빙
     filepath = os.path.join(os.path.dirname(__file__), "templates", "airiss_v5.html")
@@ -1324,7 +1325,24 @@ async def serve_root():
     if os.path.exists(filepath):
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
-        return Response(content=content, media_type="text/html; charset=utf-8")
+        
+        # 버전 태그를 동적으로 추가하여 캐시 무효화
+        timestamp = int(time.time())
+        content = content.replace('</title>', f' - v{timestamp}</title>')
+        
+        # 캐싱 완전 방지를 위한 헤더 설정
+        return Response(
+            content=content,
+            media_type="text/html; charset=utf-8",
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0, private",
+                "Pragma": "no-cache",
+                "Expires": "0",
+                "X-Content-Type-Options": "nosniff",
+                "X-Version": f"5.0.3-{timestamp}",
+                "Clear-Site-Data": '"cache"'
+            }
+        )
     
     # Fallback: React 앱이 있으면 서빙 (하위 호환성)
     if os.path.exists(static_path):
