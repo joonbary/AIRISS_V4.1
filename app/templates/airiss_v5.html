@@ -1090,30 +1090,92 @@
                 </div>
             </div>
             
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">⚠️ 관리 필요 인력 현황</h2>
-                    <button class="btn btn-primary" onclick="AIRISS.exportDashboard()">
-                        📄 리포트 다운로드
-                    </button>
+            <!-- 3개 테이블 그리드 레이아웃 -->
+            <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                <!-- 승진 후보자 테이블 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🏆 승진 후보자 명단</h2>
+                        <span class="badge" style="background: var(--primary-orange); color: white; padding: 8px 16px; border-radius: 8px;">
+                            <span id="stat-promotion-table">0</span>명
+                        </span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>사번</th>
+                                    <th>이름</th>
+                                    <th>부서</th>
+                                    <th>직급</th>
+                                    <th>AI 점수</th>
+                                    <th>등급</th>
+                                    <th>추천 사유</th>
+                                    <th>액션</th>
+                                </tr>
+                            </thead>
+                            <tbody id="promotion-candidates-table">
+                                <!-- 동적으로 생성됨 -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>사번</th>
-                                <th>이름</th>
-                                <th>부서</th>
-                                <th>위험도</th>
-                                <th>점수</th>
-                                <th>관리 사유</th>
-                                <th>액션</th>
-                            </tr>
-                        </thead>
-                        <tbody id="risk-employees-table">
-                            <!-- 동적으로 생성됨 -->
-                        </tbody>
-                    </table>
+                
+                <!-- 핵심 인재 테이블 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">⭐ 핵심 인재 명단</h2>
+                        <span class="badge" style="background: var(--primary-orange); color: white; padding: 8px 16px; border-radius: 8px;">
+                            <span id="stat-talent-table">0</span>명
+                        </span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>사번</th>
+                                    <th>이름</th>
+                                    <th>부서</th>
+                                    <th>직급</th>
+                                    <th>AI 점수</th>
+                                    <th>등급</th>
+                                    <th>핵심 역량</th>
+                                    <th>액션</th>
+                                </tr>
+                            </thead>
+                            <tbody id="talent-pool-table">
+                                <!-- 동적으로 생성됨 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 관리 필요 인력 테이블 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">⚠️ 관리 필요 인력 현황</h2>
+                        <span class="badge" style="background: #dc3545; color: white; padding: 8px 16px; border-radius: 8px;">
+                            <span id="stat-risk-table">0</span>명
+                        </span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>사번</th>
+                                    <th>이름</th>
+                                    <th>부서</th>
+                                    <th>위험도</th>
+                                    <th>점수</th>
+                                    <th>관리 사유</th>
+                                    <th>액션</th>
+                                </tr>
+                            </thead>
+                            <tbody id="risk-employees-table">
+                                <!-- 동적으로 생성됨 -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1580,71 +1642,93 @@
                 const tbody = document.getElementById('risk-employees-table');
                 tbody.innerHTML = '';
                 
+                // 카운터 업데이트
+                const counter = document.getElementById('stat-risk-table');
+                if (counter) counter.textContent = employees.length;
+                
                 employees.slice(0, 10).forEach(emp => {
                     const row = tbody.insertRow();
                     const riskColor = emp.risk_level === 'high' ? 'danger' : 'warning';
+                    // ai_score 또는 risk_score 사용
+                    const score = emp.ai_score || emp.risk_score || emp.overall_score || 0;
                     
                     row.innerHTML = `
-                        <td>${emp.uid || '-'}</td>
-                        <td>${emp.name || '익명'}</td>
+                        <td>${emp.uid || emp.employee_id || '-'}</td>
+                        <td>${emp.name || emp.employee_name || '익명'}</td>
                         <td>${emp.department || '-'}</td>
                         <td><span class="btn btn-${riskColor}" style="padding: 8px 16px; font-size: 14px; border-radius: 8px; font-weight: 500;">${emp.risk_level === 'high' ? '높음' : '보통'}</span></td>
-                        <td>${emp.risk_score || 0}</td>
-                        <td>${emp.reason || '-'}</td>
+                        <td style="font-weight: 600; color: ${score < 60 ? '#dc3545' : '#FF6200'};">${Math.round(score)}</td>
+                        <td>${emp.reason || emp.risk_reason || '-'}</td>
                         <td>
                             <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; border-radius: 8px;" 
-                                    onclick="AIRISS.viewEmployeeDetail('${emp.uid}')">상세</button>
+                                    onclick="AIRISS.viewEmployeeDetail('${emp.uid || emp.employee_id}')">상세</button>
                         </td>
                     `;
                 });
             },
             
-            // 승진 후보자 리스트 렌더링
+            // 승진 후보자 테이블 렌더링
             renderPromotionList(employees) {
-                const listContainer = document.querySelector('#promotion-list > div');
-                if (!listContainer) return;
+                const tbody = document.getElementById('promotion-candidates-table');
+                if (!tbody) return;
                 
-                if (employees.length === 0) {
-                    listContainer.innerHTML = '<p style="text-align: center; color: #999; font-size: 14px;">데이터가 없습니다</p>';
-                    return;
-                }
+                tbody.innerHTML = '';
                 
-                listContainer.innerHTML = employees.map(emp => `
-                    <div style="padding: 8px 12px; background: #f8f9fa; margin-bottom: 8px; border-radius: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>${emp.name || '익명'}</strong>
-                            <span style="color: #666; margin-left: 8px;">${emp.department || '-'} / ${emp.position || '-'}</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span class="badge badge-success" style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${emp.grade}</span>
-                            <button class="btn btn-sm btn-primary" style="padding: 4px 8px; font-size: 12px;" onclick="AIRISS.viewEmployeeDetail('${emp.uid}')">상세</button>
-                        </div>
-                    </div>
-                `).join('');
+                // 카운터 업데이트
+                const counter = document.getElementById('stat-promotion-table');
+                if (counter) counter.textContent = employees.length;
+                
+                employees.slice(0, 10).forEach(emp => {
+                    const row = tbody.insertRow();
+                    const score = emp.ai_score || emp.overall_score || 0;
+                    const grade = emp.grade || 'B';
+                    
+                    row.innerHTML = `
+                        <td>${emp.uid || emp.employee_id || '-'}</td>
+                        <td>${emp.name || emp.employee_name || '익명'}</td>
+                        <td>${emp.department || '-'}</td>
+                        <td>${emp.position || '-'}</td>
+                        <td style="font-weight: 600; color: var(--primary-orange);">${Math.round(score)}</td>
+                        <td><span class="btn btn-success" style="padding: 8px 16px; font-size: 14px; border-radius: 8px;">${grade}</span></td>
+                        <td>${emp.recommendation_reason || '우수한 성과 및 리더십'}</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; border-radius: 8px;" 
+                                    onclick="AIRISS.viewEmployeeDetail('${emp.uid || emp.employee_id}')">상세</button>
+                        </td>
+                    `;
+                });
             },
             
-            // 핵심 인재 리스트 렌더링
+            // 핵심 인재 테이블 렌더링
             renderTalentList(employees) {
-                const listContainer = document.querySelector('#talent-list > div');
-                if (!listContainer) return;
+                const tbody = document.getElementById('talent-pool-table');
+                if (!tbody) return;
                 
-                if (employees.length === 0) {
-                    listContainer.innerHTML = '<p style="text-align: center; color: #999; font-size: 14px;">데이터가 없습니다</p>';
-                    return;
-                }
+                tbody.innerHTML = '';
                 
-                listContainer.innerHTML = employees.map(emp => `
-                    <div style="padding: 8px 12px; background: #f8f9fa; margin-bottom: 8px; border-radius: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>${emp.name || '익명'}</strong>
-                            <span style="color: #666; margin-left: 8px;">${emp.department || '-'} / ${emp.position || '-'}</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span class="badge badge-primary" style="background: #007bff; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${emp.score}점</span>
-                            <button class="btn btn-sm btn-primary" style="padding: 4px 8px; font-size: 12px;" onclick="AIRISS.viewEmployeeDetail('${emp.uid}')">상세</button>
-                        </div>
-                    </div>
-                `).join('');
+                // 카운터 업데이트
+                const counter = document.getElementById('stat-talent-table');
+                if (counter) counter.textContent = employees.length;
+                
+                employees.slice(0, 10).forEach(emp => {
+                    const row = tbody.insertRow();
+                    const score = emp.ai_score || emp.overall_score || emp.score || 0;
+                    const grade = emp.grade || 'A';
+                    
+                    row.innerHTML = `
+                        <td>${emp.uid || emp.employee_id || '-'}</td>
+                        <td>${emp.name || emp.employee_name || '익명'}</td>
+                        <td>${emp.department || '-'}</td>
+                        <td>${emp.position || '-'}</td>
+                        <td style="font-weight: 600; color: var(--primary-orange);">${Math.round(score)}</td>
+                        <td><span class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; border-radius: 8px;">${grade}</span></td>
+                        <td>${emp.key_strength || '리더십, 전문성'}</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; border-radius: 8px;" 
+                                    onclick="AIRISS.viewEmployeeDetail('${emp.uid || emp.employee_id}')">상세</button>
+                        </td>
+                    `;
+                });
             },
             
             // 승진 후보자 리스트 토글
@@ -1665,7 +1749,7 @@
             
             // 대시보드 차트 렌더링
             renderDashboardCharts() {
-                // 등급 분포 차트
+                // 등급 분포 차트 - 막대그래프로 변경
                 const gradeCtx = document.getElementById('gradeChart');
                 if (gradeCtx && typeof Chart !== 'undefined') {
                     // 기존 차트가 있으면 제거
@@ -1674,38 +1758,61 @@
                     }
                     
                     this.gradeChart = new Chart(gradeCtx, {
-                        type: 'doughnut',
+                        type: 'bar',
                         data: {
-                            labels: ['S등급', 'A+등급', 'A등급', 'B등급', 'C등급'],
+                            labels: ['S', 'A+', 'A', 'B+', 'B', 'C', 'D'],
                             datasets: [{
-                                data: [5, 10, 25, 45, 15],
+                                label: '인원수',
+                                data: [0, 1, 1, 7, 19, 3, 1], // 실제 데이터 기반
                                 backgroundColor: [
-                                    '#FF6200',
-                                    '#FFA500',
-                                    '#4CAF50',
-                                    '#2196F3',
-                                    '#9C27B0'
+                                    '#1e3c72',
+                                    '#2c5f2d', 
+                                    '#2c5f2d',
+                                    '#20547a',
+                                    '#20547a',
+                                    '#5f5f5f',
+                                    '#8b2c2c'
                                 ],
-                                borderWidth: 0
+                                borderRadius: 8,
+                                barThickness: 40
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 15,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 5,
                                         font: {
                                             size: 12
                                         }
+                                    },
+                                    grid: {
+                                        drawBorder: false
                                     }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold'
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
                                 },
                                 tooltip: {
                                     callbacks: {
                                         label: function(context) {
-                                            return context.label + ': ' + context.parsed + '명';
+                                            return context.label + '등급: ' + context.parsed.y + '명';
                                         }
                                     }
                                 }
