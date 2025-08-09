@@ -677,7 +677,7 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
         
         logger.info(f"Using uid parameter: {uid_param} (type: {type(uid_param).__name__})")
         
-        # employee_results 테이블에서 직원 정보 조회 - uid를 문자열과 정수 모두 시도
+        # employee_results 테이블에서 직원 정보 조회
         result = db.execute(text("""
             SELECT 
                 uid,
@@ -690,9 +690,9 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
                 ai_feedback,
                 created_at as analyzed_at
             FROM employee_results
-            WHERE uid = :uid_str OR uid = :uid_int::text
+            WHERE uid = :uid
             LIMIT 1
-        """), {"uid_str": str(employee_uid), "uid_int": uid_param if isinstance(uid_param, int) else 0}).first()
+        """), {"uid": str(employee_uid)}).first()
         
         logger.info(f"Query result for {employee_uid}: {result is not None}")
         
