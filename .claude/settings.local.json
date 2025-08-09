@@ -19,7 +19,8 @@
       "Bash(git merge:*)",
       "Bash(curl:*)",
       "Bash(rm:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

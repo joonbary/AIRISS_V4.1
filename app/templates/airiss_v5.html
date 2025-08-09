@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIRISS v5.0 - AI HR Intelligence System</title>
     
-    <!-- 캐싱 방지 메타 태그 -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <!-- 강력한 캐싱 방지 메타 태그 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <meta http-equiv="Clear-Site-Data" content="cache">
+    <meta name="refresh-version" content="v5.0.2-20250808">
     
     <!-- OK금융그룹 디자인 시스템 버전 정보 -->
     <meta name="version" content="5.0.0">
@@ -1353,22 +1355,29 @@
         console.log('🚀 AIRISS v5.0 초기화 시작...');
         
         window.AIRISS = {
-            // 버전 정보
-            version: '5.0.1-debug',
+            // 버전 정보 - 캐시 방지용 타임스탬프 추가
+            version: '5.0.2-' + Date.now(),
             buildDate: '2025-08-08',
             buildTime: new Date().toISOString(),
+            cacheBreaker: Math.random().toString(36).substring(7),
             
             // API 설정
             api: {
                 baseURL: '/api/v1',
                 
                 async request(method, endpoint, data = null) {
+                    // 캐시 방지를 위한 타임스탬프 추가
+                    const url = `${this.baseURL}${endpoint}${endpoint.includes('?') ? '&' : '?'}_t=${Date.now()}&_v=${AIRISS.cacheBreaker}`;
+                    
                     const options = {
                         method,
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-Version': AIRISS.version
-                        }
+                            'X-Version': AIRISS.version,
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        },
+                        cache: 'no-store'
                     };
                     
                     if (data) {
@@ -1376,11 +1385,14 @@
                     }
                     
                     try {
-                        const response = await fetch(this.baseURL + endpoint, options);
+                        console.log(`📡 API 호출: ${method} ${url}`);
+                        const response = await fetch(url, options);
                         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                        return await response.json();
+                        const result = await response.json();
+                        console.log(`✅ API 응답:`, result);
+                        return result;
                     } catch (error) {
-                        console.error('API Error:', error);
+                        console.error('❌ API Error:', error);
                         AIRISS.showNotification('API 호출 실패', 'error');
                         throw error;
                     }

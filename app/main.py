@@ -471,6 +471,21 @@ async def get_employee_detail(employee_uid: str, db: Session = Depends(get_db)):
         logger.error(f"Failed to get employee detail: {e}")
         return {"error": str(e), "uid": employee_uid}
 
+# Debug Test Page
+@app.get("/debug")
+async def debug_test():
+    """Debug test page for API testing"""
+    from fastapi.responses import Response
+    
+    filepath = os.path.join(os.path.dirname(__file__), "templates", "debug_test.html")
+    
+    if os.path.exists(filepath):
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(content=content, media_type="text/html; charset=utf-8")
+    
+    return {"error": "Debug test page not found"}
+
 # AIRISS v5.0 Test Dashboard - Debug version
 @app.get("/test")
 async def airiss_v5_test():
