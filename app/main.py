@@ -163,35 +163,49 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
     try:
         from sqlalchemy import text
         
-        # employee_results 테이블에서 데이터 조회 (overall_score 사용)
+        # employee_results 테이블에서 최신 데이터만 조회 (중복 제거)
         result = db.execute(text("""
-            SELECT COUNT(DISTINCT uid) as total_employees,
-                   COUNT(CASE WHEN overall_score >= 80 THEN 1 END) as high_performers,
-                   COUNT(CASE WHEN overall_score < 60 THEN 1 END) as risk_employees
-            FROM employee_results
+            WITH latest_records AS (
+                SELECT uid, MAX(id::text) as max_id
+                FROM employee_results
+                WHERE uid IS NOT NULL
+                GROUP BY uid
+            )
+            SELECT COUNT(DISTINCT er.uid) as total_employees,
+                   COUNT(CASE WHEN er.overall_score >= 80 THEN 1 END) as high_performers,
+                   COUNT(CASE WHEN er.overall_score < 60 THEN 1 END) as risk_employees
+            FROM employee_results er
+            INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
         """)).first()
         
         total = result.total_employees if result else 0
         high_performers = result.high_performers if result else 0
         risk_count = result.risk_employees if result else 0
         
-        # 위험 직원 목록 조회
+        # 위험 직원 목록 조회 (최신 데이터만)
         risk_employees = []
         if risk_count > 0:
             risk_results = db.execute(text("""
-                SELECT uid, 
-                       employee_metadata->>'name' as name, 
-                       employee_metadata->>'department' as department, 
-                       overall_score,
+                WITH latest_records AS (
+                    SELECT uid, MAX(id::text) as max_id
+                    FROM employee_results
+                    WHERE uid IS NOT NULL
+                    GROUP BY uid
+                )
+                SELECT er.uid, 
+                       er.employee_metadata->>'name' as name, 
+                       er.employee_metadata->>'department' as department, 
+                       er.overall_score,
                        CASE 
-                           WHEN overall_score < 40 THEN 'high'
-                           WHEN overall_score < 60 THEN 'medium'
+                           WHEN er.overall_score < 40 THEN 'high'
+                           WHEN er.overall_score < 60 THEN 'medium'
                            ELSE 'low'
                        END as risk_level,
                        '성과 개선 필요' as reason
-                FROM employee_results
-                WHERE overall_score < 60
-                ORDER BY overall_score ASC
+                FROM employee_results er
+                INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
+                WHERE er.overall_score < 60
+                ORDER BY er.overall_score ASC
                 LIMIT 10
             """)).fetchall()
             
@@ -209,20 +223,27 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 for r in risk_results
             ]
         
-        # 승진 후보자 목록 조회 (상위 성과자 중 일부)
+        # 승진 후보자 목록 조회 (최신 데이터만, 상위 성과자 중 일부)
         promotion_candidates = []
         if high_performers > 0:
             promotion_results = db.execute(text("""
-                SELECT uid, 
-                       employee_metadata->>'name' as name, 
-                       employee_metadata->>'department' as department,
-                       employee_metadata->>'position' as position,
-                       overall_score,
-                       grade
-                FROM employee_results
-                WHERE overall_score >= 80 AND grade IN ('S', 'A+', 'A')
-                ORDER BY overall_score DESC
-                LIMIT 5
+                WITH latest_records AS (
+                    SELECT uid, MAX(id::text) as max_id
+                    FROM employee_results
+                    WHERE uid IS NOT NULL
+                    GROUP BY uid
+                )
+                SELECT er.uid, 
+                       er.employee_metadata->>'name' as name, 
+                       er.employee_metadata->>'department' as department,
+                       er.employee_metadata->>'position' as position,
+                       er.overall_score,
+                       er.grade
+                FROM employee_results er
+                INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
+                WHERE er.overall_score >= 80 AND er.grade IN ('S', 'A+', 'A', 'B+')
+                ORDER BY er.overall_score DESC
+                LIMIT 10
             """)).fetchall()
             
             promotion_candidates = [
@@ -238,20 +259,27 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 for r in promotion_results
             ]
         
-        # 핵심 인재 목록 조회
+        # 핵심 인재 목록 조회 (최신 데이터만)
         top_talents = []
         if high_performers > 0:
             talent_results = db.execute(text("""
-                SELECT uid, 
-                       employee_metadata->>'name' as name, 
-                       employee_metadata->>'department' as department,
-                       employee_metadata->>'position' as position,
-                       overall_score,
-                       grade
-                FROM employee_results
-                WHERE overall_score >= 85
-                ORDER BY overall_score DESC
-                LIMIT 5
+                WITH latest_records AS (
+                    SELECT uid, MAX(id::text) as max_id
+                    FROM employee_results
+                    WHERE uid IS NOT NULL
+                    GROUP BY uid
+                )
+                SELECT er.uid, 
+                       er.employee_metadata->>'name' as name, 
+                       er.employee_metadata->>'department' as department,
+                       er.employee_metadata->>'position' as position,
+                       er.overall_score,
+                       er.grade
+                FROM employee_results er
+                INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
+                WHERE er.overall_score >= 85
+                ORDER BY er.overall_score DESC
+                LIMIT 10
             """)).fetchall()
             
             top_talents = [
