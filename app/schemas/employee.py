@@ -94,8 +94,8 @@ class EmployeeAIAnalysis(BaseModel):
     competencies: CompetencyScores = Field(..., description="8대 역량 점수")
     
     # 강점과 개선점
-    strengths: List[str] = Field(..., max_items=3, description="강점 TOP 3")
-    improvements: List[str] = Field(..., max_items=2, description="개발 필요 역량 TOP 2")
+    strengths: List[str] = Field(..., max_items=5, description="강점 TOP 3-5")
+    improvements: List[str] = Field(..., max_items=3, description="개발 필요 역량 TOP 2-3")
     
     # AI 분석 텍스트
     ai_comment: str = Field(..., description="AI 자연어 코멘트")

@@ -192,8 +192,8 @@ class EmployeeService:
                     ai_score=int(analysis_result.hybrid_score) if analysis_result.hybrid_score else 0,
                     grade=self._map_grade(analysis_result.ok_grade),
                     competencies=competencies,
-                    strengths=strengths[:5],  # 상위 5개 강점
-                    improvements=improvements[:3],  # 상위 3개 개선점
+                    strengths=strengths[:5],  # 상위 5개 강점 (스키마 제한)
+                    improvements=improvements[:3],  # 상위 3개 개선점 (스키마 제한)
                     ai_comment=ai_comment,
                     career_recommendation=career_recommendations,
                     education_suggestion=education_suggestions,
