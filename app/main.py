@@ -236,6 +236,12 @@ async def test_db_connection(db: Session = Depends(get_db)):
     try:
         from sqlalchemy import text
         
+        # 트랜잭션 롤백 (이전 오류가 있을 경우)
+        try:
+            db.rollback()
+        except:
+            pass
+        
         # 테이블 존재 확인
         tables_query = text("""
             SELECT table_name 
@@ -248,34 +254,54 @@ async def test_db_connection(db: Session = Depends(get_db)):
         # 각 테이블의 레코드 수 확인
         counts = {}
         sample_data = {}
-        for table in ['employee_results', 'employee_scores', 'analysis_results']:
+        
+        for table in ['employee_results', 'analysis_results']:
             if table in table_names:
-                count_query = text(f"SELECT COUNT(*) FROM {table}")
-                count = db.execute(count_query).scalar()
-                counts[table] = count
-                
-                # 샘플 데이터 가져오기
-                if count > 0:
-                    if table == 'employee_results':
-                        sample_query = text(f"""
-                            SELECT uid, employee_name, department, position, ai_score, ai_grade 
-                            FROM {table} 
-                            WHERE uid IS NOT NULL 
-                            LIMIT 2
-                        """)
-                    else:
-                        sample_query = text(f"""
-                            SELECT uid, metadata, hybrid_score, grade 
-                            FROM {table} 
-                            WHERE uid IS NOT NULL 
-                            LIMIT 2
-                        """)
+                try:
+                    # 각 테이블마다 새로운 트랜잭션 시작
+                    db.commit()
+                    count_query = text(f"SELECT COUNT(*) FROM {table}")
+                    count = db.execute(count_query).scalar()
+                    counts[table] = count
                     
-                    try:
+                    # 샘플 데이터 가져오기
+                    if count > 0:
+                        if table == 'employee_results':
+                            # 컬럼 확인 쿼리
+                            columns_query = text(f"""
+                                SELECT column_name 
+                                FROM information_schema.columns 
+                                WHERE table_name = '{table}'
+                            """)
+                            columns = db.execute(columns_query).fetchall()
+                            column_names = [c[0] for c in columns]
+                            
+                            sample_query = text(f"""
+                                SELECT * FROM {table} 
+                                LIMIT 2
+                            """)
+                        else:
+                            sample_query = text(f"""
+                                SELECT * FROM {table} 
+                                LIMIT 2
+                            """)
+                        
                         samples = db.execute(sample_query).fetchall()
-                        sample_data[table] = [dict(row) for row in samples] if samples else []
-                    except Exception as e:
-                        sample_data[table] = f"Error: {str(e)}"
+                        if samples:
+                            # 컬럼 이름과 함께 샘플 데이터 저장
+                            sample_data[table] = {
+                                "columns": column_names if table == 'employee_results' else [],
+                                "data": [dict(row._mapping) for row in samples]
+                            }
+                        else:
+                            sample_data[table] = {"columns": [], "data": []}
+                    
+                    db.commit()
+                    
+                except Exception as e:
+                    db.rollback()
+                    sample_data[table] = f"Error: {str(e)}"
+                    counts[table] = f"Error: {str(e)}"
         
         return {
             "status": "connected",
@@ -286,6 +312,10 @@ async def test_db_connection(db: Session = Depends(get_db)):
         }
     except Exception as e:
         logger.error(f"Database test failed: {e}")
+        try:
+            db.rollback()
+        except:
+            pass
         return {"status": "error", "message": str(e)}
 
 @app.get("/api/v1/employees/list")
@@ -294,20 +324,30 @@ async def get_employees_list(db: Session = Depends(get_db)):
     try:
         from sqlalchemy import text
         
+        # 트랜잭션 롤백 (이전 오류가 있을 경우)
+        try:
+            db.rollback()
+        except:
+            pass
+        
         # 먼저 employee_results 테이블 시도
         results = []
         try:
+            # 먼저 컬럼 확인
+            check_columns = db.execute(text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'employee_results'
+                AND column_name IN ('uid', 'employee_name', 'department', 'position', 'ai_score', 'ai_grade')
+            """)).fetchall()
+            
+            available_columns = [c[0] for c in check_columns]
+            logger.info(f"Available columns in employee_results: {available_columns}")
+            
+            # 기본 쿼리
             results = db.execute(text("""
-                SELECT 
-                    uid,
-                    employee_name,
-                    department,
-                    position,
-                    ai_score,
-                    ai_grade,
-                    created_at
-                FROM employee_results
-                WHERE uid IS NOT NULL AND employee_name IS NOT NULL
+                SELECT * FROM employee_results
+                WHERE uid IS NOT NULL
                 ORDER BY created_at DESC
                 LIMIT 100
             """)).fetchall()
@@ -373,9 +413,18 @@ async def get_employees_list(db: Session = Depends(get_db)):
         
         employees = []
         for r in results:
-            score = r.ai_score or 0
+            # 딕셔너리로 변환 (column 이름 접근 가능하도록)
+            row_dict = dict(r._mapping) if hasattr(r, '_mapping') else {}
+            
+            # 필드 안전하게 접근
+            uid = row_dict.get('uid', '')
+            name = row_dict.get('employee_name', '') or row_dict.get('name', '') or '익명'
+            department = row_dict.get('department', '') or '-'
+            position = row_dict.get('position', '') or '-'
+            score = row_dict.get('ai_score', 0) or row_dict.get('overall_score', 0) or 0
+            
             # Grade 계산 및 정규화
-            grade = r.ai_grade
+            grade = row_dict.get('ai_grade', '') or row_dict.get('grade', '')
             if not grade:
                 if score >= 90: grade = "S"
                 elif score >= 80: grade = "A"
@@ -394,14 +443,14 @@ async def get_employees_list(db: Session = Depends(get_db)):
                 else: grade = "D"
             
             employees.append({
-                "uid": r.uid,
-                "employee_name": r.employee_name or "익명",
-                "department": r.department or "-",
-                "position": r.position or "-",
+                "uid": uid,
+                "employee_name": name,
+                "department": department,
+                "position": position,
                 "ai_score": round(score, 1) if score else 0,
                 "ai_grade": grade,
-                "analysis_date": r.created_at.isoformat() if r.created_at else None,
-                "source": r.source
+                "analysis_date": row_dict.get('created_at').isoformat() if row_dict.get('created_at') else None,
+                "source": row_dict.get('source', 'employee_results')
             })
         
         logger.info(f"Found {len(employees)} employees from database")
