@@ -2295,7 +2295,7 @@
                                         <h3 style="margin: 0; font-size: 20px;">경력 발전 로드맵</h3>
                                     </div>
                                     <div style="space-y: 10px;">
-                                        ${(data.career_recommendation || ['프로젝트 관리 역량 강화', '팀 리더십 개발']).map(r => `
+                                        ${(data.career_recommendation && data.career_recommendation.length > 0 ? data.career_recommendation : []).map(r => `
                                             <div style="
                                                 background: rgba(255,255,255,0.15);
                                                 padding: 12px 15px;

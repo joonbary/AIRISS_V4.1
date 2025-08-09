@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIRISS API 직원 상세 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #FF6200;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .employee-button {
+            background: #FF6200;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .employee-button:hover {
+            background: #FF5000;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .data-table th, .data-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .data-table th {
+            background: #FF6200;
+            color: white;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 AIRISS API 직원 상세 데이터 테스트</h1>
+        
+        <div class="test-section">
+            <h2>1. 직원 목록에서 선택</h2>
+            <div id="employee-buttons"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. 직접 ID 입력</h2>
+            <input type="text" id="employee-id-input" placeholder="직원 ID 입력 (예: 4101000)" style="padding: 10px; width: 200px;">
+            <button onclick="testEmployeeById()" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">테스트</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. API 응답 데이터</h2>
+            <div id="api-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. 파싱된 데이터</h2>
+            <div id="parsed-result"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '/api/v1';
+        
+        // 직원 목록 로드
+        async function loadEmployeeList() {
+            try {
+                const response = await fetch(`${API_BASE}/hr-dashboard/stats`);
+                const data = await response.json();
+                
+                const buttonsDiv = document.getElementById('employee-buttons');
+                buttonsDiv.innerHTML = '';
+                
+                // 상위 10명의 직원 버튼 생성
+                if (data.employees && data.employees.length > 0) {
+                    data.employees.slice(0, 10).forEach(emp => {
+                        const button = document.createElement('button');
+                        button.className = 'employee-button';
+                        button.textContent = `${emp.employee_name} (${emp.employee_id}) - ${emp.ai_score}점`;
+                        button.onclick = () => testEmployee(emp.employee_id);
+                        buttonsDiv.appendChild(button);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load employee list:', error);
+            }
+        }
+        
+        // 직원 상세 테스트
+        async function testEmployee(employeeId) {
+            console.log('🔍 Testing employee:', employeeId);
+            
+            try {
+                // API 호출
+                const response = await fetch(`${API_BASE}/employees/${employeeId}/ai-analysis`);
+                const data = await response.json();
+                
+                // Raw 데이터 표시
+                const apiResultDiv = document.getElementById('api-result');
+                apiResultDiv.className = 'result ' + (response.ok ? 'success' : 'error');
+                apiResultDiv.innerHTML = '<h3>Raw API Response:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                // 파싱된 데이터 표시
+                if (response.ok) {
+                    displayParsedData(data);
+                }
+                
+            } catch (error) {
+                document.getElementById('api-result').className = 'result error';
+                document.getElementById('api-result').innerHTML = '<h3>Error:</h3><pre>' + error.toString() + '</pre>';
+            }
+        }
+        
+        // 직접 ID 입력 테스트
+        function testEmployeeById() {
+            const employeeId = document.getElementById('employee-id-input').value.trim();
+            if (employeeId) {
+                testEmployee(employeeId);
+            }
+        }
+        
+        // 파싱된 데이터 표시
+        function displayParsedData(data) {
+            const parsedDiv = document.getElementById('parsed-result');
+            
+            let html = '<table class="data-table">';
+            html += '<tr><th>필드</th><th>값</th><th>타입</th></tr>';
+            
+            // 기본 정보
+            html += `<tr><td>직원 ID</td><td>${data.employee_id}</td><td>${typeof data.employee_id}</td></tr>`;
+            html += `<tr><td>이름</td><td>${data.name}</td><td>${typeof data.name}</td></tr>`;
+            html += `<tr><td>부서</td><td>${data.department}</td><td>${typeof data.department}</td></tr>`;
+            html += `<tr><td>직급</td><td>${data.position}</td><td>${typeof data.position}</td></tr>`;
+            html += `<tr><td>AI 점수</td><td>${data.ai_score}</td><td>${typeof data.ai_score}</td></tr>`;
+            html += `<tr><td>등급</td><td>${data.grade}</td><td>${typeof data.grade}</td></tr>`;
+            
+            // 8대 역량
+            if (data.competencies) {
+                html += '<tr><td colspan="3" style="background:#f0f0f0;"><strong>8대 핵심 역량</strong></td></tr>';
+                Object.entries(data.competencies).forEach(([key, value]) => {
+                    html += `<tr><td>&nbsp;&nbsp;${key}</td><td>${value}</td><td>${typeof value}</td></tr>`;
+                });
+            }
+            
+            // 강점
+            if (data.strengths) {
+                html += `<tr><td>강점</td><td>${Array.isArray(data.strengths) ? data.strengths.join(', ') : data.strengths}</td><td>${typeof data.strengths}</td></tr>`;
+            }
+            
+            // 개선점
+            if (data.improvements) {
+                html += `<tr><td>개선점</td><td>${Array.isArray(data.improvements) ? data.improvements.join(', ') : data.improvements}</td><td>${typeof data.improvements}</td></tr>`;
+            }
+            
+            // AI 코멘트
+            if (data.ai_comment) {
+                html += `<tr><td>AI 코멘트</td><td>${data.ai_comment.substring(0, 100)}...</td><td>${typeof data.ai_comment}</td></tr>`;
+            }
+            
+            // 추천사항
+            if (data.career_recommendation) {
+                html += `<tr><td>경력 추천</td><td>${Array.isArray(data.career_recommendation) ? data.career_recommendation.length + '개 항목' : '없음'}</td><td>${typeof data.career_recommendation}</td></tr>`;
+            }
+            
+            if (data.education_suggestion) {
+                html += `<tr><td>교육 추천</td><td>${Array.isArray(data.education_suggestion) ? data.education_suggestion.length + '개 항목' : '없음'}</td><td>${typeof data.education_suggestion}</td></tr>`;
+            }
+            
+            html += '</table>';
+            
+            parsedDiv.innerHTML = html;
+        }
+        
+        // 페이지 로드 시 직원 목록 로드
+        window.onload = () => {
+            loadEmployeeList();
+        };
+    </script>
+</body>
+</html>

@@ -681,12 +681,11 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
         logger.info(f"Using uid parameter: {uid_param} (type: {type(uid_param).__name__})")
         
         # employee_results 테이블에서 직원 정보 조회
+        # employee_metadata를 전체로 가져와서 파이썬에서 파싱
         result = db.execute(text("""
             SELECT 
                 uid,
-                employee_metadata->>'name' as name,
-                employee_metadata->>'department' as department,
-                employee_metadata->>'position' as position,
+                employee_metadata,
                 overall_score as ai_score,
                 grade,
                 dimension_scores,
@@ -710,14 +709,69 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
             # 데이터가 없으면 에러 반환
             raise Exception(f"직원 데이터를 찾을 수 없습니다: {employee_uid}")
         
+        # employee_metadata 파싱
+        employee_metadata = result.employee_metadata or {}
+        if isinstance(employee_metadata, str):
+            import json
+            try:
+                employee_metadata = json.loads(employee_metadata)
+            except Exception as e:
+                logger.error(f"Failed to parse employee_metadata: {e}")
+                employee_metadata = {}
+        elif not isinstance(employee_metadata, dict):
+            employee_metadata = {}
+        
+        # 직원 정보 추출
+        employee_name = employee_metadata.get("name", "")
+        employee_department = employee_metadata.get("department", "")
+        employee_position = employee_metadata.get("position", "")
+        
+        # 이름 인코딩 문제 처리
+        if employee_name and ("직원_" in employee_name or any(ord(c) > 127 and ord(c) < 256 for c in employee_name)):
+            # 인코딩이 깨진 경우 직원_ID로 표시
+            employee_name = f"직원_{result.uid}"
+        elif not employee_name:
+            employee_name = f"직원_{result.uid}"
+            
+        logger.info(f"Employee metadata - Name: {employee_name}, Dept: {employee_department}, Position: {employee_position}")
+        
         # dimension_scores를 competencies로 변환
         competencies = result.dimension_scores or {}
         if isinstance(competencies, str):
             import json
             try:
                 competencies = json.loads(competencies)
-            except:
+                logger.info(f"Parsed dimension_scores: {competencies}")
+            except Exception as e:
+                logger.error(f"Failed to parse dimension_scores: {e}")
                 competencies = {}
+        else:
+            logger.info(f"dimension_scores type: {type(competencies)}, value: {competencies}")
+        
+        # 영어 키를 한글 키로 매핑
+        competency_mapping = {
+            "execution": "실행력",
+            "growth": "성장지향",
+            "collaboration": "협업",
+            "customer_focus": "고객지향",
+            "expertise": "전문성",
+            "innovation": "혁신성",
+            "leadership": "리더십",
+            "communication": "커뮤니케이션",
+            # 추가 가능한 매핑들
+            "teamwork": "협업",
+            "problem_solving": "문제해결",
+            "technical": "전문성"
+        }
+        
+        # 실제 데이터의 키를 한글로 변환
+        korean_competencies = {}
+        for eng_key, value in competencies.items():
+            # 매핑이 있으면 한글 키 사용, 없으면 원래 키 사용
+            korean_key = competency_mapping.get(eng_key, eng_key)
+            korean_competencies[korean_key] = value
+        
+        logger.info(f"Mapped competencies: {korean_competencies}")
         
         # ai_feedback 파싱
         ai_feedback = result.ai_feedback or {}
@@ -725,8 +779,12 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
             import json
             try:
                 ai_feedback = json.loads(ai_feedback)
-            except:
+                logger.info(f"Parsed ai_feedback: {ai_feedback}")
+            except Exception as e:
+                logger.error(f"Failed to parse ai_feedback: {e}")
                 ai_feedback = {}
+        else:
+            logger.info(f"ai_feedback type: {type(ai_feedback)}, value: {ai_feedback}")
         
         # 강점과 개선점 추출
         strengths = []
@@ -737,43 +795,49 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
             strengths = ai_feedback.get("strengths", [])
             improvements = ai_feedback.get("improvements", [])
             ai_comment = ai_feedback.get("ai_feedback", ai_feedback.get("comment", ""))
+            
+            # 강점과 개선점이 문자열인 경우 리스트로 변환
+            if isinstance(strengths, str):
+                strengths = [strengths]
+            if isinstance(improvements, str):
+                improvements = [improvements]
         elif isinstance(ai_feedback, str):
             ai_comment = ai_feedback
-            # 간단한 텍스트 파싱으로 강점과 개선점 추출
-            if "강점" in ai_comment:
-                strengths = ["전문성과 실행력이 우수함", "협업 능력이 뛰어남", "고객 지향적 사고"]
-            if "개선" in ai_comment:
-                improvements = ["리더십 역량 강화 필요", "혁신적 사고 개발"]
         
-        # 강점과 개선점이 비어있으면 기본값 설정
+        # 데이터가 없으면 빈 배열 반환 (목업 데이터 제거)
         if not strengths:
-            strengths = ["업무 전문성", "성실성과 책임감", "팀워크"]
+            strengths = []
         if not improvements:
-            improvements = ["전략적 사고", "혁신 역량"]
+            improvements = []
+        
+        # 실제 점수가 있으면 사용, 없으면 0
+        final_competencies = {
+            "실행력": int(korean_competencies.get("실행력", 0)),
+            "성장지향": int(korean_competencies.get("성장지향", 0)),
+            "협업": int(korean_competencies.get("협업", 0)),
+            "고객지향": int(korean_competencies.get("고객지향", 0)),
+            "전문성": int(korean_competencies.get("전문성", 0)),
+            "혁신성": int(korean_competencies.get("혁신성", 0)),
+            "리더십": int(korean_competencies.get("리더십", 0)),
+            "커뮤니케이션": int(korean_competencies.get("커뮤니케이션", 0))
+        }
+        
+        logger.info(f"Final competencies: {final_competencies}")
         
         return {
             "employee_id": result.uid,
-            "name": result.name or "익명",
-            "department": result.department or "-",
-            "position": result.position or "-",
+            "name": employee_name,
+            "department": employee_department if employee_department else "부서 정보 없음",
+            "position": employee_position if employee_position else "직급 정보 없음",
             "ai_score": round(float(result.ai_score or 0)),
             "grade": result.grade or "C",
-            "competencies": {
-                "실행력": int(competencies.get("실행력", 70)),
-                "성장지향": int(competencies.get("성장지향", 70)),
-                "협업": int(competencies.get("협업", 70)),
-                "고객지향": int(competencies.get("고객지향", 70)),
-                "전문성": int(competencies.get("전문성", 70)),
-                "혁신성": int(competencies.get("혁신성", 70)),
-                "리더십": int(competencies.get("리더십", 70)),
-                "커뮤니케이션": int(competencies.get("커뮤니케이션", 70))
-            },
-            "strengths": strengths[:5],  # 최대 5개
-            "improvements": improvements[:3],  # 최대 3개
-            "ai_comment": ai_comment or "종합적인 역량을 보유하고 있으며, 지속적인 성장이 기대됩니다.",
-            "career_recommendation": ["전문가 트랙", "리더십 트랙", "프로젝트 매니저"],
-            "education_suggestion": ["리더십 교육", "전문 기술 교육", "커뮤니케이션 스킬"],
-            "analyzed_at": result.analyzed_at.isoformat() if result.analyzed_at else "2025-01-08T10:00:00"
+            "competencies": final_competencies,
+            "strengths": strengths[:5] if strengths else [],
+            "improvements": improvements[:3] if improvements else [],
+            "ai_comment": ai_comment if ai_comment else "",
+            "career_recommendation": [],  # 실제 데이터가 없으면 빈 배열
+            "education_suggestion": [],  # 실제 데이터가 없으면 빈 배열
+            "analyzed_at": result.analyzed_at.isoformat() if result.analyzed_at else None
         }
         
     except Exception as e:
@@ -799,6 +863,21 @@ async def debug_test():
         return Response(content=content, media_type="text/html; charset=utf-8")
     
     return {"error": "Debug test page not found"}
+
+# API Test Page for Employee Details
+@app.get("/api-test")
+async def api_test():
+    """API test page for employee detail debugging"""
+    from fastapi.responses import Response
+    
+    filepath = os.path.join(os.path.dirname(__file__), "templates", "api_test.html")
+    
+    if os.path.exists(filepath):
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(content=content, media_type="text/html; charset=utf-8")
+    
+    return {"error": "API test page not found"}
 
 # AIRISS v5.0 Test Dashboard - Debug version
 @app.get("/test")
