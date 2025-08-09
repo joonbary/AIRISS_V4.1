@@ -4656,7 +4656,19 @@
         
         // 앱 초기화
         document.addEventListener('DOMContentLoaded', () => {
-            AIRISS.init();
+            try {
+                console.log('🔍 AIRISS 객체 확인:', typeof window.AIRISS);
+                if (window.AIRISS) {
+                    console.log('✅ AIRISS 객체가 정상적으로 로드되었습니다');
+                    console.log('📋 사용 가능한 메서드:', Object.keys(window.AIRISS).filter(k => typeof window.AIRISS[k] === 'function'));
+                    AIRISS.init();
+                } else {
+                    console.error('❌ AIRISS 객체를 찾을 수 없습니다');
+                }
+            } catch (error) {
+                console.error('❌ 초기화 오류:', error);
+                console.error('상세 오류:', error.stack);
+            }
         });
     </script>
 </body>
