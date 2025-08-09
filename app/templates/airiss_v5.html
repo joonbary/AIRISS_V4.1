@@ -23,7 +23,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
-    <!-- Chart.js 데이터 레이블 플러그인 -->
+    <!-- Chart.js 및 플러그인 (순서 중요) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     
     <style>
@@ -1112,8 +1113,6 @@
             }
         }
     </style>
-    <!-- Chart.js 라이브러리 -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -1896,6 +1895,12 @@
             
             // 대시보드 차트 렌더링
             renderDashboardCharts() {
+                // Chart.js가 로드되었는지 확인
+                if (typeof Chart === 'undefined') {
+                    console.error('Chart.js가 로드되지 않았습니다.');
+                    return;
+                }
+                
                 // 실제 데이터 기반 등급 분포 계산
                 const gradeDistribution = { 'S': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'D': 0 };
                 this.state.employees.forEach(emp => {
@@ -1907,11 +1912,14 @@
                 
                 // 등급 분포 차트 - 막대그래프로 변경
                 const gradeCtx = document.getElementById('gradeChart');
-                if (gradeCtx && typeof Chart !== 'undefined') {
+                if (gradeCtx) {
                     // 기존 차트가 있으면 제거
                     if (this.gradeChart) {
                         this.gradeChart.destroy();
                     }
+                    
+                    // 플러그인 옵션 설정 (ChartDataLabels 플러그인 사용 시)
+                    const useDataLabels = typeof ChartDataLabels !== 'undefined';
                     
                     this.gradeChart = new Chart(gradeCtx, {
                         type: 'bar',
@@ -1933,6 +1941,7 @@
                                 barThickness: 40
                             }]
                         },
+                        plugins: useDataLabels ? [ChartDataLabels] : [],
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
@@ -1972,7 +1981,7 @@
                                         }
                                     }
                                 },
-                                datalabels: {
+                                datalabels: useDataLabels ? {
                                     anchor: 'end',
                                     align: 'top',
                                     color: '#333',
@@ -1983,7 +1992,7 @@
                                     formatter: function(value) {
                                         return value > 0 ? value + '명' : '';
                                     }
-                                }
+                                } : false
                             }
                         }
                     });
@@ -2018,11 +2027,13 @@
                 
                 // 부서별 성과 차트
                 const deptCtx = document.getElementById('departmentChart');
-                if (deptCtx && typeof Chart !== 'undefined') {
+                if (deptCtx) {
                     // 기존 차트가 있으면 제거
                     if (this.departmentChart) {
                         this.departmentChart.destroy();
                     }
+                    
+                    const useDataLabels = typeof ChartDataLabels !== 'undefined';
                     
                     this.departmentChart = new Chart(deptCtx, {
                         type: 'bar',
@@ -2035,6 +2046,7 @@
                                 borderRadius: 8
                             }]
                         },
+                        plugins: useDataLabels ? [ChartDataLabels] : [],
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
@@ -2058,7 +2070,7 @@
                                         }
                                     }
                                 },
-                                datalabels: {
+                                datalabels: useDataLabels ? {
                                     anchor: 'end',
                                     align: 'top',
                                     color: '#333',
@@ -2069,7 +2081,7 @@
                                     formatter: function(value) {
                                         return value + '점';
                                     }
-                                }
+                                } : false
                             }
                         }
                     });
