@@ -1666,113 +1666,387 @@
                 try {
                     const data = await this.api.request('GET', `/employees/${employeeId}/ai-analysis`);
                     
+                    // 등급별 색상 매핑
+                    const gradeColors = {
+                        'S': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        'A': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        'A_PLUS': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        'B': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        'C': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                        'D': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+                    };
+                    
+                    const gradeColor = gradeColors[data.grade] || gradeColors['C'];
+                    
                     const modalBody = document.getElementById('modal-body');
                     modalBody.innerHTML = `
-                        <div class="employee-detail-content">
-                            <!-- 기본 정보 및 AI 점수 -->
-                            <div class="detail-header" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
-                                <div class="basic-info">
-                                    <h3 style="color: var(--primary-orange); margin-bottom: 20px; font-size: 20px;">📋 기본 정보</h3>
-                                    <div class="info-grid">
-                                        <p><strong>이름:</strong> ${data.name || '익명'}</p>
-                                        <p><strong>부서:</strong> ${data.department || '-'}</p>
-                                        <p><strong>직급:</strong> ${data.position || '-'}</p>
-                                        <p><strong>분석 일시:</strong> ${data.analyzed_at ? new Date(data.analyzed_at).toLocaleDateString('ko-KR') : '-'}</p>
-                                    </div>
-                                </div>
-                                <div class="ai-score-section">
-                                    <h3 style="color: var(--primary-orange); margin-bottom: 20px; font-size: 20px;">🎯 AI 종합 평가</h3>
-                                    <div style="text-align: center;">
-                                        <div class="score-circle" style="
-                                            width: 100px; 
-                                            height: 100px; 
-                                            border-radius: 50%; 
-                                            background: var(--primary-gradient);
-                                            display: flex; 
-                                            align-items: center; 
-                                            justify-content: center; 
-                                            margin: 0 auto 10px;
-                                            color: white;
-                                            font-size: 24px;
-                                            font-weight: bold;
-                                        ">${data.ai_score || 0}</div>
-                                        <div class="grade-badge" style="
-                                            background: var(--primary-orange);
-                                            color: white;
-                                            padding: 5px 15px;
-                                            border-radius: 20px;
-                                            font-weight: bold;
-                                            display: inline-block;
-                                        ">${data.grade || 'C'} 등급</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- 8대 역량 분석 -->
-                            <div class="competency-section" style="margin-bottom: 30px;">
-                                <h3 style="color: var(--primary-orange); margin-bottom: 20px; font-size: 20px;">📊 8대 핵심 역량</h3>
-                                <div class="competency-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
-                                    ${Object.entries(data.competencies || {}).map(([key, value]) => `
-                                        <div class="competency-item" style="
-                                            background: #F8F9FA;
-                                            padding: 16px;
-                                            border-radius: 12px;
-                                            text-align: center;
-                                            border-left: 4px solid var(--primary-orange);
-                                            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-                                        ">
-                                            <div style="font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #666;">${key}</div>
-                                            <div style="font-size: 24px; color: var(--primary-orange); font-weight: 600;">${value || 0}</div>
+                        <div class="employee-detail-content" style="max-height: 80vh; overflow-y: auto; padding: 20px;">
+                            <!-- 헤더 섹션 - 프로필 카드 스타일 -->
+                            <div class="profile-header" style="
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                border-radius: 20px;
+                                padding: 30px;
+                                color: white;
+                                margin-bottom: 30px;
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                            ">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="flex: 1;">
+                                        <h2 style="font-size: 32px; margin-bottom: 10px; font-weight: 700;">
+                                            ${data.name || '익명'}
+                                        </h2>
+                                        <div style="display: flex; gap: 20px; margin-bottom: 20px; opacity: 0.95;">
+                                            <span>📍 ${data.department || '미지정'}</span>
+                                            <span>💼 ${data.position || '미지정'}</span>
+                                            <span>📅 ${data.analyzed_at ? new Date(data.analyzed_at).toLocaleDateString('ko-KR') : '최근 분석'}</span>
                                         </div>
-                                    `).join('')}
+                                        <div style="display: flex; gap: 15px; align-items: center;">
+                                            <span style="
+                                                background: rgba(255,255,255,0.2);
+                                                padding: 8px 16px;
+                                                border-radius: 25px;
+                                                font-size: 14px;
+                                                backdrop-filter: blur(10px);
+                                            ">
+                                                🏆 상위 ${100 - Math.floor((data.ai_score || 50) / 10) * 10}% 성과자
+                                            </span>
+                                            <span style="
+                                                background: rgba(255,255,255,0.2);
+                                                padding: 8px 16px;
+                                                border-radius: 25px;
+                                                font-size: 14px;
+                                                backdrop-filter: blur(10px);
+                                            ">
+                                                📈 성장 잠재력 ${data.ai_score >= 80 ? '높음' : data.ai_score >= 60 ? '보통' : '개발필요'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="
+                                            width: 140px;
+                                            height: 140px;
+                                            border-radius: 50%;
+                                            background: white;
+                                            display: flex;
+                                            flex-direction: column;
+                                            align-items: center;
+                                            justify-content: center;
+                                            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                                        ">
+                                            <div style="font-size: 48px; font-weight: bold; color: #667eea;">
+                                                ${data.ai_score || 0}
+                                            </div>
+                                            <div style="font-size: 14px; color: #999; margin-top: 5px;">AI SCORE</div>
+                                        </div>
+                                        <div style="
+                                            margin-top: 15px;
+                                            background: ${gradeColor};
+                                            color: white;
+                                            padding: 10px 25px;
+                                            border-radius: 25px;
+                                            font-weight: bold;
+                                            font-size: 18px;
+                                            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                                            display: inline-block;
+                                        ">
+                                            ${data.grade || 'C'} GRADE
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <!-- AI 종합 피드백 -->
+                            <!-- 8대 역량 분석 - 레이더 차트 스타일 -->
+                            <div class="competency-section" style="
+                                background: white;
+                                border-radius: 20px;
+                                padding: 30px;
+                                margin-bottom: 30px;
+                                box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+                            ">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                                    <h3 style="color: #2c3e50; font-size: 24px; font-weight: 600; margin: 0;">
+                                        🎯 8대 핵심 역량 분석
+                                    </h3>
+                                    <div style="
+                                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                        color: white;
+                                        padding: 8px 20px;
+                                        border-radius: 20px;
+                                        font-size: 14px;
+                                        font-weight: 500;
+                                    ">
+                                        평균 점수: ${Math.round(Object.values(data.competencies || {}).reduce((a, b) => a + b, 0) / 8)}점
+                                    </div>
+                                </div>
+                                
+                                <div class="competency-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                                    ${Object.entries(data.competencies || {}).map(([key, value]) => {
+                                        const percentage = (value / 100) * 100;
+                                        const barColor = value >= 80 ? '#28a745' : value >= 60 ? '#ffc107' : '#dc3545';
+                                        return `
+                                        <div class="competency-item" style="
+                                            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                                            padding: 20px;
+                                            border-radius: 15px;
+                                            position: relative;
+                                            overflow: hidden;
+                                            transition: transform 0.3s ease;
+                                        " onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                                            <div style="position: relative; z-index: 2;">
+                                                <div style="font-weight: 600; margin-bottom: 10px; font-size: 14px; color: #2c3e50;">
+                                                    ${key}
+                                                </div>
+                                                <div style="font-size: 32px; color: ${barColor}; font-weight: 700; margin-bottom: 10px;">
+                                                    ${value || 0}
+                                                </div>
+                                                <div style="
+                                                    background: rgba(255,255,255,0.8);
+                                                    border-radius: 10px;
+                                                    height: 8px;
+                                                    overflow: hidden;
+                                                ">
+                                                    <div style="
+                                                        background: ${barColor};
+                                                        height: 100%;
+                                                        width: ${percentage}%;
+                                                        transition: width 0.5s ease;
+                                                        border-radius: 10px;
+                                                    "></div>
+                                                </div>
+                                                <div style="
+                                                    margin-top: 8px;
+                                                    font-size: 12px;
+                                                    color: #666;
+                                                ">
+                                                    ${value >= 80 ? '우수' : value >= 60 ? '양호' : '개발필요'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                            
+                            <!-- AI 종합 피드백 - 프리미엄 디자인 -->
                             ${data.ai_comment ? `
-                            <div class="ai-feedback-section" style="margin-bottom: 25px;">
-                                <h3 style="color: var(--primary-orange); margin-bottom: 15px;">🤖 AI 종합 피드백</h3>
+                            <div class="ai-feedback-section" style="
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                border-radius: 20px;
+                                padding: 30px;
+                                margin-bottom: 30px;
+                                color: white;
+                                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+                            ">
+                                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                                    <div style="
+                                        width: 50px;
+                                        height: 50px;
+                                        background: rgba(255,255,255,0.2);
+                                        border-radius: 50%;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        margin-right: 15px;
+                                        font-size: 24px;
+                                    ">🤖</div>
+                                    <h3 style="margin: 0; font-size: 24px; font-weight: 600;">AI 종합 분석 리포트</h3>
+                                </div>
                                 <div style="
-                                    background: linear-gradient(135deg, #f8f9fa, #fff);
+                                    background: rgba(255,255,255,0.1);
                                     padding: 20px;
-                                    border-radius: 12px;
-                                    border: 1px solid #e9ecef;
-                                    font-size: 14px;
-                                    line-height: 1.6;
-                                    color: #495057;
+                                    border-radius: 15px;
+                                    font-size: 16px;
+                                    line-height: 1.8;
+                                    backdrop-filter: blur(10px);
                                 ">${data.ai_comment}</div>
                             </div>
                             ` : ''}
                             
-                            <!-- 강점과 개선점 -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
-                                <div class="strengths-section">
-                                    <h3 style="color: #28a745; margin-bottom: 15px;">✨ 핵심 강점</h3>
-                                    <ul style="background: #f8fff9; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
-                                        ${(data.strengths || ['데이터가 충분하지 않습니다']).map(s => `<li style="margin-bottom: 8px;">${s}</li>`).join('')}
-                                    </ul>
+                            <!-- 강점과 개선점 - 카드 스타일 -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px;">
+                                <div class="strengths-section" style="
+                                    background: white;
+                                    border-radius: 20px;
+                                    padding: 25px;
+                                    box-shadow: 0 5px 20px rgba(40, 167, 69, 0.1);
+                                    border-top: 4px solid #28a745;
+                                ">
+                                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                                        <div style="
+                                            width: 40px;
+                                            height: 40px;
+                                            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                                            border-radius: 50%;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            margin-right: 12px;
+                                            color: white;
+                                            font-size: 20px;
+                                        ">✨</div>
+                                        <h3 style="margin: 0; color: #28a745; font-size: 20px;">핵심 강점</h3>
+                                    </div>
+                                    <div style="space-y: 12px;">
+                                        ${(data.strengths || ['데이터가 충분하지 않습니다']).map((s, idx) => `
+                                            <div style="
+                                                display: flex;
+                                                align-items: flex-start;
+                                                padding: 12px;
+                                                background: #f8fff9;
+                                                border-radius: 10px;
+                                                margin-bottom: 10px;
+                                            ">
+                                                <span style="
+                                                    background: #28a745;
+                                                    color: white;
+                                                    width: 24px;
+                                                    height: 24px;
+                                                    border-radius: 50%;
+                                                    display: flex;
+                                                    align-items: center;
+                                                    justify-content: center;
+                                                    font-size: 12px;
+                                                    font-weight: bold;
+                                                    margin-right: 12px;
+                                                    flex-shrink: 0;
+                                                ">${idx + 1}</span>
+                                                <span style="color: #495057; line-height: 1.5;">${s}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
                                 </div>
-                                <div class="improvements-section">
-                                    <h3 style="color: #dc3545; margin-bottom: 15px;">🎯 개선 포인트</h3>
-                                    <ul style="background: #fff5f5; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
-                                        ${(data.improvements || ['데이터가 충분하지 않습니다']).map(i => `<li style="margin-bottom: 8px;">${i}</li>`).join('')}
-                                    </ul>
+                                
+                                <div class="improvements-section" style="
+                                    background: white;
+                                    border-radius: 20px;
+                                    padding: 25px;
+                                    box-shadow: 0 5px 20px rgba(220, 53, 69, 0.1);
+                                    border-top: 4px solid #dc3545;
+                                ">
+                                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                                        <div style="
+                                            width: 40px;
+                                            height: 40px;
+                                            background: linear-gradient(135deg, #dc3545 0%, #f86c6b 100%);
+                                            border-radius: 50%;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            margin-right: 12px;
+                                            color: white;
+                                            font-size: 20px;
+                                        ">🎯</div>
+                                        <h3 style="margin: 0; color: #dc3545; font-size: 20px;">개선 포인트</h3>
+                                    </div>
+                                    <div style="space-y: 12px;">
+                                        ${(data.improvements || ['데이터가 충분하지 않습니다']).map((i, idx) => `
+                                            <div style="
+                                                display: flex;
+                                                align-items: flex-start;
+                                                padding: 12px;
+                                                background: #fff5f5;
+                                                border-radius: 10px;
+                                                margin-bottom: 10px;
+                                            ">
+                                                <span style="
+                                                    background: #dc3545;
+                                                    color: white;
+                                                    width: 24px;
+                                                    height: 24px;
+                                                    border-radius: 50%;
+                                                    display: flex;
+                                                    align-items: center;
+                                                    justify-content: center;
+                                                    font-size: 12px;
+                                                    font-weight: bold;
+                                                    margin-right: 12px;
+                                                    flex-shrink: 0;
+                                                ">${idx + 1}</span>
+                                                <span style="color: #495057; line-height: 1.5;">${i}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
                                 </div>
                             </div>
                             
-                            <!-- 추천 사항 -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                <div class="career-recommendation">
-                                    <h3 style="color: #17a2b8; margin-bottom: 15px;">🚀 경력 발전 추천</h3>
-                                    <ul style="background: #f0f8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #17a2b8;">
-                                        ${(data.career_recommendation || ['프로젝트 관리', '팀 리더십']).map(r => `<li style="margin-bottom: 8px;">${r}</li>`).join('')}
-                                    </ul>
+                            <!-- 추천 사항 - 그라디언트 카드 스타일 -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px;">
+                                <div class="career-recommendation" style="
+                                    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                                    border-radius: 20px;
+                                    padding: 25px;
+                                    color: white;
+                                    box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);
+                                ">
+                                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                                        <div style="
+                                            width: 40px;
+                                            height: 40px;
+                                            background: rgba(255,255,255,0.2);
+                                            border-radius: 50%;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            margin-right: 12px;
+                                            font-size: 20px;
+                                        ">🚀</div>
+                                        <h3 style="margin: 0; font-size: 20px;">경력 발전 로드맵</h3>
+                                    </div>
+                                    <div style="space-y: 10px;">
+                                        ${(data.career_recommendation || ['프로젝트 관리 역량 강화', '팀 리더십 개발']).map(r => `
+                                            <div style="
+                                                background: rgba(255,255,255,0.15);
+                                                padding: 12px 15px;
+                                                border-radius: 10px;
+                                                margin-bottom: 10px;
+                                                backdrop-filter: blur(10px);
+                                                display: flex;
+                                                align-items: center;
+                                            ">
+                                                <span style="margin-right: 10px;">▶</span>
+                                                <span>${r}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
                                 </div>
-                                <div class="education-suggestion">
-                                    <h3 style="color: #6f42c1; margin-bottom: 15px;">📚 교육 프로그램</h3>
-                                    <ul style="background: #faf8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #6f42c1;">
-                                        ${(data.education_suggestion || ['리더십 교육', '전략적 사고 프로그램']).map(e => `<li style="margin-bottom: 8px;">${e}</li>`).join('')}
-                                    </ul>
+                                
+                                <div class="education-suggestion" style="
+                                    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+                                    border-radius: 20px;
+                                    padding: 25px;
+                                    color: white;
+                                    box-shadow: 0 10px 30px rgba(250, 112, 154, 0.3);
+                                ">
+                                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                                        <div style="
+                                            width: 40px;
+                                            height: 40px;
+                                            background: rgba(255,255,255,0.2);
+                                            border-radius: 50%;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            margin-right: 12px;
+                                            font-size: 20px;
+                                        ">📚</div>
+                                        <h3 style="margin: 0; font-size: 20px;">맞춤 교육 프로그램</h3>
+                                    </div>
+                                    <div style="space-y: 10px;">
+                                        ${(data.education_suggestion || ['리더십 교육 프로그램', '전략적 사고 워크샵']).map(e => `
+                                            <div style="
+                                                background: rgba(255,255,255,0.15);
+                                                padding: 12px 15px;
+                                                border-radius: 10px;
+                                                margin-bottom: 10px;
+                                                backdrop-filter: blur(10px);
+                                                display: flex;
+                                                align-items: center;
+                                            ">
+                                                <span style="margin-right: 10px;">▶</span>
+                                                <span>${e}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
                                 </div>
                             </div>
                             
