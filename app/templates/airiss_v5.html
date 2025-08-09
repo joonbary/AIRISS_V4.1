@@ -1566,20 +1566,57 @@
         <div id="reports-tab" class="tab-content">
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">리포트 생성</h2>
+                    <h2 class="card-title">📊 AI 분석 리포트</h2>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                    <button class="btn btn-primary" style="height: 100px; font-size: 16px;" onclick="AIRISS.generateReport('monthly')">
-                        📊 월간 리포트
+                
+                <!-- 리포트 타입 선택 버튼 -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; padding: 20px; background: #f8f9fa; border-radius: 12px; margin-bottom: 20px;">
+                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('monthly')">
+                        📊 월간 종합
                     </button>
-                    <button class="btn btn-primary" style="height: 100px; font-size: 16px;" onclick="AIRISS.generateReport('talent')">
-                        ⭐ 인재 리포트
+                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('talent')">
+                        ⭐ 핵심 인재
                     </button>
-                    <button class="btn btn-primary" style="height: 100px; font-size: 16px;" onclick="AIRISS.generateReport('risk')">
-                        ⚠️ 리스크 리포트
+                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('risk')">
+                        ⚠️ 리스크 관리
                     </button>
-                    <button class="btn btn-primary" style="height: 100px; font-size: 16px;" onclick="AIRISS.generateReport('custom')">
-                        ✏️ 맞춤 리포트
+                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('performance')">
+                        📈 성과 분석
+                    </button>
+                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('department')">
+                        🏢 부서별 분석
+                    </button>
+                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('executive')">
+                        💼 경영진 브리핑
+                    </button>
+                </div>
+                
+                <!-- 리포트 내용 표시 영역 -->
+                <div id="report-content" style="min-height: 600px; padding: 30px; background: white; border: 1px solid #e9ecef; border-radius: 12px; overflow-y: auto; max-height: 80vh;">
+                    <div style="text-align: center; padding: 100px 20px; color: #6c757d;">
+                        <i style="font-size: 64px; margin-bottom: 20px; display: block; opacity: 0.5;">📄</i>
+                        <h3 style="color: #495057;">리포트를 선택해주세요</h3>
+                        <p>위의 버튼을 클릭하여 원하는 리포트를 생성하고 확인하세요.</p>
+                        <p style="font-size: 12px; margin-top: 20px;">생성된 리포트는 인쇄하거나 다운로드할 수 있습니다.</p>
+                    </div>
+                </div>
+                
+                <!-- 리포트 액션 버튼 -->
+                <div id="report-actions" style="display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: right;">
+                    <span style="float: left; color: #6c757d; line-height: 36px;">
+                        <i id="report-type-icon">📄</i> <span id="report-type-name">리포트</span>
+                    </span>
+                    <button class="btn btn-secondary" onclick="AIRISS.printReport()" style="margin-right: 10px;">
+                        🖨️ 인쇄
+                    </button>
+                    <button class="btn btn-secondary" onclick="AIRISS.copyReport()" style="margin-right: 10px;">
+                        📋 복사
+                    </button>
+                    <button class="btn btn-primary" onclick="AIRISS.downloadReportAsHTML()">
+                        💾 HTML 저장
+                    </button>
+                    <button class="btn btn-primary" onclick="AIRISS.downloadReportAsPDF()" style="margin-left: 10px;">
+                        📄 PDF 저장
                     </button>
                 </div>
             </div>
@@ -3956,6 +3993,79 @@
                 `;
             },
             
+            // 화면에 리포트 표시
+            async showReport(type) {
+                const reportContent = document.getElementById('report-content');
+                const reportActions = document.getElementById('report-actions');
+                const reportTypeIcon = document.getElementById('report-type-icon');
+                const reportTypeName = document.getElementById('report-type-name');
+                
+                // 로딩 표시
+                reportContent.innerHTML = `
+                    <div style="text-align: center; padding: 100px 20px;">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 20px; color: #6c757d;">리포트를 생성하고 있습니다...</p>
+                    </div>
+                `;
+                
+                // 리포트 타입별 아이콘과 이름 설정
+                const reportTypes = {
+                    'monthly': { icon: '📊', name: '월간 종합 리포트' },
+                    'talent': { icon: '⭐', name: '핵심 인재 리포트' },
+                    'risk': { icon: '⚠️', name: '리스크 관리 리포트' },
+                    'performance': { icon: '📈', name: '성과 분석 리포트' },
+                    'department': { icon: '🏢', name: '부서별 분석 리포트' },
+                    'executive': { icon: '💼', name: '경영진 브리핑 리포트' }
+                };
+                
+                if (reportTypes[type]) {
+                    reportTypeIcon.textContent = reportTypes[type].icon;
+                    reportTypeName.textContent = reportTypes[type].name;
+                }
+                
+                // 잠시 후 리포트 생성
+                setTimeout(() => {
+                    const employees = this.state.employees || [];
+                    const dashboardData = this.state.dashboardStats || {};
+                    
+                    let content = '';
+                    
+                    switch(type) {
+                        case 'monthly':
+                            content = this.generateMonthlyReport(dashboardData, employees);
+                            break;
+                        case 'talent':
+                            content = this.generateTalentReport(dashboardData, employees);
+                            break;
+                        case 'risk':
+                            content = this.generateRiskReport(dashboardData, employees);
+                            break;
+                        case 'performance':
+                            content = this.generatePerformanceReport(dashboardData, employees);
+                            break;
+                        case 'department':
+                            content = this.generateDepartmentReport(dashboardData, employees);
+                            break;
+                        case 'executive':
+                            content = this.generateExecutiveReport(dashboardData, employees);
+                            break;
+                        default:
+                            content = '<p>알 수 없는 리포트 타입입니다.</p>';
+                    }
+                    
+                    // 리포트 내용 표시
+                    reportContent.innerHTML = content;
+                    reportActions.style.display = 'block';
+                    
+                    // 현재 리포트 정보 저장 (다운로드용)
+                    this.currentReport = {
+                        type: type,
+                        content: content,
+                        title: reportTypes[type]?.name || '리포트'
+                    };
+                }, 500);
+            },
+            
             // 리포트 생성
             async generateReport(type) {
                 try {
@@ -4010,16 +4120,210 @@
                 const date = new Date();
                 const month = date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
                 
+                // 통계 계산
+                const avgScore = this.calculateAverageScore(employees);
+                const gradeDistribution = this.calculateGradeDistribution(employees);
+                const deptAnalysis = this.analyzeDepartments(employees);
+                
                 return `
-                    <h2>${month} HR 분석 리포트</h2>
+                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
+                        <h1 style="color: #FF6200; border-bottom: 3px solid #FF6200; padding-bottom: 15px;">
+                            ${month} HR 종합 분석 리포트
+                        </h1>
+                        
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <p style="margin: 0; color: #6c757d;">
+                                <strong>생성일시:</strong> ${new Date().toLocaleString('ko-KR')}<br>
+                                <strong>분석 대상:</strong> 전체 ${employees.length}명<br>
+                                <strong>작성 부서:</strong> 인사전략팀
+                            </p>
+                        </div>
+                        
+                        <h2 style="color: #FF6200; margin-top: 30px;">📊 Executive Summary</h2>
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; margin: 20px 0;">
+                            <h3 style="margin-top: 0;">핵심 지표</h3>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 32px; font-weight: bold;">${employees.length}</div>
+                                    <div style="font-size: 12px; opacity: 0.9;">전체 직원</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 32px; font-weight: bold;">${avgScore}</div>
+                                    <div style="font-size: 12px; opacity: 0.9;">평균 AI 점수</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 32px; font-weight: bold;">${gradeDistribution['S'] + gradeDistribution['A+']}</div>
+                                    <div style="font-size: 12px; opacity: 0.9;">최우수 인재</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 32px; font-weight: bold;">${Object.keys(deptAnalysis).length}</div>
+                                    <div style="font-size: 12px; opacity: 0.9;">분석 부서</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h2 style="color: #FF6200; margin-top: 30px;">1. 인력 현황 분석</h2>
+                        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                            <thead>
+                                <tr style="background: #f8f9fa;">
+                                    <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">구분</th>
+                                    <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">인원수</th>
+                                    <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">비율</th>
+                                    <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">비고</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">전체 직원</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${employees.length}명</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">100%</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">분석 대상 전체</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">핵심 인재 (S/A+)</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${gradeDistribution['S'] + gradeDistribution['A+']}명</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${Math.round((gradeDistribution['S'] + gradeDistribution['A+']) / employees.length * 100)}%</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6; color: ${(gradeDistribution['S'] + gradeDistribution['A+']) / employees.length > 0.1 ? '#28a745' : '#dc3545'};">
+                                        ${(gradeDistribution['S'] + gradeDistribution['A+']) / employees.length > 0.1 ? '목표 달성 ✓' : '육성 필요'}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">우수 인재 (A/B+)</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${gradeDistribution['A'] + gradeDistribution['B+']}명</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${Math.round((gradeDistribution['A'] + gradeDistribution['B+']) / employees.length * 100)}%</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">승진 후보군</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">일반 성과자 (B/C)</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${gradeDistribution['B'] + gradeDistribution['C']}명</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${Math.round((gradeDistribution['B'] + gradeDistribution['C']) / employees.length * 100)}%</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">역량 개발 대상</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">관리 필요 (D)</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${gradeDistribution['D']}명</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${Math.round(gradeDistribution['D'] / employees.length * 100)}%</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6; color: ${gradeDistribution['D'] / employees.length < 0.05 ? '#28a745' : '#dc3545'};">
+                                        ${gradeDistribution['D'] / employees.length < 0.05 ? '양호' : '집중 관리 필요'}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <h2 style="color: #FF6200; margin-top: 30px;">2. 부서별 성과 분석</h2>
+                        ${this.generateDepartmentTable(deptAnalysis)}
+                        
+                        <h2 style="color: #FF6200; margin-top: 30px;">3. 월간 주요 이슈 및 Action Items</h2>
+                        <div style="background: #fff5f5; padding: 20px; border-left: 4px solid #dc3545; border-radius: 4px; margin: 20px 0;">
+                            <h4 style="color: #dc3545; margin-top: 0;">🚨 즉시 조치 필요 사항</h4>
+                            <ul style="margin: 10px 0;">
+                                ${gradeDistribution['D'] > 5 ? '<li>하위 성과자 ' + gradeDistribution['D'] + '명에 대한 개선 계획 수립</li>' : ''}
+                                ${(gradeDistribution['S'] + gradeDistribution['A+']) < employees.length * 0.1 ? '<li>핵심 인재 부족 - 육성 프로그램 시급</li>' : ''}
+                                ${avgScore < 700 ? '<li>전사 평균 성과 개선 프로그램 필요</li>' : ''}
+                                <li>부서간 성과 격차 해소 방안 마련</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #e8f5e9; padding: 20px; border-left: 4px solid #4caf50; border-radius: 4px; margin: 20px 0;">
+                            <h4 style="color: #2e7d32; margin-top: 0;">✅ 긍정적 성과</h4>
+                            <ul style="margin: 10px 0;">
+                                ${avgScore >= 750 ? '<li>전사 평균 AI 점수 ' + avgScore + '점으로 우수</li>' : ''}
+                                ${(gradeDistribution['S'] + gradeDistribution['A+']) >= employees.length * 0.15 ? '<li>핵심 인재 비율 업계 평균 상회</li>' : ''}
+                                ${gradeDistribution['D'] < 3 ? '<li>하위 성과자 최소화 달성</li>' : ''}
+                                <li>AI 기반 인재 분석 시스템 정착</li>
+                            </ul>
+                        </div>
+                        
+                        <h2 style="color: #FF6200; margin-top: 30px;">4. 차월 중점 추진 과제</h2>
+                        <ol style="line-height: 2;">
+                            <li><strong>인재 육성:</strong> 상위 20% 대상 리더십 프로그램 실시</li>
+                            <li><strong>성과 관리:</strong> 하위 10% 대상 맞춤형 코칭 제공</li>
+                            <li><strong>조직 문화:</strong> 부서간 협업 증진 워크샵 개최</li>
+                            <li><strong>보상 체계:</strong> 성과 기반 인센티브 제도 개선</li>
+                            <li><strong>디지털 전환:</strong> AI 기반 HR 시스템 고도화</li>
+                        </ol>
+                        
+                        <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                            <p style="margin: 0; color: #6c757d; text-align: center;">
+                                <small>본 리포트는 AIRISS v5.0 AI-Powered HR Intelligence System에 의해 자동 생성되었습니다.<br>
+                                문의: 인사전략팀 (내선 2580)</small>
+                            </p>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            // 등급 분포 계산
+            calculateGradeDistribution(employees) {
+                const distribution = { 'S': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'D': 0 };
+                employees.forEach(emp => {
+                    const grade = emp.ai_grade || emp.grade || emp.OK등급 || 'C';
+                    if (distribution.hasOwnProperty(grade)) {
+                        distribution[grade]++;
+                    }
+                });
+                return distribution;
+            },
+            
+            // 부서별 분석
+            analyzeDepartments(employees) {
+                const deptAnalysis = {};
+                employees.forEach(emp => {
+                    const dept = emp.department || emp.부서 || '기타';
+                    if (!deptAnalysis[dept]) {
+                        deptAnalysis[dept] = { 
+                            count: 0, 
+                            totalScore: 0, 
+                            grades: { 'S': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'D': 0 }
+                        };
+                    }
+                    deptAnalysis[dept].count++;
+                    deptAnalysis[dept].totalScore += emp.ai_score || emp.overall_score || emp.AIRISS_v2_종합점수 || 0;
                     
-                    <h3>1. 전체 현황</h3>
-                    <ul>
-                        <li>분석 직원 수: ${dashboardData.total_employees || 0}명</li>
-                        <li>승진 후보자: ${dashboardData.promotion_candidates?.count || 0}명</li>
-                        <li>핵심 인재: ${dashboardData.top_talents?.count || 0}명</li>
-                        <li>관리 필요 인력: ${dashboardData.risk_employees?.count || 0}명</li>
-                    </ul>
+                    const grade = emp.ai_grade || emp.grade || 'C';
+                    if (deptAnalysis[dept].grades[grade] !== undefined) {
+                        deptAnalysis[dept].grades[grade]++;
+                    }
+                });
+                return deptAnalysis;
+            },
+            
+            // 부서별 테이블 생성
+            generateDepartmentTable(deptAnalysis) {
+                let rows = '';
+                Object.entries(deptAnalysis).forEach(([dept, data]) => {
+                    const avg = Math.round(data.totalScore / data.count);
+                    const topTalents = data.grades['S'] + data.grades['A+'];
+                    rows += `
+                        <tr>
+                            <td style="padding: 12px; border: 1px solid #dee2e6;">${dept}</td>
+                            <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${data.count}명</td>
+                            <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${avg}점</td>
+                            <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${topTalents}명</td>
+                            <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6; color: ${avg >= 750 ? '#28a745' : avg >= 650 ? '#ffc107' : '#dc3545'};">
+                                ${avg >= 750 ? '우수' : avg >= 650 ? '보통' : '개선필요'}
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                return `
+                    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">부서명</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">인원</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">평균 점수</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">핵심 인재</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">평가</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                `;
+            },
                     
                     <h3>2. 등급 분포</h3>
                     <p>전체 직원의 등급 분포는 다음과 같습니다:</p>
