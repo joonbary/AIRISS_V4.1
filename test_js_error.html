@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>JavaScript Error Test</title>
+</head>
+<body>
+    <h1>JavaScript 오류 테스트</h1>
+    <div id="output"></div>
+    
+    <script>
+        console.log('Starting JavaScript test...');
+        
+        try {
+            // Test basic syntax
+            const test1 = `Template literal test`;
+            console.log('✅ Template literal works');
+            
+            // Test object creation
+            const testObj = {
+                method1() {
+                    return 'Method 1';
+                },
+                method2() {
+                    return 'Method 2';
+                }
+            };
+            console.log('✅ Object creation works');
+            
+            // Test the actual AIRISS structure (simplified)
+            const AIRISS = {
+                state: {
+                    employees: []
+                },
+                
+                init() {
+                    console.log('Init called');
+                },
+                
+                calculateAverageScore(employees) {
+                    return 0;
+                },
+                
+                loadInsights() {
+                    const employees = this.state.employees || [];
+                    const avgScore = this.calculateAverageScore(employees);
+                    console.log('Average score:', avgScore);
+                }
+            };
+            
+            console.log('✅ AIRISS-like object creation works');
+            
+            // Test calling methods
+            AIRISS.init();
+            AIRISS.loadInsights();
+            console.log('✅ Method calls work');
+            
+            document.getElementById('output').innerHTML = '<h2>✅ All tests passed!</h2>';
+            
+        } catch (error) {
+            console.error('❌ Error occurred:', error);
+            document.getElementById('output').innerHTML = `<h2>❌ Error: ${error.message}</h2>`;
+        }
+    </script>
+</body>
+</html>

@@ -1645,6 +1645,19 @@
     
     <script>
         // AIRISS v5.0 Main Application - Debug Version
+        
+        // 전역 에러 핸들러 - 구문 오류 포착
+        window.addEventListener('error', function(e) {
+            if (e.message && e.message.includes('Unexpected token')) {
+                console.error('❌ Syntax Error Detected:', e.message);
+                console.error('  Line:', e.lineno, 'Column:', e.colno);
+                console.error('  File:', e.filename);
+                if (e.error && e.error.stack) {
+                    console.error('  Stack:', e.error.stack);
+                }
+            }
+        }, true);
+        
         console.log('🚀 AIRISS v5.0 초기화 시작...');
         
         window.AIRISS = {
