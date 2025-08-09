@@ -392,29 +392,36 @@ async def get_employees_list(db: Session = Depends(get_db)):
         # 먼저 employee_results 테이블 시도
         results = []
         try:
-            # employee_results 테이블 조회 (중복 제거 및 최신 데이터만)
+            # employee_results 테이블 조회 (각 uid별로 최신 레코드만)
+            # 서브쿼리로 각 uid의 최신 id를 먼저 찾음
             results = db.execute(text("""
-                SELECT DISTINCT ON (uid)
-                    uid,
-                    uid as employee_id,
-                    employee_metadata->>'name' as employee_name,
-                    employee_metadata->>'name' as name,
-                    employee_metadata->>'department' as department,
-                    employee_metadata->>'position' as position,
-                    overall_score,
-                    overall_score as ai_score,
-                    grade,
-                    text_score,
-                    quantitative_score,
-                    confidence,
-                    dimension_scores,
-                    ai_feedback,
-                    id,
-                    job_id
-                FROM employee_results
-                WHERE uid IS NOT NULL 
-                  AND employee_metadata->>'name' IS NOT NULL
-                ORDER BY uid, id DESC
+                WITH latest_records AS (
+                    SELECT uid, MAX(id::text) as max_id
+                    FROM employee_results
+                    WHERE uid IS NOT NULL
+                    GROUP BY uid
+                )
+                SELECT 
+                    er.uid,
+                    er.uid as employee_id,
+                    er.employee_metadata->>'name' as employee_name,
+                    er.employee_metadata->>'name' as name,
+                    er.employee_metadata->>'department' as department,
+                    er.employee_metadata->>'position' as position,
+                    er.overall_score,
+                    er.overall_score as ai_score,
+                    er.grade,
+                    er.text_score,
+                    er.quantitative_score,
+                    er.confidence,
+                    er.dimension_scores,
+                    er.ai_feedback,
+                    er.id,
+                    er.job_id
+                FROM employee_results er
+                INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
+                WHERE er.employee_metadata->>'name' IS NOT NULL
+                ORDER BY er.overall_score DESC
                 LIMIT 100
             """)).fetchall()
             logger.info(f"Found {len(results)} records from employee_results")
@@ -682,6 +689,7 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
         
         # employee_results 테이블에서 직원 정보 조회
         # employee_metadata를 전체로 가져와서 파이썬에서 파싱
+        # 여러 레코드가 있을 경우 가장 최근 것 선택 (ID 역순)
         result = db.execute(text("""
             SELECT 
                 uid,
@@ -690,13 +698,18 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
                 grade,
                 dimension_scores,
                 ai_feedback,
+                id,
                 CURRENT_TIMESTAMP as analyzed_at
             FROM employee_results
             WHERE uid = :uid
+            ORDER BY id DESC
             LIMIT 1
         """), {"uid": str(employee_uid)}).first()
         
         logger.info(f"Query result for {employee_uid}: {result is not None}")
+        if result:
+            logger.info(f"Found record ID: {result.id}")
+            logger.info(f"Score: {result.ai_score}, Grade: {result.grade}")
         
         if not result:
             # 디버깅: 실제 존재하는 uid 몇 개 확인
