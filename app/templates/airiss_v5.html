@@ -1791,7 +1791,7 @@
                         <td>${emp.department || '-'}</td>
                         <td>${emp.position || '-'}</td>
                         <td style="font-weight: 600; color: var(--primary-orange);">${Math.round(score)}</td>
-                        <td><span class="btn btn-success" style="padding: 8px 16px; font-size: 14px; border-radius: 8px;">${grade}</span></td>
+                        <td><span class="btn btn-success" style="padding: 8px 16px; font-size: 14px; border-radius: 8px; color: white !important;">${grade}</span></td>
                         <td>${emp.recommendation_reason || '우수한 성과 및 리더십'}</td>
                         <td>
                             <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; border-radius: 8px;" 
@@ -1823,7 +1823,7 @@
                         <td>${emp.department || '-'}</td>
                         <td>${emp.position || '-'}</td>
                         <td style="font-weight: 600; color: var(--primary-orange);">${Math.round(score)}</td>
-                        <td><span class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; border-radius: 8px;">${grade}</span></td>
+                        <td><span class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; border-radius: 8px; color: white !important;">${grade}</span></td>
                         <td>${emp.key_strength || '리더십, 전문성'}</td>
                         <td>
                             <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; border-radius: 8px;" 
@@ -2108,7 +2108,7 @@
                         <td style="font-weight: 600;">${employeeName}</td>
                         <td>${department}</td>
                         <td>${position}</td>
-                        <td><span class="btn btn-${gradeColor}" style="padding: 8px 16px; font-size: 14px; font-weight: 600; border-radius: 8px;">${grade}</span></td>
+                        <td><span class="btn btn-${gradeColor}" style="padding: 8px 16px; font-size: 14px; font-weight: 600; border-radius: 8px; color: white !important;">${grade}</span></td>
                         <td style="font-weight: 600; color: var(--primary-orange); font-size: 18px;">${Math.round(score)}</td>
                         <td>
                             <button class="btn btn-primary" style="padding: 10px 20px; font-size: 14px; border-radius: 8px; font-weight: 500;" 
@@ -2200,13 +2200,14 @@
                     const modalBody = document.getElementById('modal-body');
                     modalBody.style.maxHeight = '85vh';
                     modalBody.style.overflowY = 'auto';
+                    modalBody.style.padding = '2rem';
                     modalBody.innerHTML = `
                         <div class="employee-detail-content" style="padding: 20px;">
                             <!-- 헤더 섹션 - 전문적인 프로필 카드 스타일 -->
                             <div class="profile-header" style="
-                                background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-                                border-radius: 12px;
-                                padding: 30px;
+                                background: linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-tertiary) 100%);
+                                border-radius: 16px;
+                                padding: 40px;
                                 color: white;
                                 margin-bottom: 30px;
                                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
