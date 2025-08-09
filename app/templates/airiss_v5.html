@@ -1438,9 +1438,16 @@
                         console.log(`📡 API Response Status: ${response.status}`);
                         
                         if (!response.ok) {
-                            const errorText = await response.text();
-                            console.error('API Error Response:', errorText);
-                            throw new Error(`HTTP ${response.status}: ${errorText}`);
+                            let errorMessage = `HTTP ${response.status}`;
+                            try {
+                                const errorData = await response.json();
+                                errorMessage = errorData.detail || errorData.message || errorMessage;
+                            } catch {
+                                const errorText = await response.text();
+                                errorMessage = errorText || errorMessage;
+                            }
+                            console.error('API Error Response:', errorMessage);
+                            throw new Error(errorMessage);
                         }
                         
                         const result = await response.json();
@@ -1879,7 +1886,7 @@
                     const score = emp.ai_score || emp.overall_score || 0;
                     
                     row.innerHTML = `
-                        <td style="font-weight: 500;">${employeeId?.slice(0, 8) || (index + 1)}</td>
+                        <td style="font-weight: 500;">${employeeId || (index + 1)}</td>
                         <td style="font-weight: 600;">${employeeName}</td>
                         <td>${department}</td>
                         <td>${position}</td>

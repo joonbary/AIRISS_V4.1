@@ -396,10 +396,13 @@ async def get_employees_list(db: Session = Depends(get_db)):
             results = db.execute(text("""
                 SELECT DISTINCT ON (uid)
                     uid,
+                    uid as employee_id,
                     employee_metadata->>'name' as employee_name,
+                    employee_metadata->>'name' as name,
                     employee_metadata->>'department' as department,
                     employee_metadata->>'position' as position,
                     overall_score,
+                    overall_score as ai_score,
                     grade,
                     text_score,
                     quantitative_score,
@@ -702,32 +705,10 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
                 SELECT uid FROM employee_results LIMIT 5
             """)).fetchall()
             logger.info(f"Sample UIDs in database: {[row.uid for row in sample_uids]}")
+            logger.error(f"No data found for employee_uid: {employee_uid}")
             
-            # 데이터가 없으면 목업 데이터 반환
-            return {
-                "employee_id": employee_uid,
-                "name": "테스트 직원",
-                "department": "개발팀",
-                "position": "선임연구원",
-                "ai_score": 75,
-                "grade": "B",
-                "competencies": {
-                    "실행력": 80,
-                    "성장지향": 75,
-                    "협업": 85,
-                    "고객지향": 70,
-                    "전문성": 80,
-                    "혁신성": 75,
-                    "리더십": 65,
-                    "커뮤니케이션": 78
-                },
-                "strengths": ["협업 능력이 뛰어남", "전문성이 높음", "실행력이 우수함"],
-                "improvements": ["리더십 역량 개발 필요", "혁신적 사고 강화"],
-                "ai_comment": "전반적으로 우수한 성과를 보이고 있으며, 특히 협업과 실행력에서 강점을 보입니다.",
-                "career_recommendation": ["프로젝트 매니저 역할", "기술 리더 포지션"],
-                "education_suggestion": ["리더십 교육", "혁신 마인드셋 워크샵"],
-                "analyzed_at": "2025-01-08T10:00:00"
-            }
+            # 데이터가 없으면 에러 반환
+            raise Exception(f"직원 데이터를 찾을 수 없습니다: {employee_uid}")
         
         # dimension_scores를 competencies로 변환
         competencies = result.dimension_scores or {}
@@ -800,31 +781,9 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
         logger.error(f"Error type: {type(e).__name__}")
         logger.error(f"Error details: {e.args if hasattr(e, 'args') else 'No details'}")
         
-        # 에러 시에도 기본 데이터 반환 (에러 정보 포함)
-        return {
-            "employee_id": employee_uid,
-            "name": "데이터 로드 실패",
-            "department": "-",
-            "position": "-",
-            "ai_score": 0,
-            "grade": "C",
-            "competencies": {
-                "실행력": 70,
-                "성장지향": 70,
-                "협업": 70,
-                "고객지향": 70,
-                "전문성": 70,
-                "혁신성": 70,
-                "리더십": 70,
-                "커뮤니케이션": 70
-            },
-            "strengths": ["데이터를 불러올 수 없습니다"],
-            "improvements": ["데이터를 불러올 수 없습니다"],
-            "ai_comment": "데이터를 불러오는 중 오류가 발생했습니다.",
-            "career_recommendation": [],
-            "education_suggestion": [],
-            "analyzed_at": "2025-01-08T10:00:00"
-        }
+        # 에러 발생시 에러 메시지 반환
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail=f"직원 데이터를 찾을 수 없습니다: {employee_uid}")
 
 # Debug Test Page
 @app.get("/debug")
