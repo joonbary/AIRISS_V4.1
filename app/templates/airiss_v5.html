@@ -1435,13 +1435,25 @@
                     try {
                         console.log(`📡 API 호출: ${method} ${url}`);
                         const response = await fetch(url, options);
-                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        console.log(`📡 API Response Status: ${response.status}`);
+                        
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error('API Error Response:', errorText);
+                            throw new Error(`HTTP ${response.status}: ${errorText}`);
+                        }
+                        
                         const result = await response.json();
                         console.log(`✅ API 응답:`, result);
                         return result;
                     } catch (error) {
-                        console.error('❌ API Error:', error);
-                        AIRISS.showNotification('API 호출 실패', 'error');
+                        console.error('❌ API Error:', {
+                            url: url,
+                            method: method,
+                            error: error.message,
+                            stack: error.stack
+                        });
+                        AIRISS.showNotification(`API 호출 실패: ${error.message}`, 'error');
                         throw error;
                     }
                 }
@@ -1928,7 +1940,14 @@
             // 직원 상세 보기 - 풍부한 AI 분석 정보 표시
             async viewEmployeeDetail(employeeId) {
                 try {
+                    console.log('🔍 직원 상세 조회 시작:', employeeId);
                     const data = await this.api.request('GET', `/employees/${employeeId}/ai-analysis`);
+                    console.log('✅ 직원 상세 데이터:', data);
+                    
+                    // 데이터 검증
+                    if (!data || data.error) {
+                        throw new Error(data?.error || '데이터를 불러올 수 없습니다');
+                    }
                     
                     // 등급별 색상 매핑 - 전문적인 색상으로 변경
                     const gradeColors = {
@@ -2331,14 +2350,20 @@
                     modal.style.maxWidth = '1600px';
                     modal.style.maxHeight = '95vh';
                 } catch (error) {
-                    console.error('Employee detail load failed:', error);
+                    console.error('❌ Employee detail load failed:', {
+                        employeeId: employeeId,
+                        error: error.message,
+                        stack: error.stack
+                    });
                     
                     const modalBody = document.getElementById('modal-body');
                     modalBody.innerHTML = `
                         <div style="text-align: center; padding: 40px; color: #dc3545;">
                             <h3>⚠️ 데이터 로드 실패</h3>
+                            <p>직원 ID: ${employeeId}</p>
                             <p>분석 데이터를 불러올 수 없습니다.</p>
                             <p style="font-size: 14px; color: #6c757d;">오류: ${error.message}</p>
+                            <p style="font-size: 12px; color: #999;">API Endpoint: /api/v1/employees/${employeeId}/ai-analysis</p>
                         </div>
                     `;
                     
