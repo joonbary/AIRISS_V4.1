@@ -777,13 +777,46 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
             "technical": "전문성"
         }
         
-        # 실제 데이터의 키를 한글로 변환
-        korean_competencies = {}
-        for eng_key, value in competencies.items():
-            # 매핑이 있으면 한글 키 사용, 없으면 원래 키 사용
-            korean_key = competency_mapping.get(eng_key, eng_key)
-            korean_competencies[korean_key] = value
+        # 한글 키 정리 (실제 DB 키를 표준 8대 역량으로 매핑)
+        korean_key_mapping = {
+            "실행력": "실행력",
+            "성장지향": "성장지향",
+            "협업": "협업",
+            "고객지향": "고객지향",
+            "전문성": "전문성",
+            "혁신성": "혁신성",
+            "리더십": "리더십",
+            "커뮤니케이션": "커뮤니케이션",
+            # 실제 DB에 있는 키들
+            "업무성과": "실행력",
+            "KPI달성": "실행력",
+            "태도마인드": "성장지향",
+            "리더십협업": "리더십",
+            "전문성학습": "전문성",
+            "창의혁신": "혁신성",
+            "조직적응": "협업",
+            # 기타 가능한 변형들
+            "리더십관리": "리더십",
+            "팀플레이": "협업",
+            "팀빌딩역량": "협업",
+            "학습열의": "성장지향",
+            "업무학습": "전문성"
+        }
         
+        # 실제 데이터의 키를 표준 한글 키로 변환
+        korean_competencies = {}
+        for key, value in competencies.items():
+            # 키가 이미 한글인지 확인
+            if any(ord(c) > 127 for c in key):
+                # 한글 키 - 표준 키로 매핑
+                standard_key = korean_key_mapping.get(key, key)
+                korean_competencies[standard_key] = value
+            else:
+                # 영어 키 - 한글로 변환
+                korean_key = competency_mapping.get(key, key)
+                korean_competencies[korean_key] = value
+        
+        logger.info(f"Original competencies: {competencies}")
         logger.info(f"Mapped competencies: {korean_competencies}")
         
         # ai_feedback 파싱
