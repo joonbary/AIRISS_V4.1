@@ -4091,12 +4091,12 @@
                             
                         case 'talent':
                             reportData.title = '핵심 인재 분석 리포트';
-                            reportData.content = this.generateTalentReport(dashboardData);
+                            reportData.content = this.generateTalentReport(dashboardData, employees);
                             break;
                             
                         case 'risk':
                             reportData.title = '리스크 관리 리포트';
-                            reportData.content = this.generateRiskReport(dashboardData);
+                            reportData.content = this.generateRiskReport(dashboardData, employees);
                             break;
                             
                         case 'custom':
@@ -4347,7 +4347,7 @@
             },
             
             // 인재 리포트 생성
-            generateTalentReport(dashboardData) {
+            generateTalentReport(dashboardData, employees) {
                 const talents = dashboardData.top_talents?.employees || [];
                 const promotions = dashboardData.promotion_candidates?.employees || [];
                 
@@ -4380,7 +4380,7 @@
             },
             
             // 리스크 리포트 생성
-            generateRiskReport(dashboardData) {
+            generateRiskReport(dashboardData, employees) {
                 const riskEmployees = dashboardData.risk_employees?.employees || [];
                 
                 let riskList = riskEmployees.map(emp => 
@@ -4442,10 +4442,162 @@
                 `;
             },
             
+            // 추가 리포트 생성 함수들
+            generatePerformanceReport(dashboardData, employees) {
+                const avgScore = this.calculateAverageScore(employees);
+                const gradeDistribution = this.calculateGradeDistribution(employees);
+                
+                return `
+                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
+                        <h1 style="color: #FF6200; border-bottom: 3px solid #FF6200; padding-bottom: 15px;">
+                            📈 성과 분석 리포트
+                        </h1>
+                        <p>총 ${employees.length}명 직원의 평균 AI 점수는 ${avgScore}점입니다.</p>
+                        <p>성과 분석 상세 리포트가 준비 중입니다...</p>
+                    </div>
+                `;
+            },
+            
+            generateDepartmentReport(dashboardData, employees) {
+                const deptAnalysis = this.analyzeDepartments(employees);
+                
+                return `
+                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
+                        <h1 style="color: #FF6200; border-bottom: 3px solid #FF6200; padding-bottom: 15px;">
+                            🏢 부서별 분석 리포트
+                        </h1>
+                        ${this.generateDepartmentTable(deptAnalysis)}
+                    </div>
+                `;
+            },
+            
+            generateExecutiveReport(dashboardData, employees) {
+                const avgScore = this.calculateAverageScore(employees);
+                const gradeDistribution = this.calculateGradeDistribution(employees);
+                
+                return `
+                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
+                        <h1 style="color: #FF6200; border-bottom: 3px solid #FF6200; padding-bottom: 15px;">
+                            💼 경영진 브리핑 리포트
+                        </h1>
+                        <h2>핵심 요약</h2>
+                        <ul>
+                            <li>전체 인원: ${employees.length}명</li>
+                            <li>평균 점수: ${avgScore}점</li>
+                            <li>최우수 인재: ${gradeDistribution['S'] + gradeDistribution['A+']}명</li>
+                        </ul>
+                        <p>경영진 브리핑 상세 리포트가 준비 중입니다...</p>
+                    </div>
+                `;
+            },
+            
+            // 리포트 액션 함수들
+            printReport() {
+                const content = document.getElementById('report-content').innerHTML;
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>${this.currentReport?.title || '리포트'}</title>
+                            <style>
+                                body { font-family: 'Pretendard', sans-serif; padding: 20px; }
+                                @media print { body { padding: 0; } }
+                            </style>
+                        </head>
+                        <body>${content}</body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.print();
+            },
+            
+            copyReport() {
+                const content = document.getElementById('report-content').innerText;
+                navigator.clipboard.writeText(content).then(() => {
+                    this.showNotification('리포트가 클립보드에 복사되었습니다', 'success');
+                });
+            },
+            
+            downloadReportAsHTML() {
+                if (!this.currentReport) return;
+                
+                const html = `
+                    <!DOCTYPE html>
+                    <html lang="ko">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>${this.currentReport.title}</title>
+                        <style>
+                            body { 
+                                font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+                                padding: 40px; 
+                                max-width: 1200px; 
+                                margin: 0 auto; 
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${this.currentReport.content}
+                    </body>
+                    </html>
+                `;
+                
+                const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${this.currentReport.title}_${new Date().toISOString().split('T')[0]}.html`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            },
+            
+            async downloadReportAsPDF() {
+                if (!this.currentReport) return;
+                
+                try {
+                    const reportContent = document.getElementById('report-content');
+                    const canvas = await html2canvas(reportContent, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: '#ffffff'
+                    });
+                    
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const imgWidth = pageWidth - 20;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    
+                    let heightLeft = imgHeight;
+                    let position = 10;
+                    
+                    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                    heightLeft -= (pageHeight - 20);
+                    
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight + 10;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                        heightLeft -= (pageHeight - 20);
+                    }
+                    
+                    pdf.save(`${this.currentReport.title}_${new Date().toISOString().split('T')[0]}.pdf`);
+                    this.showNotification('PDF 다운로드가 완료되었습니다', 'success');
+                } catch (error) {
+                    console.error('PDF 생성 오류:', error);
+                    this.showNotification('PDF 생성 중 오류가 발생했습니다', 'error');
+                }
+            },
+            
             // 평균 점수 계산
             calculateAverageScore(employees) {
                 if (!employees || employees.length === 0) return 0;
-                const total = employees.reduce((sum, emp) => sum + (emp.ai_score || 0), 0);
+                const total = employees.reduce((sum, emp) => sum + (emp.ai_score || emp.overall_score || emp.AIRISS_v2_종합점수 || 0), 0);
                 return Math.round(total / employees.length);
             },
             
