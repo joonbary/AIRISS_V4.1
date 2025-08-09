@@ -19,6 +19,10 @@
     <meta name="design-update" content="neumorphism-glassmorphism-ok-branding">
     <meta name="design-system" content="OK금융그룹-Pretendard-Neumorphism">
     
+    <!-- PDF 생성 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
         /* ===== AIRISS Premium Design System v3.0 - Professional Edition ===== */
         :root {
@@ -996,18 +1000,22 @@
             max-width: 95vw;
             width: 95vw;
             max-height: 95vh;
-            height: 90vh;
+            height: 95vh;
             overflow-y: auto;
             animation: slideUp 0.3s ease-out;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             border: 1px solid var(--border-light);
             display: flex;
             flex-direction: column;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
         
         @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
         /* ===== OK금융 프리미엄 로딩 스피너 ===== */
@@ -1578,12 +1586,19 @@
         <!-- 직원 상세 모달 -->
         <div id="employee-modal" class="modal">
             <div class="modal-content">
-                <h2 id="modal-title">직원 상세 정보</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 id="modal-title">직원 상세 정보</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" onclick="AIRISS.downloadPDF()" style="padding: 10px 20px; font-size: 14px; border-radius: 8px;">
+                            📄 PDF 다운로드
+                        </button>
+                        <button class="btn btn-secondary" onclick="AIRISS.closeModal()" style="padding: 10px 20px; font-size: 14px; border-radius: 8px;">
+                            ✖ 닫기
+                        </button>
+                    </div>
+                </div>
                 <div id="modal-body">
                     <!-- 동적으로 생성됨 -->
-                </div>
-                <div style="margin-top: 20px; text-align: right;">
-                    <button class="btn btn-secondary" onclick="AIRISS.closeModal()">닫기</button>
                 </div>
             </div>
         </div>
@@ -3030,13 +3045,12 @@
                     `;
                     
                     document.getElementById('modal-title').textContent = `${data.name || employeeId} - 상세 AI 분석 리포트`;
+                    
+                    // 현재 직원 데이터를 전역에 저장 (PDF 다운로드용)
+                    this.currentEmployeeData = data;
+                    
                     const modal = document.getElementById('employee-modal');
                     modal.classList.add('active');
-                    // 팝업 최대화
-                    modal.style.width = '95vw';
-                    modal.style.height = '95vh';
-                    modal.style.maxWidth = '1600px';
-                    modal.style.maxHeight = '95vh';
                 } catch (error) {
                     console.error('❌ Employee detail load failed:', {
                         employeeId: employeeId,
@@ -3477,6 +3491,134 @@
             // 모달 닫기
             closeModal() {
                 document.getElementById('employee-modal').classList.remove('active');
+            },
+            
+            // PDF 다운로드
+            async downloadPDF() {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const data = this.currentEmployeeData;
+                    
+                    if (!data) {
+                        this.showNotification('직원 데이터를 불러올 수 없습니다', 'error');
+                        return;
+                    }
+                    
+                    // PDF 생성
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    let yPos = 20;
+                    
+                    // 폰트 설정
+                    pdf.setFont('helvetica');
+                    
+                    // 제목
+                    pdf.setFontSize(20);
+                    pdf.setTextColor(44, 62, 80);
+                    pdf.text('AI HR 분석 리포트', pageWidth / 2, yPos, { align: 'center' });
+                    yPos += 15;
+                    
+                    // 기본 정보
+                    pdf.setFontSize(16);
+                    pdf.setTextColor(44, 62, 80);
+                    pdf.text(`${data.name || '익명'}`, 20, yPos);
+                    yPos += 10;
+                    
+                    pdf.setFontSize(12);
+                    pdf.setTextColor(73, 80, 87);
+                    pdf.text(`부서: ${data.department || '-'}`, 20, yPos);
+                    yPos += 7;
+                    pdf.text(`직급: ${data.position || '-'}`, 20, yPos);
+                    yPos += 7;
+                    pdf.text(`AI 점수: ${data.ai_score || 0}점`, 20, yPos);
+                    yPos += 7;
+                    pdf.text(`등급: ${data.grade || 'C'}`, 20, yPos);
+                    yPos += 15;
+                    
+                    // 8대 역량
+                    pdf.setFontSize(14);
+                    pdf.setTextColor(44, 62, 80);
+                    pdf.text('8대 핵심 역량', 20, yPos);
+                    yPos += 10;
+                    
+                    pdf.setFontSize(11);
+                    pdf.setTextColor(73, 80, 87);
+                    if (data.competencies) {
+                        Object.entries(data.competencies).forEach(([key, value]) => {
+                            pdf.text(`${key}: ${value || 0}점`, 25, yPos);
+                            yPos += 7;
+                            
+                            // 페이지 넘김 체크
+                            if (yPos > pageHeight - 30) {
+                                pdf.addPage();
+                                yPos = 20;
+                            }
+                        });
+                    }
+                    yPos += 10;
+                    
+                    // 강점
+                    if (data.strengths && data.strengths.length > 0) {
+                        pdf.setFontSize(14);
+                        pdf.setTextColor(44, 62, 80);
+                        pdf.text('핵심 강점', 20, yPos);
+                        yPos += 10;
+                        
+                        pdf.setFontSize(11);
+                        pdf.setTextColor(73, 80, 87);
+                        data.strengths.forEach((strength, idx) => {
+                            const lines = pdf.splitTextToSize(`${idx + 1}. ${strength}`, pageWidth - 45);
+                            lines.forEach(line => {
+                                pdf.text(line, 25, yPos);
+                                yPos += 7;
+                                
+                                if (yPos > pageHeight - 30) {
+                                    pdf.addPage();
+                                    yPos = 20;
+                                }
+                            });
+                        });
+                    }
+                    yPos += 10;
+                    
+                    // 개선점
+                    if (data.improvements && data.improvements.length > 0) {
+                        pdf.setFontSize(14);
+                        pdf.setTextColor(44, 62, 80);
+                        pdf.text('개선 포인트', 20, yPos);
+                        yPos += 10;
+                        
+                        pdf.setFontSize(11);
+                        pdf.setTextColor(73, 80, 87);
+                        data.improvements.forEach((improvement, idx) => {
+                            const lines = pdf.splitTextToSize(`${idx + 1}. ${improvement}`, pageWidth - 45);
+                            lines.forEach(line => {
+                                pdf.text(line, 25, yPos);
+                                yPos += 7;
+                                
+                                if (yPos > pageHeight - 30) {
+                                    pdf.addPage();
+                                    yPos = 20;
+                                }
+                            });
+                        });
+                    }
+                    
+                    // 생성 일시
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(108, 117, 125);
+                    pdf.text(`생성일시: ${new Date().toLocaleString('ko-KR')}`, pageWidth - 20, pageHeight - 10, { align: 'right' });
+                    
+                    // PDF 다운로드
+                    const fileName = `${data.name || '직원'}_AI분석리포트_${new Date().toISOString().split('T')[0]}.pdf`;
+                    pdf.save(fileName);
+                    
+                    this.showNotification('PDF 다운로드가 시작되었습니다', 'success');
+                } catch (error) {
+                    console.error('PDF 생성 오류:', error);
+                    this.showNotification('PDF 생성 중 오류가 발생했습니다', 'error');
+                }
             },
             
             // 알림 표시
