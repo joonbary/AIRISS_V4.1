@@ -658,7 +658,26 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
     try:
         from sqlalchemy import text
         
-        # employee_results 테이블에서 직원 정보 조회
+        # 트랜잭션 롤백 (이전 오류가 있을 경우)
+        try:
+            db.rollback()
+        except:
+            pass
+        
+        logger.info(f"Fetching AI analysis for employee: {employee_uid}")
+        
+        # uid를 정수로 변환 시도 (필요한 경우)
+        uid_param = employee_uid
+        try:
+            # 만약 uid가 숫자 문자열이면 정수로 변환
+            if employee_uid.isdigit():
+                uid_param = int(employee_uid)
+        except:
+            pass
+        
+        logger.info(f"Using uid parameter: {uid_param} (type: {type(uid_param).__name__})")
+        
+        # employee_results 테이블에서 직원 정보 조회 - uid를 문자열과 정수 모두 시도
         result = db.execute(text("""
             SELECT 
                 uid,
@@ -671,11 +690,19 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
                 ai_feedback,
                 created_at as analyzed_at
             FROM employee_results
-            WHERE uid = :uid
+            WHERE uid = :uid_str OR uid = :uid_int::text
             LIMIT 1
-        """), {"uid": employee_uid}).first()
+        """), {"uid_str": str(employee_uid), "uid_int": uid_param if isinstance(uid_param, int) else 0}).first()
+        
+        logger.info(f"Query result for {employee_uid}: {result is not None}")
         
         if not result:
+            # 디버깅: 실제 존재하는 uid 몇 개 확인
+            sample_uids = db.execute(text("""
+                SELECT uid FROM employee_results LIMIT 5
+            """)).fetchall()
+            logger.info(f"Sample UIDs in database: {[row.uid for row in sample_uids]}")
+            
             # 데이터가 없으면 목업 데이터 반환
             return {
                 "employee_id": employee_uid,
@@ -769,8 +796,11 @@ async def get_employee_ai_analysis(employee_uid: str, db: Session = Depends(get_
         }
         
     except Exception as e:
-        logger.error(f"Failed to get employee AI analysis: {e}")
-        # 에러 시에도 기본 데이터 반환
+        logger.error(f"Failed to get employee AI analysis for {employee_uid}: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error details: {e.args if hasattr(e, 'args') else 'No details'}")
+        
+        # 에러 시에도 기본 데이터 반환 (에러 정보 포함)
         return {
             "employee_id": employee_uid,
             "name": "데이터 로드 실패",
