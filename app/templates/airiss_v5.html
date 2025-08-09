@@ -304,12 +304,13 @@
         .app-title {
             font-size: var(--font-size-4xl);
             font-weight: 700;
-            background: var(--primary-gradient);
+            background: var(--gradient-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
             letter-spacing: var(--letter-spacing-tight);
             position: relative;
-            font-family: var(--font-pretendard);
+            font-family: var(--font-primary);
             line-height: 1.2;
             margin-bottom: 8px;
         }
@@ -602,13 +603,14 @@
         }
         
         .stat-value {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 600;
-            background: var(--primary-gradient);
+            background: var(--gradient-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 8px;
-            font-family: var(--font-pretendard);
+            font-family: var(--font-primary);
             line-height: 1.2;
         }
         
@@ -670,16 +672,18 @@
         }
         
         .btn-primary {
-            background: var(--primary-gradient);
-            color: var(--text-inverse);
+            background: var(--gradient-primary) !important;
+            color: white !important;
             box-shadow: var(--shadow-md);
             font-weight: 500;
+            border: none !important;
         }
         
         .btn-primary:hover {
             transform: translateY(-3px);
             box-shadow: var(--shadow-lg);
             filter: brightness(1.08);
+            color: white !important;
         }
         
         .btn-secondary {
@@ -966,16 +970,19 @@
         }
         
         .modal-content {
-            background: #FFFFFF;
-            border-radius: 24px;
-            padding: 48px;
-            max-width: 800px;
-            width: 90%;
-            max-height: 85vh;
+            background: var(--bg-card);
+            border-radius: var(--radius-2xl);
+            padding: 3rem;
+            max-width: 95vw;
+            width: 95vw;
+            max-height: 95vh;
+            height: 90vh;
             overflow-y: auto;
             animation: slideUp 0.3s ease-out;
-            box-shadow: var(--shadow-2xl);
-            border: none;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
         }
         
         @keyframes slideUp {
