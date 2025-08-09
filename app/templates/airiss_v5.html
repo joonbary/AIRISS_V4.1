@@ -1684,11 +1684,12 @@
             },
             
             // 초기화
-            init() {
+            async init() {
                 console.log(`AIRISS v${this.version} initialized at ${this.buildTime}`);
                 this.attachEventListeners();
+                // 직원 데이터를 먼저 로드한 후 대시보드 로드
+                await this.loadEmployeesData();
                 this.loadDashboardData();
-                this.loadEmployeesData();
                 this.checkVersion();
             },
             
@@ -1776,8 +1777,10 @@
                     // 관리 필요 인력 테이블
                     this.renderRiskEmployees(data.risk_employees?.employees || []);
                     
-                    // 차트 렌더링
-                    this.renderDashboardCharts();
+                    // 직원 데이터가 있을 때만 차트 렌더링
+                    if (this.state.employees && this.state.employees.length > 0) {
+                        this.renderDashboardCharts();
+                    }
                 } catch (error) {
                     console.error('Dashboard data load failed:', error);
                 }
@@ -1908,8 +1911,8 @@
                 console.log('📊 차트 렌더링 - 직원 수:', this.state.employees.length);
                 
                 this.state.employees.forEach(emp => {
-                    // 다양한 필드명 확인 (grade, OK등급, ai_grade 등)
-                    const grade = emp.grade || emp.OK등급 || emp.ai_grade || 'C';
+                    // ai_grade 필드를 우선 사용 (실제 데이터 구조에 맞춤)
+                    const grade = emp.ai_grade || emp.grade || emp.OK등급 || 'C';
                     
                     // 첫 몇 개 데이터 로깅
                     if (gradeDistribution[grade] === 0) {
@@ -2143,6 +2146,11 @@
                             this.state.employees = response.employees;
                             console.log('👥 로드된 직원 수:', this.state.employees.length);
                             this.renderEmployees(this.state.employees);
+                            
+                            // 대시보드 탭에서 차트 업데이트
+                            if (this.state.currentTab === 'dashboard') {
+                                this.renderDashboardCharts();
+                            }
                         } else {
                             console.log('📭 데이터가 비어있음');
                             this.renderNoDataMessage('분석된 직원 데이터가 없습니다');
