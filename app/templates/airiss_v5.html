@@ -2653,23 +2653,13 @@
                                                     const cleanPart = part.trim().replace(/^-\s*/, '');
                                                     if (cleanPart.includes(' - ')) {
                                                         const [title, description] = cleanPart.split(' - ', 2);
-                                                        return \`<strong>\${title.trim()}</strong><br><span style="color: #6c757d; font-size: 14px;">\${description.trim()}</span>\`;
+                                                        return '<strong>' + title.trim() + '</strong><br><span style="color: #6c757d; font-size: 14px;">' + description.trim() + '</span>';
                                                     }
                                                     return cleanPart;
                                                 }).join('<br><br>');
                                             }
                                             
-                                            return \`
-                                            <div style="
-                                                padding: 12px;
-                                                background: #f8f9fa;
-                                                border-radius: 6px;
-                                                margin-bottom: 10px;
-                                                border: 1px solid #e9ecef;
-                                            ">
-                                                <div style="color: #495057; line-height: 1.6;">\${parsedContent}</div>
-                                            </div>
-                                        \`;
+                                            return '<div style="padding: 12px; background: #f8f9fa; border-radius: 6px; margin-bottom: 10px; border: 1px solid #e9ecef;"><div style="color: #495057; line-height: 1.6;">' + parsedContent + '</div></div>';
                                         }).join('')}
                                     </div>
                                 </div>
