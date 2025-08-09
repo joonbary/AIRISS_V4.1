@@ -2247,9 +2247,10 @@
                                         <div style="display: flex; gap: 20px; margin-bottom: 20px; opacity: 0.95;">
                                             <span>📍 ${data.department || '미지정'}</span>
                                             <span>💼 ${data.position || '미지정'}</span>
+                                            <span>👨‍💼 추정경력 ${data.estimated_experience || '3-5년'}</span>
                                             <span>📅 ${data.analyzed_at ? new Date(data.analyzed_at).toLocaleDateString('ko-KR') : '최근 분석'}</span>
                                         </div>
-                                        <div style="display: flex; gap: 15px; align-items: center;">
+                                        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                                             <span style="
                                                 background: rgba(255,255,255,0.2);
                                                 padding: 8px 16px;
@@ -2257,7 +2258,7 @@
                                                 font-size: 14px;
                                                 backdrop-filter: blur(10px);
                                             ">
-                                                🏆 상위 ${100 - Math.floor((data.ai_score || 50) / 10) * 10}% 성과자
+                                                🏆 ${data.performance_indicators?.overall_ranking || '상위 50%'}
                                             </span>
                                             <span style="
                                                 background: rgba(255,255,255,0.2);
@@ -2266,7 +2267,25 @@
                                                 font-size: 14px;
                                                 backdrop-filter: blur(10px);
                                             ">
-                                                📈 성장 잠재력 ${data.ai_score >= 80 ? '높음' : data.ai_score >= 60 ? '보통' : '개발필요'}
+                                                📈 성장잠재력 ${data.performance_indicators?.growth_potential || '보통'}
+                                            </span>
+                                            <span style="
+                                                background: rgba(255,255,255,0.2);
+                                                padding: 8px 16px;
+                                                border-radius: 25px;
+                                                font-size: 14px;
+                                                backdrop-filter: blur(10px);
+                                            ">
+                                                ⚖️ 역량균형 ${data.performance_indicators?.competency_balance || '보통'}
+                                            </span>
+                                            <span style="
+                                                background: rgba(255,255,255,0.2);
+                                                padding: 8px 16px;
+                                                border-radius: 25px;
+                                                font-size: 14px;
+                                                backdrop-filter: blur(10px);
+                                            ">
+                                                👑 리더십준비도 ${data.performance_indicators?.leadership_readiness || '개발필요'}
                                             </span>
                                         </div>
                                     </div>
@@ -2281,26 +2300,95 @@
                                             align-items: center;
                                             justify-content: center;
                                             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                                            position: relative;
                                         ">
                                             <div style="font-size: 48px; font-weight: bold; color: #2c3e50;">
                                                 ${data.ai_score || 0}
                                             </div>
                                             <div style="font-size: 14px; color: #999; margin-top: 5px;">AI SCORE</div>
+                                            <div style="
+                                                position: absolute;
+                                                top: -10px;
+                                                right: -10px;
+                                                background: ${gradeColor};
+                                                color: white;
+                                                padding: 6px 12px;
+                                                border-radius: 15px;
+                                                font-size: 14px;
+                                                font-weight: bold;
+                                            ">${data.grade || 'C'}</div>
                                         </div>
                                         <div style="
                                             margin-top: 15px;
-                                            background: ${gradeColor};
+                                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                                             color: white;
-                                            padding: 10px 25px;
+                                            padding: 8px 20px;
                                             border-radius: 25px;
-                                            font-weight: bold;
-                                            font-size: 18px;
-                                            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                                            font-weight: 500;
+                                            font-size: 14px;
+                                            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
                                             display: inline-block;
                                         ">
-                                            ${data.grade || 'C'} GRADE
+                                            평균 역량: ${data.competency_average || 0}점
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 성과 분석 대시보드 - 새로 추가 -->
+                            <div class="performance-dashboard" style="
+                                display: grid;
+                                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                                gap: 20px;
+                                margin-bottom: 30px;
+                            ">
+                                <div class="metric-card" style="
+                                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                    color: white;
+                                    padding: 25px;
+                                    border-radius: 15px;
+                                    text-align: center;
+                                    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+                                ">
+                                    <div style="font-size: 24px; margin-bottom: 5px;">📊</div>
+                                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">${data.performance_indicators?.overall_ranking || '상위 50%'}</div>
+                                    <div style="font-size: 14px; opacity: 0.9;">전체 순위</div>
+                                </div>
+                                <div class="metric-card" style="
+                                    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                                    color: white;
+                                    padding: 25px;
+                                    border-radius: 15px;
+                                    text-align: center;
+                                    box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+                                ">
+                                    <div style="font-size: 24px; margin-bottom: 5px;">📈</div>
+                                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">${data.performance_indicators?.growth_potential || '보통'}</div>
+                                    <div style="font-size: 14px; opacity: 0.9;">성장 잠재력</div>
+                                </div>
+                                <div class="metric-card" style="
+                                    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+                                    color: white;
+                                    padding: 25px;
+                                    border-radius: 15px;
+                                    text-align: center;
+                                    box-shadow: 0 8px 25px rgba(250, 112, 154, 0.3);
+                                ">
+                                    <div style="font-size: 24px; margin-bottom: 5px;">⚠️</div>
+                                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">${data.performance_indicators?.risk_level || '보통'}</div>
+                                    <div style="font-size: 14px; opacity: 0.9;">이직 위험도</div>
+                                </div>
+                                <div class="metric-card" style="
+                                    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+                                    color: #2c3e50;
+                                    padding: 25px;
+                                    border-radius: 15px;
+                                    text-align: center;
+                                    box-shadow: 0 8px 25px rgba(168, 237, 234, 0.3);
+                                ">
+                                    <div style="font-size: 24px; margin-bottom: 5px;">👑</div>
+                                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">${data.performance_indicators?.leadership_readiness || '개발필요'}</div>
+                                    <div style="font-size: 14px; opacity: 0.8;">리더십 준비도</div>
                                 </div>
                             </div>
                             
@@ -2373,6 +2461,113 @@
                                         </div>
                                         `;
                                     }).join('')}
+                                </div>
+                            </div>
+                            
+                            <!-- 역량 상세 분석 - 새로 추가 -->
+                            <div class="competency-analysis" style="
+                                background: white;
+                                border-radius: 20px;
+                                padding: 30px;
+                                margin-bottom: 30px;
+                                box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+                            ">
+                                <h3 style="color: #2c3e50; font-size: 24px; font-weight: 600; margin-bottom: 25px;">
+                                    📈 역량 상세 분석
+                                </h3>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                                    <!-- 강점 역량 TOP 3 -->
+                                    <div style="
+                                        background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+                                        padding: 25px;
+                                        border-radius: 15px;
+                                        border-left: 4px solid #28a745;
+                                    ">
+                                        <h4 style="color: #28a745; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">
+                                            🏆 강점 역량 TOP 3
+                                        </h4>
+                                        ${(data.top_competencies || []).map((comp, idx) => `
+                                            <div style="
+                                                display: flex;
+                                                justify-content: space-between;
+                                                align-items: center;
+                                                padding: 12px 0;
+                                                border-bottom: ${idx < 2 ? '1px solid rgba(40, 167, 69, 0.1)' : 'none'};
+                                            ">
+                                                <div style="display: flex; align-items: center;">
+                                                    <span style="
+                                                        background: #28a745;
+                                                        color: white;
+                                                        width: 24px;
+                                                        height: 24px;
+                                                        border-radius: 50%;
+                                                        display: flex;
+                                                        align-items: center;
+                                                        justify-content: center;
+                                                        font-size: 12px;
+                                                        font-weight: bold;
+                                                        margin-right: 12px;
+                                                    ">${idx + 1}</span>
+                                                    <span style="font-weight: 500; color: #2c3e50;">${comp[0]}</span>
+                                                </div>
+                                                <div style="
+                                                    background: #28a745;
+                                                    color: white;
+                                                    padding: 4px 12px;
+                                                    border-radius: 15px;
+                                                    font-size: 14px;
+                                                    font-weight: bold;
+                                                ">${comp[1]}점</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    
+                                    <!-- 개발 필요 역량 -->
+                                    <div style="
+                                        background: linear-gradient(135deg, #ffebee 0%, #fff3e0 100%);
+                                        padding: 25px;
+                                        border-radius: 15px;
+                                        border-left: 4px solid #ff9800;
+                                    ">
+                                        <h4 style="color: #ff9800; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">
+                                            🎯 개발 필요 역량
+                                        </h4>
+                                        ${(data.low_competencies || []).map((comp, idx) => `
+                                            <div style="
+                                                display: flex;
+                                                justify-content: space-between;
+                                                align-items: center;
+                                                padding: 12px 0;
+                                                border-bottom: ${idx < 2 ? '1px solid rgba(255, 152, 0, 0.1)' : 'none'};
+                                            ">
+                                                <div style="display: flex; align-items: center;">
+                                                    <span style="
+                                                        background: #ff9800;
+                                                        color: white;
+                                                        width: 24px;
+                                                        height: 24px;
+                                                        border-radius: 50%;
+                                                        display: flex;
+                                                        align-items: center;
+                                                        justify-content: center;
+                                                        font-size: 12px;
+                                                        font-weight: bold;
+                                                        margin-right: 12px;
+                                                    ">${idx + 1}</span>
+                                                    <span style="font-weight: 500; color: #2c3e50;">${comp[0]}</span>
+                                                </div>
+                                                <div style="
+                                                    background: ${comp[1] >= 60 ? '#ffc107' : '#dc3545'};
+                                                    color: white;
+                                                    padding: 4px 12px;
+                                                    border-radius: 15px;
+                                                    font-size: 14px;
+                                                    font-weight: bold;
+                                                ">${comp[1]}점</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
                                 </div>
                             </div>
                             
@@ -2599,10 +2794,237 @@
                                 </div>
                             </div>
                             
-                            <!-- 분석 정보 -->
-                            <div style="margin-top: 20px; text-align: center; color: #6c757d; font-size: 12px;">
-                                분석 엔진: ${data.model_version || 'AIRISS v4.2'} | 
-                                생성 시간: ${new Date().toLocaleString('ko-KR')}
+                            <!-- 종합 인사이트 - 새로 추가 -->
+                            <div class="comprehensive-insights" style="
+                                background: white;
+                                border-radius: 20px;
+                                padding: 30px;
+                                margin-bottom: 30px;
+                                box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+                            ">
+                                <h3 style="color: #2c3e50; font-size: 24px; font-weight: 600; margin-bottom: 25px;">
+                                    🎯 종합 인사이트 & 액션 플랜
+                                </h3>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 25px;">
+                                    <!-- 즉시 실행 가능한 액션 -->
+                                    <div style="
+                                        background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+                                        padding: 20px;
+                                        border-radius: 15px;
+                                        border-top: 4px solid #28a745;
+                                    ">
+                                        <h4 style="color: #28a745; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
+                                            ⚡ 즉시 실행 (1-3개월)
+                                        </h4>
+                                        <ul style="margin: 0; padding-left: 20px; color: #2c3e50; line-height: 1.6;">
+                                            ${data.low_competencies && data.low_competencies.length > 0 ? `
+                                                <li>${data.low_competencies[0][0]} 역량 집중 개발</li>
+                                                <li>멘토링 프로그램 참여</li>
+                                                <li>관련 온라인 과정 수강</li>
+                                            ` : `
+                                                <li>강점 역량 더욱 활용</li>
+                                                <li>동료와 지식 공유</li>
+                                                <li>새로운 도전 과제 수행</li>
+                                            `}
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- 중기 발전 계획 -->
+                                    <div style="
+                                        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+                                        padding: 20px;
+                                        border-radius: 15px;
+                                        border-top: 4px solid #2196f3;
+                                    ">
+                                        <h4 style="color: #2196f3; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
+                                            🎯 중기 목표 (6-12개월)
+                                        </h4>
+                                        <ul style="margin: 0; padding-left: 20px; color: #2c3e50; line-height: 1.6;">
+                                            ${data.ai_score >= 70 ? `
+                                                <li>팀 프로젝트 리딩 경험</li>
+                                                <li>교차 부서 협업 확대</li>
+                                                <li>전문성 인증 취득</li>
+                                            ` : `
+                                                <li>기본 역량 안정화</li>
+                                                <li>업무 프로세스 개선</li>
+                                                <li>전문 교육 이수</li>
+                                            `}
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- 장기 비전 -->
+                                    <div style="
+                                        background: linear-gradient(135deg, #fff3e0 0%, #ffebee 100%);
+                                        padding: 20px;
+                                        border-radius: 15px;
+                                        border-top: 4px solid #ff9800;
+                                    ">
+                                        <h4 style="color: #ff9800; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
+                                            🚀 장기 비전 (1-2년)
+                                        </h4>
+                                        <ul style="margin: 0; padding-left: 20px; color: #2c3e50; line-height: 1.6;">
+                                            ${data.ai_score >= 80 ? `
+                                                <li>리더십 포지션 도전</li>
+                                                <li>전략 기획 참여</li>
+                                                <li>조직 발전 기여</li>
+                                            ` : data.ai_score >= 60 ? `
+                                                <li>전문가 포지션 확립</li>
+                                                <li>핵심 업무 담당</li>
+                                                <li>후배 멘토링 역할</li>
+                                            ` : `
+                                                <li>안정적 성과 달성</li>
+                                                <li>역량 균형 개발</li>
+                                                <li>전문 분야 확립</li>
+                                            `}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 성과 예측 및 리스크 분석 - 새로 추가 -->
+                            <div class="prediction-analysis" style="
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                border-radius: 20px;
+                                padding: 30px;
+                                margin-bottom: 30px;
+                                color: white;
+                                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+                            ">
+                                <h3 style="color: white; font-size: 24px; font-weight: 600; margin-bottom: 25px;">
+                                    🔮 AI 예측 분석 & 리스크 관리
+                                </h3>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                                    <!-- 성과 예측 -->
+                                    <div style="
+                                        background: rgba(255,255,255,0.1);
+                                        padding: 25px;
+                                        border-radius: 15px;
+                                        backdrop-filter: blur(10px);
+                                    ">
+                                        <h4 style="color: white; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">
+                                            📊 성과 예측 (6개월 후)
+                                        </h4>
+                                        <div style="margin-bottom: 15px;">
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                                <span style="font-size: 14px;">예상 AI 점수</span>
+                                                <span style="font-weight: bold;">${Math.min(100, data.ai_score + (data.ai_score >= 70 ? 8 : data.ai_score >= 50 ? 12 : 15))}점</span>
+                                            </div>
+                                            <div style="
+                                                background: rgba(255,255,255,0.2);
+                                                border-radius: 10px;
+                                                height: 8px;
+                                                overflow: hidden;
+                                            ">
+                                                <div style="
+                                                    background: linear-gradient(90deg, #28a745 0%, #4CAF50 100%);
+                                                    height: 100%;
+                                                    width: ${Math.min(100, ((data.ai_score + (data.ai_score >= 70 ? 8 : data.ai_score >= 50 ? 12 : 15)) / 100) * 100)}%;
+                                                    transition: width 0.5s ease;
+                                                "></div>
+                                            </div>
+                                        </div>
+                                        <div style="font-size: 14px; opacity: 0.9; line-height: 1.5;">
+                                            현재 성장 궤도를 유지할 경우, ${data.ai_score >= 70 ? '리더십 역할 준비 완료' : data.ai_score >= 50 ? '안정적인 성과 향상 예상' : '기본 역량 강화 필요'}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 리스크 분석 -->
+                                    <div style="
+                                        background: rgba(255,255,255,0.1);
+                                        padding: 25px;
+                                        border-radius: 15px;
+                                        backdrop-filter: blur(10px);
+                                    ">
+                                        <h4 style="color: white; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">
+                                            ⚠️ 리스크 요인 분석
+                                        </h4>
+                                        <div style="space-y: 12px;">
+                                            ${data.ai_score < 60 ? `
+                                                <div style="
+                                                    background: rgba(220, 53, 69, 0.3);
+                                                    padding: 12px;
+                                                    border-radius: 8px;
+                                                    margin-bottom: 10px;
+                                                ">
+                                                    <div style="font-weight: bold; margin-bottom: 5px;">🔴 높은 리스크</div>
+                                                    <div style="font-size: 13px;">성과 개선 및 역량 강화 시급</div>
+                                                </div>
+                                            ` : data.ai_score < 75 ? `
+                                                <div style="
+                                                    background: rgba(255, 193, 7, 0.3);
+                                                    padding: 12px;
+                                                    border-radius: 8px;
+                                                    margin-bottom: 10px;
+                                                ">
+                                                    <div style="font-weight: bold; margin-bottom: 5px;">🟡 보통 리스크</div>
+                                                    <div style="font-size: 13px;">지속적인 발전 노력 필요</div>
+                                                </div>
+                                            ` : `
+                                                <div style="
+                                                    background: rgba(40, 167, 69, 0.3);
+                                                    padding: 12px;
+                                                    border-radius: 8px;
+                                                    margin-bottom: 10px;
+                                                ">
+                                                    <div style="font-weight: bold; margin-bottom: 5px;">🟢 낮은 리스크</div>
+                                                    <div style="font-size: 13px;">안정적이며 성장 궤도 양호</div>
+                                                </div>
+                                            `}
+                                            <div style="font-size: 14px; opacity: 0.9; line-height: 1.5;">
+                                                <strong>권장 조치:</strong><br>
+                                                ${data.performance_indicators?.risk_level === '높음' ? '즉시 개선 계획 수립 및 집중 관리' : 
+                                                  data.performance_indicators?.risk_level === '보통' ? '정기적 모니터링 및 점진적 개선' : 
+                                                  '현재 수준 유지 및 추가 도전 과제 부여'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 분석 정보 및 메타데이터 -->
+                            <div class="analysis-metadata" style="
+                                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                                border-radius: 15px;
+                                padding: 25px;
+                                margin-top: 30px;
+                                border-top: 3px solid var(--primary-orange);
+                            ">
+                                <h4 style="color: #2c3e50; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">
+                                    📋 분석 리포트 정보
+                                </h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                                    <div>
+                                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">분석 엔진</div>
+                                        <div style="font-weight: 600; color: #2c3e50;">${data.analysis_version || 'AIRISS v5.0 Enhanced'}</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">리포트 생성</div>
+                                        <div style="font-weight: 600; color: #2c3e50;">${new Date().toLocaleString('ko-KR')}</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">분석 기간</div>
+                                        <div style="font-weight: 600; color: #2c3e50;">최근 3개월 데이터 기준</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">신뢰도</div>
+                                        <div style="font-weight: 600; color: var(--success);">95%+</div>
+                                    </div>
+                                </div>
+                                
+                                <div style="
+                                    margin-top: 20px;
+                                    padding: 15px;
+                                    background: rgba(255, 107, 53, 0.1);
+                                    border-radius: 10px;
+                                    border-left: 4px solid var(--primary-orange);
+                                ">
+                                    <div style="font-size: 14px; color: #2c3e50; line-height: 1.6;">
+                                        <strong>💡 이 리포트는</strong> AI 기반 종합 분석으로 생성된 개인맞춤형 인사평가 보고서입니다. 
+                                        정확한 인사결정을 위해서는 추가적인 정성적 평가와 함께 종합적으로 활용하시기 바랍니다.
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `;
