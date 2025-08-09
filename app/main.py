@@ -207,15 +207,71 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 for r in risk_results
             ]
         
+        # 승진 후보자 목록 조회 (상위 성과자 중 일부)
+        promotion_candidates = []
+        if high_performers > 0:
+            promotion_results = db.execute(text("""
+                SELECT uid, 
+                       employee_metadata->>'name' as name, 
+                       employee_metadata->>'department' as department,
+                       employee_metadata->>'position' as position,
+                       overall_score,
+                       grade
+                FROM employee_results
+                WHERE overall_score >= 80 AND grade IN ('S', 'A+', 'A')
+                ORDER BY overall_score DESC
+                LIMIT 5
+            """)).fetchall()
+            
+            promotion_candidates = [
+                {
+                    "uid": r.uid,
+                    "name": r.name or "익명",
+                    "department": r.department or "-",
+                    "position": r.position or "-",
+                    "score": r.overall_score,
+                    "grade": r.grade
+                }
+                for r in promotion_results
+            ]
+        
+        # 핵심 인재 목록 조회
+        top_talents = []
+        if high_performers > 0:
+            talent_results = db.execute(text("""
+                SELECT uid, 
+                       employee_metadata->>'name' as name, 
+                       employee_metadata->>'department' as department,
+                       employee_metadata->>'position' as position,
+                       overall_score,
+                       grade
+                FROM employee_results
+                WHERE overall_score >= 85
+                ORDER BY overall_score DESC
+                LIMIT 5
+            """)).fetchall()
+            
+            top_talents = [
+                {
+                    "uid": r.uid,
+                    "name": r.name or "익명",
+                    "department": r.department or "-",
+                    "position": r.position or "-",
+                    "score": r.overall_score,
+                    "grade": r.grade
+                }
+                for r in talent_results
+            ]
+        
         return {
             "total_employees": total,
             "promotion_candidates": {
-                "count": max(0, high_performers // 3),
-                "employees": []
+                "count": len(promotion_candidates),
+                "employees": promotion_candidates
             },
             "top_talents": {
-                "count": high_performers,
-                "employees": []
+                "count": len(top_talents),
+                "employees": top_talents
             },
             "risk_employees": {
                 "count": risk_count,

@@ -972,14 +972,16 @@
             }
         }
     </style>
+    <!-- Chart.js 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="app-container">
         <!-- 헤더 -->
         <header class="app-header">
             <div>
-                <h1 class="app-title">AIRISS v5.0</h1>
-                <p class="app-subtitle">AI-Powered HR Intelligence & Risk Scoring System</p>
+                <h1 class="app-title">OK AIRISS v5.0</h1>
+                <p class="app-subtitle">AI-Powered HR Result & Intelligence Scoring System</p>
             </div>
             <div class="version-info">
                 <div class="sync-status">
@@ -1026,7 +1028,7 @@
                     </div>
                 </div>
                 
-                <div class="stat-card">
+                <div class="stat-card" style="cursor: pointer;" onclick="AIRISS.togglePromotionList()">
                     <div class="stat-icon">🎯</div>
                     <div class="stat-value" id="stat-promotion">0</div>
                     <div class="stat-label">승진 후보자</div>
@@ -1034,15 +1036,25 @@
                         <span>↑</span>
                         <span>+2명 증가</span>
                     </div>
+                    <div id="promotion-list" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            <!-- 승진 후보자 리스트 -->
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="stat-card">
+                <div class="stat-card" style="cursor: pointer;" onclick="AIRISS.toggleTalentList()">
                     <div class="stat-icon">⭐</div>
                     <div class="stat-value" id="stat-talent">0</div>
                     <div class="stat-label">핵심 인재</div>
                     <div class="stat-change positive">
                         <span>↑</span>
                         <span>+3명 증가</span>
+                    </div>
+                    <div id="talent-list" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            <!-- 핵심 인재 리스트 -->
+                        </div>
                     </div>
                 </div>
                 
@@ -1057,11 +1069,32 @@
                 </div>
             </div>
             
+            <!-- 차트 섹션 추가 -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📊 등급 분포</h2>
+                    </div>
+                    <div style="padding: 20px;">
+                        <canvas id="gradeChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📈 부서별 성과</h2>
+                    </div>
+                    <div style="padding: 20px;">
+                        <canvas id="departmentChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">관리 필요 인력 현황</h2>
+                    <h2 class="card-title">⚠️ 관리 필요 인력 현황</h2>
                     <button class="btn btn-primary" onclick="AIRISS.exportDashboard()">
-                        📄 PDF 다운로드
+                        📄 리포트 다운로드
                     </button>
                 </div>
                 <div class="table-responsive">
@@ -1117,6 +1150,17 @@
                             <!-- 동적으로 생성됨 -->
                         </tbody>
                     </table>
+                    <!-- 페이지네이션 UI -->
+                    <div id="pagination-container" style="
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        gap: 10px;
+                        margin-top: 30px;
+                        padding: 20px;
+                    ">
+                        <!-- 페이지네이션 버튼이 여기에 동적으로 생성됨 -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -1496,8 +1540,17 @@
                     document.getElementById('stat-talent').textContent = data.top_talents?.count || 0;
                     document.getElementById('stat-risk').textContent = data.risk_employees?.count || 0;
                     
+                    // 승진 후보자 리스트 렌더링
+                    this.renderPromotionList(data.promotion_candidates?.employees || []);
+                    
+                    // 핵심 인재 리스트 렌더링
+                    this.renderTalentList(data.top_talents?.employees || []);
+                    
                     // 관리 필요 인력 테이블
                     this.renderRiskEmployees(data.risk_employees?.employees || []);
+                    
+                    // 차트 렌더링
+                    this.renderDashboardCharts();
                 } catch (error) {
                     console.error('Dashboard data load failed:', error);
                 }
@@ -1518,13 +1571,176 @@
                         <td>${emp.department || '-'}</td>
                         <td><span class="btn btn-${riskColor}" style="padding: 8px 16px; font-size: 14px; border-radius: 8px; font-weight: 500;">${emp.risk_level === 'high' ? '높음' : '보통'}</span></td>
                         <td>${emp.risk_score || 0}</td>
-                        <td>${emp.reasons?.join(', ') || '-'}</td>
+                        <td>${emp.reason || '-'}</td>
                         <td>
                             <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; border-radius: 8px;" 
-                                    onclick="AIRISS.viewEmployee('${emp.uid}')">상세</button>
+                                    onclick="AIRISS.viewEmployeeDetail('${emp.uid}')">상세</button>
                         </td>
                     `;
                 });
+            },
+            
+            // 승진 후보자 리스트 렌더링
+            renderPromotionList(employees) {
+                const listContainer = document.querySelector('#promotion-list > div');
+                if (!listContainer) return;
+                
+                if (employees.length === 0) {
+                    listContainer.innerHTML = '<p style="text-align: center; color: #999; font-size: 14px;">데이터가 없습니다</p>';
+                    return;
+                }
+                
+                listContainer.innerHTML = employees.map(emp => `
+                    <div style="padding: 8px 12px; background: #f8f9fa; margin-bottom: 8px; border-radius: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${emp.name || '익명'}</strong>
+                            <span style="color: #666; margin-left: 8px;">${emp.department || '-'} / ${emp.position || '-'}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="badge badge-success" style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${emp.grade}</span>
+                            <button class="btn btn-sm btn-primary" style="padding: 4px 8px; font-size: 12px;" onclick="AIRISS.viewEmployeeDetail('${emp.uid}')">상세</button>
+                        </div>
+                    </div>
+                `).join('');
+            },
+            
+            // 핵심 인재 리스트 렌더링
+            renderTalentList(employees) {
+                const listContainer = document.querySelector('#talent-list > div');
+                if (!listContainer) return;
+                
+                if (employees.length === 0) {
+                    listContainer.innerHTML = '<p style="text-align: center; color: #999; font-size: 14px;">데이터가 없습니다</p>';
+                    return;
+                }
+                
+                listContainer.innerHTML = employees.map(emp => `
+                    <div style="padding: 8px 12px; background: #f8f9fa; margin-bottom: 8px; border-radius: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${emp.name || '익명'}</strong>
+                            <span style="color: #666; margin-left: 8px;">${emp.department || '-'} / ${emp.position || '-'}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="badge badge-primary" style="background: #007bff; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${emp.score}점</span>
+                            <button class="btn btn-sm btn-primary" style="padding: 4px 8px; font-size: 12px;" onclick="AIRISS.viewEmployeeDetail('${emp.uid}')">상세</button>
+                        </div>
+                    </div>
+                `).join('');
+            },
+            
+            // 승진 후보자 리스트 토글
+            togglePromotionList() {
+                const listDiv = document.getElementById('promotion-list');
+                if (listDiv) {
+                    listDiv.style.display = listDiv.style.display === 'none' ? 'block' : 'none';
+                }
+            },
+            
+            // 핵심 인재 리스트 토글
+            toggleTalentList() {
+                const listDiv = document.getElementById('talent-list');
+                if (listDiv) {
+                    listDiv.style.display = listDiv.style.display === 'none' ? 'block' : 'none';
+                }
+            },
+            
+            // 대시보드 차트 렌더링
+            renderDashboardCharts() {
+                // 등급 분포 차트
+                const gradeCtx = document.getElementById('gradeChart');
+                if (gradeCtx && typeof Chart !== 'undefined') {
+                    // 기존 차트가 있으면 제거
+                    if (this.gradeChart) {
+                        this.gradeChart.destroy();
+                    }
+                    
+                    this.gradeChart = new Chart(gradeCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['S등급', 'A+등급', 'A등급', 'B등급', 'C등급'],
+                            datasets: [{
+                                data: [5, 10, 25, 45, 15],
+                                backgroundColor: [
+                                    '#FF6200',
+                                    '#FFA500',
+                                    '#4CAF50',
+                                    '#2196F3',
+                                    '#9C27B0'
+                                ],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 15,
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.label + ': ' + context.parsed + '명';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // 부서별 성과 차트
+                const deptCtx = document.getElementById('departmentChart');
+                if (deptCtx && typeof Chart !== 'undefined') {
+                    // 기존 차트가 있으면 제거
+                    if (this.departmentChart) {
+                        this.departmentChart.destroy();
+                    }
+                    
+                    this.departmentChart = new Chart(deptCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['개발팀', '영업팀', '마케팅팀', '인사팀', '재무팀'],
+                            datasets: [{
+                                label: '평균 점수',
+                                data: [78, 82, 75, 80, 77],
+                                backgroundColor: '#FF6200',
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: {
+                                        stepSize: 20
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return '평균 점수: ' + context.parsed.y + '점';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
             },
             
             // 직원 데이터 로드 (개선된 버전)
@@ -1609,8 +1825,8 @@
                 `;
             },
             
-            // 직원 목록 렌더링 (개선된 버전)
-            renderEmployees(employees) {
+            // 직원 목록 렌더링 (페이지네이션 포함)
+            renderEmployees(employees, page = 1) {
                 const tbody = document.getElementById('employees-table');
                 if (!tbody) return;
                 
@@ -1624,7 +1840,15 @@
                 
                 console.log('🖼️ 직원 목록 렌더링:', employees.length + '명');
                 
-                employees.slice(0, 50).forEach((emp, index) => {
+                // 페이지네이션 설정
+                const itemsPerPage = 20;
+                const totalPages = Math.ceil(employees.length / itemsPerPage);
+                const startIndex = (page - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                this.state.currentPage = page;
+                
+                // 현재 페이지의 직원만 표시
+                employees.slice(startIndex, endIndex).forEach((emp, index) => {
                     const row = tbody.insertRow();
                     const gradeColor = {
                         'S': 'success',
@@ -1658,7 +1882,47 @@
                     `;
                 });
                 
+                // 페이지네이션 UI 렌더링
+                this.renderPagination(employees.length, page, itemsPerPage);
+                
                 console.log('✅ 직원 목록 렌더링 완료');
+            },
+            
+            // 페이지네이션 UI 렌더링
+            renderPagination(totalItems, currentPage, itemsPerPage) {
+                const container = document.getElementById('pagination-container');
+                if (!container) return;
+                
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+                container.innerHTML = '';
+                
+                // 이전 버튼
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'btn btn-secondary';
+                prevBtn.innerHTML = '◀ 이전';
+                prevBtn.disabled = currentPage === 1;
+                prevBtn.onclick = () => this.renderEmployees(this.state.employees, currentPage - 1);
+                prevBtn.style.cssText = 'padding: 8px 16px; font-size: 14px; border-radius: 8px;';
+                container.appendChild(prevBtn);
+                
+                // 페이지 정보
+                const pageInfo = document.createElement('div');
+                pageInfo.style.cssText = 'padding: 8px 20px; font-weight: 600; color: #2c3e50;';
+                pageInfo.innerHTML = `
+                    <span style="font-size: 16px;">${currentPage} / ${totalPages}</span>
+                    <br>
+                    <span style="font-size: 12px; color: #666;">총 ${totalItems}명</span>
+                `;
+                container.appendChild(pageInfo);
+                
+                // 다음 버튼
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'btn btn-secondary';
+                nextBtn.innerHTML = '다음 ▶';
+                nextBtn.disabled = currentPage === totalPages;
+                nextBtn.onclick = () => this.renderEmployees(this.state.employees, currentPage + 1);
+                nextBtn.style.cssText = 'padding: 8px 16px; font-size: 14px; border-radius: 8px;';
+                container.appendChild(nextBtn);
             },
             
             // 직원 상세 보기 - 풍부한 AI 분석 정보 표시
@@ -1666,14 +1930,14 @@
                 try {
                     const data = await this.api.request('GET', `/employees/${employeeId}/ai-analysis`);
                     
-                    // 등급별 색상 매핑
+                    // 등급별 색상 매핑 - 전문적인 색상으로 변경
                     const gradeColors = {
-                        'S': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        'A': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                        'A_PLUS': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                        'B': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                        'C': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-                        'D': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+                        'S': 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                        'A': 'linear-gradient(135deg, #2c5f2d 0%, #97bc4c 100%)',
+                        'A_PLUS': 'linear-gradient(135deg, #2c5f2d 0%, #97bc4c 100%)',
+                        'B': 'linear-gradient(135deg, #20547a 0%, #4a8db8 100%)',
+                        'C': 'linear-gradient(135deg, #5f5f5f 0%, #9e9e9e 100%)',
+                        'D': 'linear-gradient(135deg, #8b2c2c 0%, #c45a5a 100%)'
                     };
                     
                     const gradeColor = gradeColors[data.grade] || gradeColors['C'];
@@ -1681,14 +1945,14 @@
                     const modalBody = document.getElementById('modal-body');
                     modalBody.innerHTML = `
                         <div class="employee-detail-content" style="max-height: 80vh; overflow-y: auto; padding: 20px;">
-                            <!-- 헤더 섹션 - 프로필 카드 스타일 -->
+                            <!-- 헤더 섹션 - 전문적인 프로필 카드 스타일 -->
                             <div class="profile-header" style="
-                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                border-radius: 20px;
+                                background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+                                border-radius: 12px;
                                 padding: 30px;
                                 color: white;
                                 margin-bottom: 30px;
-                                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                             ">
                                 <div style="display: flex; align-items: center; justify-content: space-between;">
                                     <div style="flex: 1;">
@@ -1733,7 +1997,7 @@
                                             justify-content: center;
                                             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
                                         ">
-                                            <div style="font-size: 48px; font-weight: bold; color: #667eea;">
+                                            <div style="font-size: 48px; font-weight: bold; color: #2c3e50;">
                                                 ${data.ai_score || 0}
                                             </div>
                                             <div style="font-size: 14px; color: #999; margin-top: 5px;">AI SCORE</div>
@@ -2059,7 +2323,13 @@
                     `;
                     
                     document.getElementById('modal-title').textContent = `${data.name || employeeId} - 상세 AI 분석 리포트`;
-                    document.getElementById('employee-modal').classList.add('active');
+                    const modal = document.getElementById('employee-modal');
+                    modal.classList.add('active');
+                    // 팝업 최대화
+                    modal.style.width = '95vw';
+                    modal.style.height = '95vh';
+                    modal.style.maxWidth = '1600px';
+                    modal.style.maxHeight = '95vh';
                 } catch (error) {
                     console.error('Employee detail load failed:', error);
                     
