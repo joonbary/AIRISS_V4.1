@@ -101,29 +101,36 @@ class EmployeeService:
                 ai_feedback = analysis_result.ai_feedback or {}
                 ai_strengths = analysis_result.ai_strengths or ""
                 ai_weaknesses = analysis_result.ai_weaknesses or ""
-                ai_recommendations = analysis_result.ai_recommendations or {}
+                ai_recommendations = analysis_result.ai_recommendations or []
                 
                 # 강점을 리스트로 파싱 (기존 AI 피드백 형식)
                 strengths = []
                 if ai_strengths:
-                    # "[장점]" 섹션에서 항목들 추출
-                    strength_lines = ai_strengths.split('\n')
-                    for line in strength_lines:
-                        if line.strip() and not line.startswith('[') and not line.startswith('장점'):
-                            # 번호와 기호 제거 후 추가
-                            clean_line = line.strip().lstrip('123456789.-• ').strip()
-                            if clean_line:
-                                strengths.append(clean_line)
+                    # 문자열인 경우 파싱
+                    if isinstance(ai_strengths, str):
+                        # "[장점]" 섹션에서 항목들 추출
+                        strength_lines = ai_strengths.split('\n')
+                        for line in strength_lines:
+                            if line.strip() and not line.startswith('[') and not line.startswith('장점'):
+                                # 번호와 기호 제거 후 추가
+                                clean_line = line.strip().lstrip('123456789.-• ').strip()
+                                if clean_line:
+                                    strengths.append(clean_line)
+                    elif isinstance(ai_strengths, list):
+                        strengths = ai_strengths
                 
                 # 개선점을 리스트로 파싱
                 improvements = []
                 if ai_weaknesses:
-                    weakness_lines = ai_weaknesses.split('\n')
-                    for line in weakness_lines:
-                        if line.strip() and not line.startswith('[') and not line.startswith('개선'):
-                            clean_line = line.strip().lstrip('123456789.-• ').strip()
-                            if clean_line:
-                                improvements.append(clean_line)
+                    if isinstance(ai_weaknesses, str):
+                        weakness_lines = ai_weaknesses.split('\n')
+                        for line in weakness_lines:
+                            if line.strip() and not line.startswith('[') and not line.startswith('개선'):
+                                clean_line = line.strip().lstrip('123456789.-• ').strip()
+                                if clean_line:
+                                    improvements.append(clean_line)
+                    elif isinstance(ai_weaknesses, list):
+                        improvements = ai_weaknesses
                 
                 # 8대 역량 점수 추출 (기존 데이터 구조 활용)
                 dimension_scores = analysis_result.dimension_scores or {}
@@ -145,11 +152,29 @@ class EmployeeService:
                 if isinstance(ai_recommendations, dict):
                     career_recommendations = ai_recommendations.get("career", ["프로젝트 관리 역량 강화", "팀 리더십 개발"])
                     education_suggestions = ai_recommendations.get("education", ["리더십 교육 프로그램", "전략적 사고 워크샵"])
+                elif isinstance(ai_recommendations, list):
+                    # 리스트인 경우 반으로 나누어 할당
+                    mid = len(ai_recommendations) // 2
+                    career_recommendations = ai_recommendations[:mid] if ai_recommendations else ["프로젝트 관리 역량 강화"]
+                    education_suggestions = ai_recommendations[mid:] if ai_recommendations else ["리더십 교육 프로그램"]
+                elif isinstance(ai_recommendations, str):
+                    # 문자열인 경우 파싱
+                    recommendations = [r.strip() for r in ai_recommendations.split('\n') if r.strip()]
+                    mid = len(recommendations) // 2
+                    career_recommendations = recommendations[:mid] if recommendations else ["프로젝트 관리 역량 강화"]
+                    education_suggestions = recommendations[mid:] if recommendations else ["리더십 교육 프로그램"]
                 
                 # AI 종합 피드백 (기존 시스템의 풍부한 피드백)
-                ai_comment = ai_feedback.get("ai_feedback", ai_feedback.get("overall_comment", ""))
+                ai_comment = ""
+                if isinstance(ai_feedback, dict):
+                    ai_comment = ai_feedback.get("ai_feedback", ai_feedback.get("overall_comment", ""))
+                elif isinstance(ai_feedback, str):
+                    ai_comment = ai_feedback
+                
                 if not ai_comment and ai_strengths and ai_weaknesses:
-                    ai_comment = f"주요 강점: {ai_strengths[:200]}... 개선 필요 영역: {ai_weaknesses[:200]}..."
+                    strength_text = ai_strengths if isinstance(ai_strengths, str) else ", ".join(ai_strengths[:3])
+                    weakness_text = ai_weaknesses if isinstance(ai_weaknesses, str) else ", ".join(ai_weaknesses[:2])
+                    ai_comment = f"주요 강점: {strength_text[:200]}... 개선 필요 영역: {weakness_text[:200]}..."
                 
                 # 파일에서 직원 정보 추출
                 from app.models.file import File
@@ -191,15 +216,27 @@ class EmployeeService:
             # 메타데이터가 있는 것을 우선적으로 선택
             employee_result = None
             for result in employee_results:
-                if result.employee_metadata and result.employee_metadata.get('name'):
-                    employee_result = result
-                    break
+                # employee_metadata가 dict인지 확인
+                if result.employee_metadata:
+                    if isinstance(result.employee_metadata, dict) and result.employee_metadata.get('name'):
+                        employee_result = result
+                        break
             
             if not employee_result:
                 employee_result = employee_results[0]
             
             # 기본 데이터로 반환 (기존 로직)
-            metadata = employee_result.employee_metadata or {}
+            metadata = {}
+            if employee_result.employee_metadata:
+                if isinstance(employee_result.employee_metadata, dict):
+                    metadata = employee_result.employee_metadata
+                elif isinstance(employee_result.employee_metadata, str):
+                    try:
+                        import json
+                        metadata = json.loads(employee_result.employee_metadata)
+                    except:
+                        metadata = {}
+            
             name = metadata.get("name", "Unknown")
             department = metadata.get("department", "미지정")
             position = metadata.get("position", "미지정")
