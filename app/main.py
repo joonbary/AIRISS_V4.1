@@ -1783,6 +1783,314 @@ async def serve_executive_dashboard():
         return FileResponse(template_path)
     return {"message": "Executive Dashboard not found"}
 
+# ============================================================================
+# AIRISS 분석결과 API - 외부 시스템 연동용
+# ============================================================================
+
+@app.get("/api/v1/airiss/talent-analysis")
+async def get_talent_analysis(db: Session = Depends(get_db)):
+    """핵심인재, 승진후보군 등 인재풀 분석 결과 제공"""
+    try:
+        from app.models.employee import Employee
+        from sqlalchemy import func
+        
+        # 전체 직원 데이터 조회
+        employees = db.query(Employee).all()
+        
+        if not employees:
+            return {"message": "No employee data found", "data": []}
+        
+        # 인재 분류 로직
+        talent_pools = {
+            "core_talent": [],      # 핵심인재 (S, A+)
+            "promotion_candidates": [],  # 승진후보 (A+, A)
+            "high_performers": [],  # 우수인재 (A)
+            "development_needed": [], # 개발필요 (B+, B)
+            "at_risk": []          # 위험인재 (C, D)
+        }
+        
+        for emp in employees:
+            grade = emp.ai_grade or emp.grade or emp.OK등급 or 'C'
+            score = emp.ai_score or emp.overall_score or emp.AIRISS_v2_종합점수 or 0
+            
+            emp_data = {
+                "employee_id": emp.uid,
+                "name": emp.name or emp.이름,
+                "department": emp.department or emp.부서,
+                "position": emp.position or emp.직급,
+                "grade": grade,
+                "score": score,
+                "years_of_service": getattr(emp, 'years_of_service', None) or getattr(emp, '근속년수', 0),
+                "last_evaluation": emp.updated_at.strftime('%Y-%m-%d') if emp.updated_at else None
+            }
+            
+            # 인재풀 분류
+            if grade in ['S', 'A+']:
+                talent_pools["core_talent"].append(emp_data)
+                if grade == 'A+' or score >= 850:  # 승진 가능 점수
+                    talent_pools["promotion_candidates"].append(emp_data)
+            elif grade == 'A':
+                talent_pools["high_performers"].append(emp_data)
+                if score >= 800:  # 승진 후보 기준
+                    talent_pools["promotion_candidates"].append(emp_data)
+            elif grade in ['B+', 'B']:
+                talent_pools["development_needed"].append(emp_data)
+            else:  # C, D
+                talent_pools["at_risk"].append(emp_data)
+        
+        # 요약 통계
+        summary = {
+            "total_employees": len(employees),
+            "core_talent_count": len(talent_pools["core_talent"]),
+            "promotion_candidates_count": len(talent_pools["promotion_candidates"]),
+            "high_performers_count": len(talent_pools["high_performers"]),
+            "development_needed_count": len(talent_pools["development_needed"]),
+            "at_risk_count": len(talent_pools["at_risk"]),
+            "talent_density": round((len(talent_pools["core_talent"]) / len(employees)) * 100, 2),
+            "analysis_date": datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        return {
+            "status": "success",
+            "summary": summary,
+            "talent_pools": talent_pools
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in talent analysis API: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@app.get("/api/v1/airiss/department-performance")
+async def get_department_performance(db: Session = Depends(get_db)):
+    """부서별 성과 분석 결과 제공"""
+    try:
+        from app.models.employee import Employee
+        
+        employees = db.query(Employee).all()
+        
+        if not employees:
+            return {"message": "No employee data found", "departments": []}
+        
+        # 부서별 데이터 집계
+        dept_data = {}
+        
+        for emp in employees:
+            dept = emp.department or emp.부서 or '미지정'
+            grade = emp.ai_grade or emp.grade or emp.OK등급 or 'C'
+            score = emp.ai_score or emp.overall_score or emp.AIRISS_v2_종합점수 or 0
+            
+            if dept not in dept_data:
+                dept_data[dept] = {
+                    "department": dept,
+                    "total_employees": 0,
+                    "total_score": 0,
+                    "grades": {'S': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'D': 0},
+                    "employees": []
+                }
+            
+            dept_data[dept]["total_employees"] += 1
+            dept_data[dept]["total_score"] += score
+            dept_data[dept]["grades"][grade] += 1
+            
+            dept_data[dept]["employees"].append({
+                "employee_id": emp.uid,
+                "name": emp.name or emp.이름,
+                "position": emp.position or emp.직급,
+                "grade": grade,
+                "score": score
+            })
+        
+        # 부서별 성과 계산
+        departments = []
+        for dept, data in dept_data.items():
+            avg_score = round(data["total_score"] / data["total_employees"]) if data["total_employees"] > 0 else 0
+            core_talent = data["grades"]["S"] + data["grades"]["A+"]
+            
+            dept_performance = {
+                "department": dept,
+                "total_employees": data["total_employees"],
+                "average_score": avg_score,
+                "core_talent_count": core_talent,
+                "talent_ratio": round((core_talent / data["total_employees"]) * 100, 2) if data["total_employees"] > 0 else 0,
+                "grade_distribution": data["grades"],
+                "performance_level": "우수" if avg_score >= 750 else "보통" if avg_score >= 650 else "개선필요",
+                "employees": data["employees"]
+            }
+            
+            departments.append(dept_performance)
+        
+        # 성과순으로 정렬
+        departments.sort(key=lambda x: x["average_score"], reverse=True)
+        
+        return {
+            "status": "success",
+            "analysis_date": datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S'),
+            "total_departments": len(departments),
+            "departments": departments
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in department performance API: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@app.get("/api/v1/airiss/risk-analysis")
+async def get_risk_analysis(db: Session = Depends(get_db)):
+    """위험인재 및 리스크 분석 결과 제공"""
+    try:
+        from app.models.employee import Employee
+        
+        employees = db.query(Employee).all()
+        
+        if not employees:
+            return {"message": "No employee data found", "risk_analysis": {}}
+        
+        # 위험도 분석
+        risk_categories = {
+            "high_risk": [],     # 고위험 (D, 저성과 C)
+            "medium_risk": [],   # 중위험 (C)
+            "low_risk": [],      # 저위험 (B, B+)
+            "retention_candidates": []  # 리텐션 대상 (우수 인재 중 위험 요소)
+        }
+        
+        total_score = 0
+        grade_distribution = {'S': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'D': 0}
+        
+        for emp in employees:
+            grade = emp.ai_grade or emp.grade or emp.OK등급 or 'C'
+            score = emp.ai_score or emp.overall_score or emp.AIRISS_v2_종합점수 or 0
+            total_score += score
+            grade_distribution[grade] += 1
+            
+            emp_data = {
+                "employee_id": emp.uid,
+                "name": emp.name or emp.이름,
+                "department": emp.department or emp.부서,
+                "position": emp.position or emp.직급,
+                "grade": grade,
+                "score": score,
+                "risk_factors": []
+            }
+            
+            # 위험 요소 분석
+            if grade == 'D':
+                emp_data["risk_factors"].extend(["극저성과", "즉시개선필요"])
+                risk_categories["high_risk"].append(emp_data)
+            elif grade == 'C':
+                if score < 500:
+                    emp_data["risk_factors"].append("고위험성과")
+                    risk_categories["high_risk"].append(emp_data)
+                else:
+                    emp_data["risk_factors"].append("성과개선필요")
+                    risk_categories["medium_risk"].append(emp_data)
+            elif grade in ['B', 'B+']:
+                emp_data["risk_factors"].append("개발필요")
+                risk_categories["low_risk"].append(emp_data)
+            elif grade in ['S', 'A+', 'A']:
+                # 우수 인재 중 리텐션 고려 대상 (임의 기준)
+                years_service = getattr(emp, 'years_of_service', None) or getattr(emp, '근속년수', 0)
+                if years_service and years_service > 10:
+                    emp_data["risk_factors"].append("장기근속우수인재")
+                    risk_categories["retention_candidates"].append(emp_data)
+        
+        # 전체 리스크 평가
+        total_employees = len(employees)
+        high_risk_rate = round((len(risk_categories["high_risk"]) / total_employees) * 100, 2)
+        avg_score = round(total_score / total_employees) if total_employees > 0 else 0
+        
+        risk_level = "HIGH" if high_risk_rate > 20 else "MEDIUM" if high_risk_rate > 10 else "LOW"
+        
+        risk_summary = {
+            "total_employees": total_employees,
+            "average_score": avg_score,
+            "overall_risk_level": risk_level,
+            "high_risk_count": len(risk_categories["high_risk"]),
+            "medium_risk_count": len(risk_categories["medium_risk"]),
+            "low_risk_count": len(risk_categories["low_risk"]),
+            "retention_candidates_count": len(risk_categories["retention_candidates"]),
+            "high_risk_rate": high_risk_rate,
+            "grade_distribution": grade_distribution,
+            "recommendations": []
+        }
+        
+        # 권고사항 생성
+        if high_risk_rate > 20:
+            risk_summary["recommendations"].append("즉시 성과 개선 계획 수립 필요")
+        if len(risk_categories["retention_candidates"]) > 0:
+            risk_summary["recommendations"].append("핵심 인재 리텐션 전략 강화")
+        if avg_score < 650:
+            risk_summary["recommendations"].append("전사 교육 및 개발 프로그램 확대")
+        
+        return {
+            "status": "success",
+            "analysis_date": datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S'),
+            "risk_summary": risk_summary,
+            "risk_categories": risk_categories
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in risk analysis API: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@app.get("/api/v1/airiss/export/csv")
+async def export_analysis_csv(analysis_type: str = "talent", db: Session = Depends(get_db)):
+    """AIRISS 분석결과를 CSV 형태로 내보내기"""
+    try:
+        from fastapi.responses import StreamingResponse
+        import csv
+        import io
+        
+        from app.models.employee import Employee
+        employees = db.query(Employee).all()
+        
+        if not employees:
+            raise HTTPException(status_code=404, detail="No employee data found")
+        
+        # CSV 생성
+        output = io.StringIO()
+        
+        if analysis_type == "talent":
+            writer = csv.writer(output)
+            writer.writerow(['직원ID', '이름', '부서', '직급', '등급', '점수', '인재분류', '분석일시'])
+            
+            for emp in employees:
+                grade = emp.ai_grade or emp.grade or emp.OK등급 or 'C'
+                score = emp.ai_score or emp.overall_score or emp.AIRISS_v2_종합점수 or 0
+                
+                # 인재 분류
+                if grade in ['S', 'A+']:
+                    talent_type = '핵심인재'
+                elif grade == 'A':
+                    talent_type = '우수인재'
+                elif grade in ['B+', 'B']:
+                    talent_type = '개발필요'
+                else:
+                    talent_type = '위험인재'
+                
+                writer.writerow([
+                    emp.uid,
+                    emp.name or emp.이름,
+                    emp.department or emp.부서,
+                    emp.position or emp.직급,
+                    grade,
+                    score,
+                    talent_type,
+                    datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
+                ])
+        
+        output.seek(0)
+        
+        return StreamingResponse(
+            io.BytesIO(output.getvalue().encode('utf-8-sig')),
+            media_type='text/csv',
+            headers={
+                "Content-Disposition": f"attachment; filename=airiss_{analysis_type}_{datetime.now(KST).strftime('%Y%m%d')}.csv"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in CSV export API: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 # Serve AIRISS v5.0 Dashboard as main page - MSA integration for EHR
 @app.get("/")
 async def serve_root():
