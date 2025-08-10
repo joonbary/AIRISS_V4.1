@@ -1,0 +1,165 @@
+ # AIRISS AI 인사분석 시스템 연동 요청
+
+  ## 목적
+  우리 회사의 AI 인사분석 시스템인 AIRISS의 분석 결과를 eHR 경영진
+  대시보드 "https://ehrv10-production.up.railway.app/leader-kpi-dashboard/" 에 통합하여 표시해주세요.
+
+  ## AIRISS API 정보
+  - **Base URL**: https://web-production-4066.up.railway.app//api/v1/airiss
+  - **응답 형식**: JSON
+  - **인코딩**: UTF-8
+
+  ## 필요한 API 엔드포인트
+
+  ### 1. 인재풀 분석
+  GET /api/v1/airiss/talent-analysis
+  - 핵심인재(S, A+등급), 승진후보군, 우수인재 정보 제공
+  - 인재 밀도(talent_density) 포함
+
+  ### 2. 부서별 성과
+  GET /api/v1/airiss/department-performance
+  - 부서별 평균 점수, 핵심인재 수, 성과 수준
+  - 부서 순위 정보 (이미 정렬되어 제공)
+
+  ### 3. 리스크 분석
+  GET /api/v1/airiss/risk-analysis
+  - 전체 리스크 레벨 (HIGH/MEDIUM/LOW)
+  - 고위험 인력 수, 리텐션 대상자
+  - AI 기반 권고사항
+
+  ## eHR 경영진 대시보드 구현 요구사항
+
+  ### 1. 대시보드 상단 - 핵심 지표 카드
+  다음 4개의 KPI 카드를 표시해주세요:
+  - **핵심인재**: {core_talent_count}명 (전체 대비 {talent_density}%)
+  - **승진후보**: {promotion_candidates_count}명
+  - **평균성과**: {average_score}점
+  - **리스크레벨**: {overall_risk_level} (색상코딩: HIGH=빨강,
+  MEDIUM=노랑, LOW=초록, 상세 디자인컬러는 템플릿의 분위기와 맞게 미세조정 가능)
+
+  ### 2. 좌측 섹션 - 인재 현황 차트
+  - 파이차트 또는 도넛차트로 인재풀 분포 시각화
+  - 범례: 핵심인재(보라), 우수인재(파랑), 개발필요(노랑),
+  위험인재(빨강), 상세 디자인컬러는 템플릿의 분위기와 맞게 미세조정 가능
+
+  ### 3. 우측 섹션 - 부서별 성과 TOP 5
+  테이블 형식으로 상위 5개 부서 표시:
+  | 순위 | 부서명 | 평균점수 | 핵심인재 | 성과수준 |
+  |------|--------|----------|----------|----------|
+  | 1    | IT본부 | 782점    | 6명      | 우수     |
+
+  ### 4. 하단 섹션 - AI 권고사항
+  AIRISS의 recommendations 배열을 불릿 포인트로 표시
+
+  ## 구현 예시 코드
+
+  ```javascript
+  // eHR 대시보드 컴포넌트에 추가
+  import { useState, useEffect } from 'react';
+
+  const AIRISSIntegration = () => {
+    const [talentData, setTalentData] = useState(null);
+    const [deptData, setDeptData] = useState(null);
+    const [riskData, setRiskData] = useState(null);
+
+    useEffect(() => {
+      // AIRISS API 호출
+      const fetchAIRISSData = async () => {
+        try {
+          // 1. 인재풀 분석 데이터
+          const talentRes = await
+  fetch('https://web-production-4066.up.railway.app//api/v1/airiss/talent-analysis');
+          const talent = await talentRes.json();
+          setTalentData(talent);
+
+          // 2. 부서별 성과 데이터
+          const deptRes = await fetch('https://web-production-4066.up.railway.app//api/v1/a
+  iriss/department-performance');
+          const dept = await deptRes.json();
+          setDeptData(dept);
+
+          // 3. 리스크 분석 데이터
+          const riskRes = await
+  fetch('https://web-production-4066.up.railway.app//api/v1/airiss/risk-analysis');
+          const risk = await riskRes.json();
+          setRiskData(risk);
+        } catch (error) {
+          console.error('AIRISS 데이터 로드 실패:', error);
+        }
+      };
+
+      fetchAIRISSData();
+      // 5분마다 자동 갱신
+      const interval = setInterval(fetchAIRISSData, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }, []);
+
+    return (
+      <div className="airiss-dashboard">
+        {/* KPI 카드 섹션 */}
+        <div className="kpi-cards">
+          <Card title="핵심인재"
+  value={`${talentData?.summary.core_talent_count}명`} />
+          <Card title="승진후보"
+  value={`${talentData?.summary.promotion_candidates_count}명`} />
+          <Card title="평균성과"
+  value={`${deptData?.departments[0]?.average_score}점`} />
+          <Card title="리스크"
+  value={riskData?.risk_summary.overall_risk_level}
+
+  color={getRiskColor(riskData?.risk_summary.overall_risk_level)} />
+        </div>
+
+        {/* 인재 분포 차트 */}
+        <div className="talent-distribution">
+          <PieChart data={formatTalentPoolData(talentData)} />
+        </div>
+
+        {/* 부서별 성과 테이블 */}
+        <div className="department-performance">
+          <Table data={deptData?.departments.slice(0, 5)} />
+        </div>
+
+        {/* AI 권고사항 */}
+        <div className="ai-recommendations">
+          <h3>AI 분석 권고사항</h3>
+          <ul>
+            {riskData?.risk_summary.recommendations.map((rec, idx) => (
+              <li key={idx}>{rec}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  };
+
+  추가 고려사항
+
+  1. CORS 설정: AIRISS 서버에서 eHR 도메인 허용 필요
+  2. 인증: 필요시 API 키 또는 토큰 방식 협의
+  3. 캐싱: 불필요한 API 호출 방지를 위한 캐싱 전략
+  4. 에러 처리: API 실패 시 대체 UI 표시
+  5. 실시간성: WebSocket 연동 필요시 별도 협의
+
+  데이터 갱신 주기
+
+  - 권장: 5분 간격 자동 갱신
+  - 수동 새로고침 버튼 제공
+
+  디자인 가이드
+
+  - 메인테마(레볼루셔너리 베이스.html)에 맞도록
+  - 차트 라이브러리: Chart.js 또는 Recharts 권장
+
+  이 내용을 참고하여 eHR 경영진 대시보드에 AIRISS AI 분석 섹션을
+  추가해주세요.
+  API 연동 중 문제가 있으면 AIRISS 개발팀에 문의 바랍니다.
+
+  ## 🎯 **핵심 전달 사항**
+
+  1. **API 엔드포인트 URL과 응답 구조**를 명확히 전달
+  2. **구체적인 UI 레이아웃**과 표시할 데이터 지정
+  3. **실제 구현 예시 코드** 제공
+  4. **데이터 갱신 주기**와 에러 처리 방법 안내
+
+  

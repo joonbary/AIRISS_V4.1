@@ -58,3 +58,20 @@ nul
 
 # Test data
 test_data/
+
+# Archive folders
+_archive/
+*.backup
+test_*.html
+test_*.py
+*_test.py
+*_test.html
+
+# Temporary development files
+*_fixed.py
+*_v[0-9].py
+*_v[0-9].html
+*_working.*
+*_simple.*
+*_emergency.*
+*_broken.*

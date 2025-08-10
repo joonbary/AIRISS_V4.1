@@ -1,30 +1,33 @@
 # -*- coding: utf-8 -*-
 """
-AIRISS v4.0 Main Application - Fixed Version v2
+AIRISS v5.0 Main Application
 OK Financial Group HR Analysis System
 """
-from fastapi import FastAPI, HTTPException, Request, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+# Standard library imports
 import logging
 import os
 import sys
-import subprocess
-from pathlib import Path
-import uvicorn
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
+
+# Third-party imports
+import uvicorn
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
 
 # Load environment variables
-from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
+# Local imports
 from app.db.database import get_db, engine, init_db
 from app.models import Base
-from sqlalchemy.orm import Session
 
 # Logging setup
 logging.basicConfig(
