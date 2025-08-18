@@ -3,8 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIRISS v4.0 실시간 대시보드</title>
+    <title>AIRISS v4.0 - Material-UI 디자인 시스템</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #FF5722;
+            --primary-light: #FF8A65;
+            --primary-dark: #E64A19;
+            --secondary: #F89C26;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --error: #F44336;
+            --info: #2196F3;
+            --grade-s: #4CAF50;
+            --grade-a-plus: #8BC34A;
+            --grade-a: #CDDC39;
+            --grade-b: #FFC107;
+            --grade-c: #FF9800;
+            --grade-d: #F44336;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,10 +30,10 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Roboto', 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
             min-height: 100vh;
-            padding: 20px;
+            color: #333;
         }
         
         .container {

@@ -20,7 +20,8 @@
       "Bash(curl:*)",
       "Bash(rm:*)",
       "Bash(true)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(start \"\" \"D:\\AIRISS_project_clean\\app\\templates\\airiss_v5.html\")"
     ],
     "deny": []
   }
