@@ -1645,7 +1645,9 @@ except ImportError as e:
     logger.error(f"Failed to import OpenAI proxy router: {e}")
 
 # Static file serving
-static_path = os.getenv("REACT_BUILD_PATH", "/app/static")
+# Use absolute path for Windows
+base_dir = os.path.dirname(os.path.abspath(__file__))
+static_path = os.getenv("REACT_BUILD_PATH", os.path.join(base_dir, "static"))
 
 # Mount static directories
 if os.path.exists(static_path):
@@ -2102,7 +2104,8 @@ async def serve_root():
     import time
     
     # AIRISS v5.0 대시보드를 메인으로 서빙
-    filepath = os.path.join(os.path.dirname(__file__), "templates", "airiss_v5.html")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(base_dir, "templates", "airiss_v5.html")
     
     if os.path.exists(filepath):
         with open(filepath, 'r', encoding='utf-8') as f:
