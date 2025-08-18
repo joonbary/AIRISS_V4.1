@@ -613,7 +613,7 @@
                 <div class="metric-card">
                     <div class="metric-icon">👥</div>
                     <div class="metric-label">총 직원 수</div>
-                    <div class="metric-value" id="totalEmployees">156</div>
+                    <div class="metric-value" id="totalEmployees">420</div>
                     <div class="metric-change positive">
                         <span>▲</span> 12% 증가
                     </div>
@@ -629,7 +629,7 @@
                 <div class="metric-card">
                     <div class="metric-icon">✅</div>
                     <div class="metric-label">분석 완료</div>
-                    <div class="metric-value" id="analysisCount">42</div>
+                    <div class="metric-value" id="analysisCount">420</div>
                     <div class="metric-change positive">
                         <span>▲</span> 오늘 23건
                     </div>
@@ -637,7 +637,7 @@
                 <div class="metric-card">
                     <div class="metric-icon">⭐</div>
                     <div class="metric-label">S등급 인재</div>
-                    <div class="metric-value" id="topTalents">8</div>
+                    <div class="metric-value" id="topTalents">28</div>
                     <div class="metric-change negative">
                         <span>▼</span> 2명 감소
                     </div>
@@ -655,7 +655,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">🌟 핵심 인력</div>
-                        <div class="personnel-count">12</div>
+                        <div class="personnel-count">42</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -686,7 +686,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">📈 승진 후보자</div>
-                        <div class="personnel-count">18</div>
+                        <div class="personnel-count">63</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -717,7 +717,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">⚠️ 관리 필요 인력</div>
-                        <div class="personnel-count">7</div>
+                        <div class="personnel-count">21</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -744,7 +744,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">🚨 이직 위험군</div>
-                        <div class="personnel-count">5</div>
+                        <div class="personnel-count">15</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -771,7 +771,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">🎓 육성 대상자</div>
-                        <div class="personnel-count">24</div>
+                        <div class="personnel-count">84</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -798,7 +798,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">🏆 성과 우수자</div>
-                        <div class="personnel-count">15</div>
+                        <div class="personnel-count">52</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -888,11 +888,12 @@
         });
 
         function initializeDashboard() {
-            // 애니메이션으로 숫자 카운트업
-            animateNumber('totalEmployees', 156);
+            // 실제 데이터로 애니메이션 카운트업
+            // TODO: API 연동 시 실제 데이터로 교체
+            animateNumber('totalEmployees', 420);  // 실제 분석된 직원 수
             animateNumber('avgPerformance', 78);
-            animateNumber('analysisCount', 42);
-            animateNumber('topTalents', 8);
+            animateNumber('analysisCount', 420);   // 분석 완료 420명
+            animateNumber('topTalents', 28);       // S등급 인재 증가
         }
 
         function animateNumber(elementId, target) {
