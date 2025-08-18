@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIRISS: AI가 만드는 HR의 미래 - 인쇄용(가로)</title>
+    
+    <style>
+        /* 인쇄 기본 설정 - 가로 방향 */
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            font-family: 'Pretendard', 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 13pt;
+            line-height: 1.6;
+            color: #212529;
+            background: white;
+        }
+
+        /* A4 가로 페이지 - 정확한 크기 */
+        .page {
+            width: 277mm;  /* 297mm - 20mm margins */
+            height: 190mm;  /* 210mm - 20mm margins */
+            padding: 15mm;
+            margin: 0 auto;
+            background: white;
+            page-break-after: always;
+            page-break-inside: avoid;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .page:last-child {
+            page-break-after: avoid;
+        }
+
+        /* 페이지 헤더 - 컴팩트 */
+        .page-header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #FF6200;
+        }
+
+        .page-header h1 {
+            font-size: 24pt;
+            font-weight: 900;
+            color: #FF6200;
+            margin-bottom: 5px;
+        }
+
+        .page-header p {
+            font-size: 14pt;
+            color: #6C757D;
+        }
+
+        /* 섹션 타이틀 - 컴팩트 */
+        .section-title {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #FF6200;
+            margin: 15px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #FFE0CC;
+        }
+
+        /* 본문 텍스트 */
+        .body-text {
+            font-size: 13pt;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        .body-text strong {
+            color: #FF6200;
+            font-size: 14pt;
+        }
+
+        /* 성과 카드 - 컴팩트 */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .stat-card {
+            background: #FFF5F0;
+            border: 2px solid #FF6200;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24pt;
+            font-weight: 900;
+            color: #FF6200;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 11pt;
+            color: #6C757D;
+        }
+
+        /* 타임라인 - 컴팩트 가로 버전 */
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .timeline-item {
+            background: white;
+            border: 1px solid #FF6200;
+            border-left: 4px solid #FF6200;
+            border-radius: 5px;
+            padding: 12px;
+        }
+
+        .timeline-date {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #FF6200;
+            margin-bottom: 5px;
+        }
+
+        .timeline-title {
+            font-size: 13pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .timeline-content {
+            font-size: 11pt;
+            color: #6C757D;
+            line-height: 1.5;
+        }
+
+        /* 도전과제 카드 - 컴팩트 */
+        .challenge-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .challenge-card {
+            background: #F8F9FA;
+            border-left: 4px solid #FF6200;
+            padding: 12px;
+            border-radius: 5px;
+        }
+
+        .challenge-card h4 {
+            font-size: 13pt;
+            color: #FF6200;
+            margin-bottom: 8px;
+        }
+
+        .challenge-card p {
+            font-size: 11pt;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .solution-box {
+            background: #FFF5F0;
+            padding: 8px;
+            margin-top: 8px;
+            border-radius: 3px;
+            font-size: 10pt;
+        }
+
+        .solution-box strong {
+            color: #FF6200;
+        }
+
+        /* 성과 섹션 - 컴팩트 */
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .achievement-card {
+            background: linear-gradient(135deg, #FFF5F0 0%, #FFFFFF 100%);
+            border: 2px solid #FF6200;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .achievement-metric {
+            font-size: 20pt;
+            font-weight: 900;
+            color: #FF6200;
+            margin-bottom: 5px;
+        }
+
+        .achievement-title {
+            font-size: 13pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .achievement-desc {
+            font-size: 11pt;
+            color: #6C757D;
+            line-height: 1.5;
+        }
+
+        /* 직원 스토리 - 컴팩트 */
+        .story-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .story-card {
+            background: #F8F9FA;
+            border-radius: 8px;
+            padding: 15px;
+            border-top: 3px solid #FF6200;
+        }
+
+        .story-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .story-number {
+            font-size: 18pt;
+            font-weight: 900;
+            color: #FF6200;
+        }
+
+        .story-info h5 {
+            font-size: 13pt;
+            margin-bottom: 2px;
+        }
+
+        .story-info p {
+            font-size: 10pt;
+            color: #6C757D;
+        }
+
+        .story-quote {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #FF6200;
+            margin-bottom: 10px;
+            font-style: italic;
+            padding-left: 15px;
+            border-left: 3px solid #FF6200;
+        }
+
+        .story-content {
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #495057;
+        }
+
+        /* 핵심 메시지 박스 - 컴팩트 */
+        .key-message {
+            background: linear-gradient(135deg, #FF6200 0%, #FFA500 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .key-message h3 {
+            font-size: 14pt;
+            margin-bottom: 5px;
+        }
+
+        .key-message p {
+            font-size: 12pt;
+        }
+
+        /* 미래 비전 - 컴팩트 */
+        .future-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .future-list li {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #FFF5F0;
+            border-left: 3px solid #FF6200;
+            border-radius: 5px;
+            font-size: 12pt;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .future-icon {
+            color: #FF6200;
+            font-size: 14pt;
+            font-weight: bold;
+        }
+
+        /* 교훈 박스 - 컴팩트 */
+        .lesson-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .lesson-item {
+            background: white;
+            border: 2px solid #FF6200;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .lesson-number {
+            font-size: 20pt;
+            font-weight: 900;
+            color: #FF6200;
+            margin-bottom: 5px;
+        }
+
+        .lesson-title {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .lesson-content {
+            font-size: 10pt;
+            color: #6C757D;
+            line-height: 1.4;
+        }
+
+        /* 2단 레이아웃 */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* 페이지 번호 */
+        .page-number {
+            position: absolute;
+            bottom: 10mm;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 11pt;
+            color: #6C757D;
+        }
+
+        /* 인쇄 시 스타일 */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            .page {
+                width: 277mm;
+                height: 190mm;
+                margin: 0;
+                padding: 15mm;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+            
+            .page:last-child {
+                page-break-after: avoid;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+            
+            /* 각 요소가 페이지를 넘지 않도록 */
+            .stat-card, .timeline-item, .challenge-card, 
+            .achievement-card, .story-card, .lesson-item {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 페이지 1: 프로젝트 소개 및 핵심 지표 -->
+    <div class="page">
+        <div class="page-header">
+            <h1>AIRISS: AI가 만드는 HR의 미래</h1>
+            <p>OK Financial Group × Claude AI | 비전문가가 만든 AI 인사시스템</p>
+        </div>
+
+        <div class="body-text">
+            <p>
+                <strong>AIRISS(AI 기반 성과 및 인재 평가 시스템)</strong>는 직원 데이터를 AI로 분석하여 
+                공정한 인사평가, 승진 예측, 핵심인재 발굴을 자동으로 수행하는 HR 솔루션입니다.
+            </p>
+            <p>
+                코딩 경험이 전혀 없던 직원이 Claude AI와 협업하여 단 2개월 만에 구현한 혁신 사례로,
+                <strong>이제 2025년 신인사제도를 위한 차세대 EHR 시스템의 핵심 엔진으로 진화하고 있습니다.</strong>
+            </p>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <span class="stat-number">420명</span>
+                <span class="stat-label">분석된 직원 수</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">95%</span>
+                <span class="stat-label">평가 정확도</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">60일</span>
+                <span class="stat-label">개발 기간</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">0</span>
+                <span class="stat-label">코딩 경험</span>
+            </div>
+        </div>
+
+        <h2 class="section-title">AI와 함께한 2개월의 여정 (2024년 6월 10일 - 8월 10일)</h2>
+
+        <div class="timeline-grid">
+            <div class="timeline-item">
+                <div class="timeline-date">6/10 - 6/20</div>
+                <div class="timeline-title">💡 첫 도전</div>
+                <div class="timeline-content">
+                    Claude에게 첫 질문: "Python을 모르는데 AI 앱을 만들 수 있나요?"<br>
+                    FastAPI 서버 구동 성공
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">6/21 - 7/5</div>
+                <div class="timeline-title">🔧 기초 구축</div>
+                <div class="timeline-content">
+                    SuperClaude 활용으로 개발 속도 10배 향상<br>
+                    OpenAI API 연동 성공
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">7/6 - 7/15</div>
+                <div class="timeline-title">📊 대시보드 개발</div>
+                <div class="timeline-content">
+                    Chart.js로 실시간 차트 구현<br>
+                    반응형 디자인 적용
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">7/16 - 7/25</div>
+                <div class="timeline-title">🚀 MVP 완성</div>
+                <div class="timeline-content">
+                    420명 실제 직원 데이터 분석<br>
+                    95% 정확도 달성
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">7/26 - 7/31</div>
+                <div class="timeline-title">🎯 새로운 목표</div>
+                <div class="timeline-content">
+                    AIRISS 성공으로 더 큰 도전<br>
+                    EHR 시스템 개발 결정
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">8/1 - 8/10</div>
+                <div class="timeline-title">🏗️ EHR 70% 완성</div>
+                <div class="timeline-content">
+                    핵심 인사관리 모듈 구현<br>
+                    6개 AI 모듈 통합
+                </div>
+            </div>
+        </div>
+
+        <div class="key-message">
+            <h3>"그럼 신인사제도에 걸맞는 EHR시스템도 우리 스스로 만들어볼 수 있지 않을까?"</h3>
+            <p>AIRISS의 작은 성공이 더 큰 도전으로 이어지고 있습니다</p>
+        </div>
+
+        <div class="page-number">1 / 3</div>
+    </div>
+
+    <!-- 페이지 2: 도전과제와 성과 -->
+    <div class="page">
+        <div class="page-header">
+            <h1>도전과제와 우리가 만들어낸 가치</h1>
+        </div>
+
+        <h2 class="section-title">넘어야 했던 산들</h2>
+        
+        <div class="challenge-grid">
+            <div class="challenge-card">
+                <h4>🗄️ 데이터베이스 연결</h4>
+                <p>
+                    PostgreSQL, MySQL, SQLite 모든 연결 실패<br>
+                    한글 인코딩 문제로 3일 소요
+                </p>
+                <div class="solution-box">
+                    <strong>해결:</strong> UTF-8 설정과 SQLAlchemy ORM
+                </div>
+            </div>
+            <div class="challenge-card">
+                <h4>🐛 끝없는 버그</h4>
+                <p>
+                    "AIRISS is not defined" 등<br>
+                    매일 새로운 에러와 씨름
+                </p>
+                <div class="solution-box">
+                    <strong>해결:</strong> 체계적 디버깅 학습
+                </div>
+            </div>
+            <div class="challenge-card">
+                <h4>🎨 UI/UX 역량</h4>
+                <p>
+                    개발자도 디자이너도 아닌 상황<br>
+                    못생긴 화면 개선 필요
+                </p>
+                <div class="solution-box">
+                    <strong>해결:</strong> 현대적 디자인 시스템
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">우리가 만들어낸 가치</h2>
+
+        <div class="achievement-grid">
+            <div class="achievement-card">
+                <div class="achievement-metric">1인당 3초</div>
+                <div class="achievement-title">처리 속도</div>
+                <div class="achievement-desc">420명 직원의 10년간 평가 데이터를 AI가 분석하는 시간</div>
+            </div>
+            <div class="achievement-card">
+                <div class="achievement-metric">95%</div>
+                <div class="achievement-title">정확도</div>
+                <div class="achievement-desc">실제 평가 결과와의 일치율 - 인간 평가자보다 높은 일관성</div>
+            </div>
+            <div class="achievement-card">
+                <div class="achievement-metric">최소 10억원</div>
+                <div class="achievement-title">비용 절감</div>
+                <div class="achievement-desc">외주 개발 대비 절감 금액 - 내부 역량 구축이라는 부가가치</div>
+            </div>
+            <div class="achievement-card">
+                <div class="achievement-metric">+α</div>
+                <div class="achievement-title">전략적 가치</div>
+                <div class="achievement-desc">직원에 대한 새로운 인사이트 도출 및 전략적 의사결정 지원</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">우리가 배운 것들</h2>
+
+        <div class="lesson-grid">
+            <div class="lesson-item">
+                <div class="lesson-number">01</div>
+                <div class="lesson-title">AI는 최고의 멘토</div>
+                <div class="lesson-content">
+                    Claude는 24시간 함께하는 개발 멘토였습니다.
+                    모르는 것을 물어보면 즉시 답하고 교정해주었죠.
+                </div>
+            </div>
+            <div class="lesson-item">
+                <div class="lesson-number">02</div>
+                <div class="lesson-title">완벽보다 실행</div>
+                <div class="lesson-content">
+                    처음부터 완벽할 수는 없습니다.
+                    하지만 시작하면 AI가 길을 만들어줍니다.
+                </div>
+            </div>
+            <div class="lesson-item">
+                <div class="lesson-number">03</div>
+                <div class="lesson-title">도메인 지식의 힘</div>
+                <div class="lesson-content">
+                    IT 전문가가 아니어도 괜찮았습니다.
+                    사용자 관점에서 필요한 기능을 알 수 있었죠.
+                </div>
+            </div>
+        </div>
+
+        <div class="page-number">2 / 3</div>
+    </div>
+
+    <!-- 페이지 3: 직원 이야기와 미래 비전 -->
+    <div class="page">
+        <div class="page-header">
+            <h1>직원들의 진솔한 이야기와 미래 비전</h1>
+        </div>
+
+        <div class="story-grid">
+            <div class="story-card">
+                <div class="story-header">
+                    <div class="story-number">01</div>
+                    <div class="story-info">
+                        <h5>김민선 대리</h5>
+                        <p>2019년 입사</p>
+                    </div>
+                </div>
+                <div class="story-quote">
+                    "제가 진짜 하고 싶었던 일이 무엇인지 알게 된 것 같습니다"
+                </div>
+                <div class="story-content">
+                    바이브코딩 웹개발에 몰입하며, 개인의 성장 방향과 회사의 비전이 맞아떨어질 때 시너지가 난다는 걸 실감했습니다.
+                    "내가 변화를 만들어가고 있구나"라는 뿌듯함을 느꼈습니다.
+                </div>
+            </div>
+
+            <div class="story-card">
+                <div class="story-header">
+                    <div class="story-number">02</div>
+                    <div class="story-info">
+                        <h5>황정원 대리</h5>
+                        <p>2012년 입사</p>
+                    </div>
+                </div>
+                <div class="story-quote">
+                    "AI, 또 하나의 비서, 또 하나의 동료"
+                </div>
+                <div class="story-content">
+                    이번 경험을 통해 깨달은 건 '내가 아는 만큼 결과를 주는 동료'라는 사실이었습니다.
+                    AI 시대는 더 배우고 깊이 이해해야 제대로 쓸 수 있는 시대입니다.
+                </div>
+            </div>
+
+            <div class="story-card">
+                <div class="story-header">
+                    <div class="story-number">03</div>
+                    <div class="story-info">
+                        <h5>주승현 차장</h5>
+                        <p>2014년 입사</p>
+                    </div>
+                </div>
+                <div class="story-quote">
+                    "전환점은 '바이브코딩'이었습니다"
+                </div>
+                <div class="story-content">
+                    머릿속 구상을 AI로 구현하면서 프론트엔드·백엔드·DB까지 공부하게 되었고,
+                    각자의 업무를 위한 개발자이자 기획자가 되어야 한다는 확신을 갖게 되었습니다.
+                </div>
+            </div>
+
+            <div class="story-card">
+                <div class="story-header">
+                    <div class="story-number">+</div>
+                    <div class="story-info">
+                        <h5>그리고 더 많은 직원들이</h5>
+                        <p>함께 성장하고 있습니다</p>
+                    </div>
+                </div>
+                <div class="story-quote">
+                    "우리도 할 수 있다"
+                </div>
+                <div class="story-content">
+                    AIRISS의 성공은 단순한 시스템 개발이 아니라,
+                    비전문가도 AI와 함께라면 혁신을 만들 수 있다는 가능성을 증명한 사례입니다.
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">AIRISS에서 EHR 시스템으로</h2>
+
+        <ul class="future-list">
+            <li>
+                <span class="future-icon">🏢</span>
+                <span><strong>차세대 EHR 시스템 자체 구축</strong> - AIRISS를 핵심 엔진으로 탑재</span>
+            </li>
+            <li>
+                <span class="future-icon">📅</span>
+                <span><strong>2025년 말 정식 론칭 목표</strong> - OKDS 협업으로 개발 가속화</span>
+            </li>
+            <li>
+                <span class="future-icon">🤖</span>
+                <span>AI 기반 성과관리 및 경력개발 통합 플랫폼 구축</span>
+            </li>
+            <li>
+                <span class="future-icon">🔗</span>
+                <span>신인사제도 전 프로세스 디지털 전환 추진</span>
+            </li>
+            <li>
+                <span class="future-icon">📈</span>
+                <span>실시간 HR 대시보드 및 예측 분석 고도화</span>
+            </li>
+        </ul>
+
+        <div class="key-message">
+            <h3>AI와 함께 만드는 HR의 새로운 가능성</h3>
+            <p>AIRISS는 시작에 불과합니다. 함께 더 나은 미래를 만들어갑시다.</p>
+        </div>
+
+        <div class="page-number">3 / 3</div>
+    </div>
+</body>
+</html>

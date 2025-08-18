@@ -1,0 +1,48 @@
+🚀 실행 명령어 템플릿
+
+  AIRISS 프로젝트 전환 시작
+
+  # Step 1: Material-UI 설치
+  npm install @mui/material @emotion/react @emotion/styled @mui/icons-material
+
+  # Step 2: 기존 UI 프레임워크 제거
+  npm uninstall bootstrap tailwindcss [기존_프레임워크]
+
+  # Step 3: 테마 파일 생성
+  mkdir src/theme && touch src/theme/index.js
+
+  # Step 4: 컴포넌트 마이그레이션
+  npx @mui/codemod v5.0.0/preset-safe src/components
+
+  📊 성공 지표 (KPIs)
+
+  visual_consistency:
+    target: "95% UI 요소 Material-UI 적용"
+    measurement: "컴포넌트 감사 도구"
+
+  user_experience:
+    target: "일관된 인터랙션 패턴 100%"
+    measurement: "사용성 테스트"
+
+  performance:
+    target: "번들 크기 < 500KB, FCP < 1.5s"
+    measurement: "Lighthouse 점수"
+
+  maintainability:
+    target: "컴포넌트 재사용률 > 80%"
+    measurement: "코드 리뷰 메트릭"
+
+  🔧 트러블슈팅 가이드
+
+  common_issues:
+    style_conflict:
+      problem: "기존 CSS와 MUI 스타일 충돌"
+      solution: "CSS Modules 제거, emotion 사용"
+
+    state_management:
+      problem: "상태 관리 불일치"
+      solution: "Redux Toolkit으로 통일"
+
+    routing:
+      problem: "라우팅 시스템 차이"
+      solution: "React Router v6 표준화"

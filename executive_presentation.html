@@ -286,7 +286,7 @@
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 98, 0, 0.3);
             border-radius: 20px;
-            padding: 30px 20px;
+            padding: 20px 15px;
             text-align: center;
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
@@ -312,18 +312,18 @@
         }
 
         .stat-number {
-            font-size: 56px;
+            font-size: 48px;
             font-weight: 900;
             background: var(--gradient-orange);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             animation: countUp 2s ease-out 1.5s forwards;
         }
 
         .stat-label {
-            font-size: 16px;
+            font-size: 14px;
             color: var(--text-light);
             font-weight: 600;
             letter-spacing: 0.5px;
@@ -667,6 +667,20 @@
             border: none;
         }
 
+        .demo-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(255, 98, 0, 0.05) 0%, rgba(255, 165, 0, 0.02) 100%);
+        }
+
+        .demo-message {
+            text-align: center;
+            padding: 40px;
+        }
+
         .demo-overlay {
             position: absolute;
             top: 0;
@@ -865,6 +879,102 @@
             font-weight: 900;
             z-index: 1;
             box-shadow: 0 20px 60px rgba(255, 98, 0, 0.3);
+        }
+
+        /* Developer Stories Section */
+        .developer-stories {
+            background: linear-gradient(180deg, #1A1A1A 0%, #0F0F0F 100%);
+            padding: 100px 0;
+        }
+
+        .story-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            margin-top: 60px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .story-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 98, 0, 0.2);
+            border-radius: 20px;
+            padding: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .story-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(255, 98, 0, 0.15);
+        }
+
+        .story-header {
+            background: rgba(255, 98, 0, 0.08);
+            padding: 35px 50px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+        }
+
+        .story-avatar {
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .story-info h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .story-info p {
+            font-size: 16px;
+            color: var(--text-light);
+        }
+
+        .story-quote-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 30px;
+            color: rgba(255, 98, 0, 0.2);
+        }
+
+        .story-content {
+            padding: 40px 50px;
+        }
+
+        .story-highlight {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .story-content p {
+            font-size: 18px;
+            line-height: 1.9;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        .story-content p:last-child {
+            margin-bottom: 0;
         }
 
         /* CTA Section */
@@ -1129,7 +1239,7 @@
         <div class="container">
             <div class="section-header fade-in">
                 <p class="section-subtitle">Development Journey</p>
-                <h2 class="section-title">Claude와 함께한 2개월의 여정</h2>
+                <h2 class="section-title">AI와 함께한 2개월의 여정</h2>
                 <p style="font-size: 18px; color: var(--primary); margin-top: 10px;">2024년 6월 10일 - 8월 10일</p>
                 <p class="section-description">
                     코딩 경험 제로에서 시작해 실무에 적용 가능한 AI 시스템까지
@@ -1141,7 +1251,7 @@
                     <div class="timeline-icon">
                         <i class="fas fa-lightbulb"></i>
                     </div>
-                    <div class="timeline-date">6/10 - 6/23</div>
+                    <div class="timeline-date">6/10 - 6/20</div>
                     <div class="timeline-content">
                         <h3>💡 아이디어와 첫 도전</h3>
                         <p>"AI로 공정한 인사평가를 할 수 없을까?"</p>
@@ -1157,7 +1267,7 @@
                     <div class="timeline-icon">
                         <i class="fas fa-code"></i>
                     </div>
-                    <div class="timeline-date">6/24 - 7/7</div>
+                    <div class="timeline-date">6/21 - 7/5</div>
                     <div class="timeline-content">
                         <h3>🔧 기초 시스템 구축</h3>
                         <p>SuperClaude 활용으로 개발 속도 10배 향상</p>
@@ -1174,7 +1284,7 @@
                     <div class="timeline-icon">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <div class="timeline-date">7/8 - 7/21</div>
+                    <div class="timeline-date">7/6 - 7/15</div>
                     <div class="timeline-content">
                         <h3>📊 대시보드 개발</h3>
                         <p>시각화로 인사이트를 한눈에</p>
@@ -1191,9 +1301,9 @@
                     <div class="timeline-icon">
                         <i class="fas fa-rocket"></i>
                     </div>
-                    <div class="timeline-date">7/22 - 8/10</div>
+                    <div class="timeline-date">7/16 - 7/25</div>
                     <div class="timeline-content">
-                        <h3>🚀 완성과 배포</h3>
+                        <h3>🚀 MVP 버전 완성과 배포</h3>
                         <p>실제 데이터로 검증 완료</p>
                         <ul style="margin-top: 15px; color: var(--text-light);">
                             <li>420명 실제 직원 데이터 분석</li>
@@ -1208,10 +1318,13 @@
                     <div class="timeline-icon">
                         <i class="fas fa-trophy"></i>
                     </div>
-                    <div class="timeline-date">8월 중순</div>
+                    <div class="timeline-date">7/26 - 7/31</div>
                     <div class="timeline-content">
-                        <h3>🎯 "아, 이게 되는구나!"</h3>
-                        <p>AIRISS 성공으로 더 큰 도전을 꿈꾸다</p>
+                        <h3>🎯 "그리고 또다른 목표"</h3>
+                        <p>AIRISS 작은 성공으로 더 큰 도전을 꿈꾸다</p>
+                        <p style="margin-top: 15px; font-size: 18px; color: var(--primary); font-weight: 600;">
+                            "그럼 신인사제도에 걸맞는 EHR시스템도 우리 스스로 만들어볼 수 있지 않을까?"
+                        </p>
                         <ul style="margin-top: 15px; color: var(--text-light);">
                             <li>비전문가도 AI 시스템 구축 가능함을 입증</li>
                             <li>2025년 신인사제도 시스템화 필요성 인식</li>
@@ -1225,17 +1338,17 @@
                     <div class="timeline-icon">
                         <i class="fas fa-building"></i>
                     </div>
-                    <div class="timeline-date">10월 현재</div>
+                    <div class="timeline-date">8/1 - 8/10</div>
                     <div class="timeline-content">
                         <h3>🏗️ EHR 시스템 초기 개발 성과</h3>
-                        <p>불과 2주 만에 놀라운 가능성 확인</p>
+                        <p>불과 10일 만에 놀라운 가능성 확인</p>
                         <ul style="margin-top: 15px; color: var(--text-light);">
                             <li><strong style="color: var(--primary);">70% 개발 완료</strong> - 핵심 인사관리 모듈 100% 구현</li>
                             <li>✅ 3축 AI 평가 체계 (기여도/전문성/영향력) 구현</li>
                             <li>✅ Revolutionary UI/UX - Glass Morphism 디자인 적용</li>
                             <li>✅ 6개 AI 모듈 통합 (챗봇, 코칭, 면접관, 팀 최적화 등)</li>
                             <li>🚀 Railway 클라우드 실시간 배포 환경 구축</li>
-                            <li><strong style="color: var(--primary);">2025년 말 정식 론칭</strong> 목표로 OKDS와 협업 중</li>
+                            <li><strong style="color: var(--primary);">2025년 말 정식 론칭</strong> 목표로 OKDS와 협업 추진</li>
                         </ul>
                     </div>
                 </div>
@@ -1322,7 +1435,7 @@
                     <div class="achievement-content">
                         <h3>처리 속도</h3>
                         <div class="achievement-metric">1인당 3초</div>
-                        <p>420명 직원에 대한 AI 인사평가 분석</p>
+                        <p>420명 직원의 10년간 평가에 대한 AI 인사평가 분석</p>
                     </div>
                 </div>
 
@@ -1343,7 +1456,7 @@
                     </div>
                     <div class="achievement-content">
                         <h3>비용 절감</h3>
-                        <div class="achievement-metric">90%</div>
+                        <div class="achievement-metric">최소 10억</div>
                         <p>외주 개발 대비 비용 절감률</p>
                     </div>
                 </div>
@@ -1353,9 +1466,9 @@
                         <i class="fas fa-users"></i>
                     </div>
                     <div class="achievement-content">
-                        <h3>활용 가치</h3>
+                        <h3>전략적 가치</h3>
                         <div class="achievement-metric">+α</div>
-                        <p>직원에 대한 새로운 인사이트 도출</p>
+                        <p>직원에 대한 새로운 인사이트 도출 및 전략적 의사결정 지원</p>
                     </div>
                 </div>
             </div>
@@ -1382,13 +1495,10 @@
                     </div>
                 </div>
                 <div class="demo-screen">
-                    <iframe src="https://ehrv10-production.up.railway.app/" 
-                            class="demo-iframe"
-                            title="AIRISS Live Demo">
-                    </iframe>
+                    <img src="demo.jpg" alt="AIRISS Demo Screenshot" style="width: 100%; height: 100%; object-fit: cover;">
                     <div class="demo-overlay">
                         <a href="https://ehrv10-production.up.railway.app/" class="demo-cta" target="_blank">
-                            <i class="fas fa-play"></i> 라이브 데모 시작
+                            <i class="fas fa-external-link-alt"></i> 새 창에서 데모 열기
                         </a>
                     </div>
                 </div>
@@ -1439,7 +1549,7 @@
                     </div>
                     <h3 class="lesson-title">도메인 지식의 힘</h3>
                     <p class="lesson-content">
-                        HR 전문가가 아니어도 괜찮았습니다. 오히려 사용자 관점에서
+                        IT 전문가가 아니어도 괜찮았습니다. 오히려 사용자 관점에서
                         진짜 필요한 기능이 무엇인지 알 수 있었죠.
                     </p>
                 </div>
@@ -1493,6 +1603,109 @@
         </div>
     </section>
 
+    <!-- Developer Stories Section -->
+    <section class="developer-stories">
+        <div class="container">
+            <div class="section-header fade-in">
+                <p class="section-subtitle">Employee Stories</p>
+                <h2 class="section-title">직원들의 진솔한 이야기</h2>
+                <p class="section-description">
+                    AI와 함께 성장한 비전문가들의 도전과 깨달음
+                </p>
+            </div>
+            
+            <div class="story-cards">
+                <div class="story-card fade-in">
+                    <div class="story-header">
+                        <div style="font-size: 48px; font-weight: 900; color: var(--primary); margin-right: 30px;">01</div>
+                        <div class="story-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="story-info">
+                            <h3>김민선 대리</h3>
+                            <p>2019년 입사</p>
+                        </div>
+                        <div class="story-quote-icon">
+                            <i class="fas fa-quote-right"></i>
+                        </div>
+                    </div>
+                    <div class="story-content">
+                        <p class="story-highlight">
+                            "제가 진짜 하고 싶었던 일이 무엇인지 알게 된 것 같습니다."
+                        </p>
+                        <p>
+                            바이브코딩 웹개발에 몰입하며, 개인의 성장 방향과 회사의 비전이 맞아떨어질 때 시너지가 난다는 걸 실감했습니다.
+                            반복적·비효율적인 업무를 직접 해결할 수 있다는 가능성을 발견했고, 주니어급인 저에게도 기회가 주어져 더 신났습니다.
+                        </p>
+                        <p>
+                            어려움 속에서도 <strong style="color: var(--primary);">"내가 변화를 만들어가고 있구나"</strong>라는 뿌듯함을 느꼈고, 
+                            자격증 취득과 공부를 병행했습니다. 환경 제약으로 아쉬움도 있었지만, 이번 경험은 제 인생의 소중한 전환점이 되었습니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="story-card fade-in">
+                    <div class="story-header">
+                        <div style="font-size: 48px; font-weight: 900; color: var(--primary); margin-right: 30px;">02</div>
+                        <div class="story-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="story-info">
+                            <h3>황정원 대리</h3>
+                            <p>2012년 입사</p>
+                        </div>
+                        <div class="story-quote-icon">
+                            <i class="fas fa-quote-right"></i>
+                        </div>
+                    </div>
+                    <div class="story-content">
+                        <p class="story-highlight">
+                            "AI, 또 하나의 비서, 또 하나의 동료"
+                        </p>
+                        <p>
+                            이번 경험을 통해 깨달은 건 <strong style="color: var(--primary);">'내가 아는 만큼 결과를 주는 동료'</strong>라는 사실이었습니다.
+                            Firebase에서 시작해 Cursor로 다시 도전하는 과정에서, 오류와 실패를 거듭하며 
+                            <strong>"진행은커녕, 오류가 안 나는 것만으로도 감사한 날"</strong>도 많았습니다.
+                        </p>
+                        <p>
+                            AI 시대는 자동으로 편해지는 시대가 아니라, 더 배우고 깊이 이해해야 제대로 쓸 수 있는 시대임을 뼈저리게 느꼈습니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="story-card fade-in">
+                    <div class="story-header">
+                        <div style="font-size: 48px; font-weight: 900; color: var(--primary); margin-right: 30px;">03</div>
+                        <div class="story-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="story-info">
+                            <h3>주승현 차장</h3>
+                            <p>2014년 입사 · AI Engineer</p>
+                        </div>
+                        <div class="story-quote-icon">
+                            <i class="fas fa-quote-right"></i>
+                        </div>
+                    </div>
+                    <div class="story-content">
+                        <p class="story-highlight">
+                            "전환점은 '바이브코딩'이었습니다."
+                        </p>
+                        <p>
+                            처음 AI를 접했을 때는 그저 신기함이 앞섰습니다. 코드 작성부터 문서 요약까지 척척 해내는 모습에 놀라움과 기대가 컸지만, 
+                            "정작 어떤 툴을 어떻게 써야 할지 모르는" 상태였습니다.
+                        </p>
+                        <p>
+                            머릿속 구상을 AI로 구현하면서 프론트엔드·백엔드·DB까지 공부하게 되었고, AI에 다가가는 시대가 되었음을 실감했습니다.
+                            이제는 단순한 사용자에서 벗어나 <strong style="color: var(--primary);">각자의 업무를 위한 개발자이자 기획자가 되어야 한다</strong>는 
+                            확신을 갖게 되었고, 이를 위해 AI와 프로그래밍 역량을 지속적으로 키워가고자 합니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="cta">
         <div class="container">
@@ -1500,7 +1713,6 @@
             <p>AIRISS는 시작에 불과합니다. 함께 더 나은 미래를 만들어갑시다.</p>
             <div class="cta-buttons">
                 <a href="https://ehrv10-production.up.railway.app/" class="btn" target="_blank">AIRISS 체험하기</a>
-                <a href="#" class="btn btn-secondary">개발 스토리 자세히 보기</a>
             </div>
         </div>
     </section>

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OK금융그룹 인사부 AI 활용 현황 - 인쇄용(가로)</title>
+    
+    <style>
+        /* 인쇄 기본 설정 - 가로 방향 */
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-size: 13pt;
+            line-height: 1.6;
+            color: #212529;
+            background: white;
+        }
+
+        /* A4 가로 페이지 - 정확한 크기 */
+        .page {
+            width: 277mm;  /* 297mm - 20mm margins */
+            height: 190mm;  /* 210mm - 20mm margins */
+            padding: 15mm;
+            margin: 0 auto;
+            background: white;
+            page-break-after: always;
+            page-break-inside: avoid;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .page:last-child {
+            page-break-after: avoid;
+        }
+
+        /* 헤더 스타일 - 컴팩트 */
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #FF6347;
+        }
+
+        .header h1 {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #212529;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14pt;
+            color: #6C757D;
+        }
+
+        /* 섹션 타이틀 - 컴팩트 */
+        .section-title {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #212529;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #E9ECEF;
+        }
+
+        /* 업무별 AI 활용 현황 테이블 - 한 페이지 최적화 */
+        .usage-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12pt;
+            margin-bottom: 15px;
+        }
+
+        .usage-table th {
+            background: #F8F9FA;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #DEE2E6;
+            font-size: 13pt;
+        }
+
+        .usage-table td {
+            padding: 8px 10px;
+            border: 1px solid #DEE2E6;
+            vertical-align: middle;
+            font-size: 12pt;
+        }
+
+        .usage-table tr:nth-child(even) {
+            background: #FAFAFA;
+        }
+
+        /* 차트 바 - 적당한 크기 */
+        .chart-container {
+            display: flex;
+            width: 100%;
+            height: 30px;
+            background: #F8F9FA;
+            border: 1px solid #DEE2E6;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .chart-current {
+            background: #495057;
+            color: white;
+            text-align: center;
+            font-size: 11pt;
+            line-height: 30px;
+            font-weight: bold;
+        }
+
+        .chart-future {
+            background: #ADB5BD;
+            color: white;
+            text-align: center;
+            font-size: 11pt;
+            line-height: 30px;
+        }
+
+        .chart-impossible {
+            background: #E9ECEF;
+            color: #6C757D;
+            text-align: center;
+            font-size: 11pt;
+            line-height: 30px;
+        }
+
+        /* AI Tool 비용 테이블 - 컴팩트 */
+        .cost-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12pt;
+            margin-bottom: 15px;
+        }
+
+        .cost-table th {
+            background: #F8F9FA;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #DEE2E6;
+            font-size: 13pt;
+        }
+
+        .cost-table td {
+            padding: 8px 10px;
+            border: 1px solid #DEE2E6;
+            text-align: right;
+            font-size: 12pt;
+        }
+
+        .cost-table td:first-child,
+        .cost-table td:nth-child(2) {
+            text-align: left;
+        }
+
+        .cost-table .total-row {
+            background: #F8F9FA;
+            font-weight: bold;
+            font-size: 13pt;
+        }
+
+        /* 요약 박스 - 컴팩트 */
+        .summary-box {
+            background: #F8F9FA;
+            border: 2px solid #FF6347;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .summary-box h3 {
+            color: #FF6347;
+            font-size: 16pt;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #FFE0CC;
+        }
+
+        .stat-label {
+            font-size: 11pt;
+            color: #6C757D;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #FF6347;
+        }
+
+        /* 범례 - 컴팩트 */
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+            font-size: 12pt;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+
+        /* 정보 박스 - 컴팩트 */
+        .info-box {
+            background: #FFF5F0;
+            border-left: 4px solid #FF6347;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 12pt;
+            line-height: 1.6;
+        }
+
+        .info-box strong {
+            color: #FF6347;
+            font-size: 13pt;
+        }
+
+        /* 2단 레이아웃 */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* 페이지 번호 */
+        .page-number {
+            position: absolute;
+            bottom: 10mm;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 11pt;
+            color: #6C757D;
+        }
+
+        /* 인쇄 시 스타일 */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            .page {
+                width: 277mm;
+                height: 190mm;
+                margin: 0;
+                padding: 15mm;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+            
+            .page:last-child {
+                page-break-after: avoid;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+            
+            /* 테이블과 박스가 페이지를 넘지 않도록 */
+            table, .summary-box, .info-box {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 페이지 1: 핵심 지표 및 전체 업무별 현황 -->
+    <div class="page">
+        <div class="header">
+            <h1>OK금융그룹 인사부 AI 활용 현황</h1>
+            <p>2024년 상반기 AI 도구 활용 및 투자 현황 보고</p>
+        </div>
+
+        <div class="summary-box">
+            <h3>핵심 지표 요약</h3>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-label">평균 AI 활용률</div>
+                    <div class="stat-value">32%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">연간 AI 투자액</div>
+                    <div class="stat-value">447만원</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">활용 중인 도구</div>
+                    <div class="stat-value">11개</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">향후 확대 계획</div>
+                    <div class="stat-value">+38%</div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">업무별 AI 활용 현황</h2>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #495057;"></div>
+                <span>현재 활용 중</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #ADB5BD;"></div>
+                <span>향후 확대 예정</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #E9ECEF;"></div>
+                <span>활용 불가능</span>
+            </div>
+        </div>
+
+        <table class="usage-table">
+            <thead>
+                <tr>
+                    <th width="20%">업무 구분</th>
+                    <th width="40%">세부 업무</th>
+                    <th width="40%">AI 활용 현황 (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>채용·인재확보</strong></td>
+                    <td>채용공고 작성, 이력서 스크리닝, AI면접</td>
+                    <td>
+                        <div class="chart-container">
+                            <div class="chart-current" style="width: 35%;">35</div>
+                            <div class="chart-future" style="width: 40%;">40</div>
+                            <div class="chart-impossible" style="width: 25%;">25</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>인사운영·발령</strong></td>
+                    <td>인사발령, 근태관리, 조직도 분석</td>
+                    <td>
+                        <div class="chart-container">
+                            <div class="chart-current" style="width: 30%;">30</div>
+                            <div class="chart-future" style="width: 35%;">35</div>
+                            <div class="chart-impossible" style="width: 35%;">35</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>평가·보상관리</strong></td>
+                    <td>업적평가, 역량평가, 성과급 시뮬레이션</td>
+                    <td>
+                        <div class="chart-container">
+                            <div class="chart-current" style="width: 30%;">30</div>
+                            <div class="chart-future" style="width: 40%;">40</div>
+                            <div class="chart-impossible" style="width: 30%;">30</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>노무·노사관계</strong></td>
+                    <td>단체교섭, 노동법 검토, 분쟁처리</td>
+                    <td>
+                        <div class="chart-container">
+                            <div class="chart-current" style="width: 20%;">20</div>
+                            <div class="chart-future" style="width: 30%;">30</div>
+                            <div class="chart-impossible" style="width: 50%;">50</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>HR 데이터분석</strong></td>
+                    <td>인력수급 분석, 이직예측, 인건비 시뮬레이션</td>
+                    <td>
+                        <div class="chart-container">
+                            <div class="chart-current" style="width: 35%;">35</div>
+                            <div class="chart-future" style="width: 45%;">45</div>
+                            <div class="chart-impossible" style="width: 20%;">20</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>규정·정책관리</strong></td>
+                    <td>규정검색, 정책초안 작성, 영향분석</td>
+                    <td>
+                        <div class="chart-container">
+                            <div class="chart-current" style="width: 40%;">40</div>
+                            <div class="chart-future" style="width: 40%;">40</div>
+                            <div class="chart-impossible" style="width: 20%;">20</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>기타 지원</strong></td>
+                    <td>보고서 작성, 상담챗봇, 복리후생 안내</td>
+                    <td>
+                        <div class="chart-container">
+                            <div class="chart-current" style="width: 35%;">35</div>
+                            <div class="chart-future" style="width: 40%;">40</div>
+                            <div class="chart-impossible" style="width: 25%;">25</div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="page-number">1 / 2</div>
+    </div>
+
+    <!-- 페이지 2: AI Tool 이용료 및 성과 -->
+    <div class="page">
+        <div class="header">
+            <h1>AI Tool 투자 현황 및 주요 성과</h1>
+        </div>
+
+        <div class="two-column">
+            <div>
+                <h2 class="section-title">AI Tool 이용료 현황</h2>
+                
+                <table class="cost-table">
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>AI 툴</th>
+                            <th>상반기</th>
+                            <th>하반기</th>
+                            <th>계</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td rowspan="2">문장작성</td>
+                            <td>ChatGPT</td>
+                            <td>739,800</td>
+                            <td>739,800</td>
+                            <td><strong>1,479,600</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Claude</td>
+                            <td>452,100</td>
+                            <td>1,988,800</td>
+                            <td><strong>2,440,900</strong></td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2">코딩</td>
+                            <td>Cursor</td>
+                            <td>82,200</td>
+                            <td>164,400</td>
+                            <td><strong>246,600</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Lovable</td>
+                            <td>-</td>
+                            <td>102,750</td>
+                            <td><strong>102,750</strong></td>
+                        </tr>
+                        <tr>
+                            <td>리서치</td>
+                            <td>Genspark</td>
+                            <td>205,500</td>
+                            <td>-</td>
+                            <td><strong>205,500</strong></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td colspan="2">합계</td>
+                            <td>1,479,600</td>
+                            <td>2,995,750</td>
+                            <td><strong>4,475,350</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <p style="font-size: 11pt; text-align: center; margin-top: 10px;">
+                    ※ 무료 도구: Firebase, Gemini, 클로바노트, Notion, Lilys AI
+                </p>
+            </div>
+
+            <div>
+                <h2 class="section-title">주요 성과</h2>
+                
+                <div class="info-box">
+                    <p><strong>✓ 채용 효율화</strong><br>
+                    채용 공고 작성 시간 70% 단축</p>
+                </div>
+                
+                <div class="info-box">
+                    <p><strong>✓ 정책 관리 개선</strong><br>
+                    규정 검색 및 정책 초안 작성 효율 80% 향상</p>
+                </div>
+                
+                <div class="info-box">
+                    <p><strong>✓ 데이터 분석 고도화</strong><br>
+                    HR 데이터 분석을 통한 이직 예측 정확도 85% 달성</p>
+                </div>
+                
+                <div class="info-box">
+                    <p><strong>✓ 직원 지원 강화</strong><br>
+                    직원 상담 챗봇 도입으로 24시간 지원 체계 구축</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box" style="background: #FFF0F0; border-left-color: #FF0000; margin-top: 20px;">
+            <p style="text-align: center;">
+                <strong style="color: #FF0000; font-size: 14pt;">다음 단계: AIRISS 프로젝트</strong><br>
+                인사부의 AI 활용 경험을 바탕으로 AI 기반 인사평가 시스템 AIRISS를 자체 개발하였습니다.<br>
+                코딩 경험 없는 직원이 Claude AI와 협업하여 단 2개월 만에 완성한 혁신 사례로,<br>
+                현재 2025년 신인사제도 EHR 시스템의 핵심 엔진으로 발전 중입니다.
+            </p>
+        </div>
+
+        <div class="page-number">2 / 2</div>
+    </div>
+</body>
+</html>
