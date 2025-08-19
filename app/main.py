@@ -2134,6 +2134,7 @@ async def serve_root():
     }
 
 # Serve AIRISS v5.0 Dashboard as HTML page
+@app.get("/airiss")
 @app.get("/dashboard")
 async def serve_dashboard():
     """Serve AIRISS v5.0 Dashboard for web interface"""
