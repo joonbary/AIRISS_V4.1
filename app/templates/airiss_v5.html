@@ -121,19 +121,20 @@
         .nav-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
         }
 
         .logo {
-            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 24px;
             font-weight: 800;
-            letter-spacing: 2px;
-            color: var(--primary-color);
-            text-transform: uppercase;
-            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            min-width: fit-content;
         }
 
         .nav-links {
@@ -579,6 +580,13 @@
             .nav-links {
                 display: none;
             }
+            
+            .logo {
+                font-size: 18px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
         }
     </style>
 </head>
@@ -586,7 +594,11 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
-            <div class="logo">AIRISS v5.0</div>
+            <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                <span style="background: linear-gradient(135deg, #FFD700, #FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; font-size: 24px; white-space: nowrap;">OK금융그룹</span>
+                <span style="color: var(--primary-color); font-weight: 700; font-size: 20px;">|</span>
+                <span style="color: var(--primary-color); font-weight: 800; letter-spacing: 1px;">AIRISS v5.0</span>
+            </div>
             <div class="nav-links">
                 <a href="#dashboard" class="nav-link" onclick="navigateToSection('dashboard'); return false;">대시보드</a>
                 <a href="#upload" class="nav-link" onclick="navigateToSection('upload'); return false;">파일 업로드</a>
