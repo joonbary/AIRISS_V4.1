@@ -884,7 +884,11 @@
         async function initializeDashboard() {
             // API에서 실제 데이터 가져오기 - 목업 데이터 없음
             try {
-                const response = await fetch('http://localhost:8080/api/v1/hr-dashboard/stats');
+                // Railway 배포 환경과 로컬 환경 자동 감지
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8080' 
+                    : 'https://ehrv10-production.up.railway.app';
+                const response = await fetch(`${apiBaseUrl}/api/v1/hr-dashboard/stats`);
                 if (response.ok) {
                     const data = await response.json();
                     
@@ -1032,7 +1036,10 @@
         async function uploadFile(formData) {
             try {
                 // 실제 API 호출
-                const response = await fetch('http://localhost:8080/api/v1/upload', {
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8080' 
+                    : 'https://ehrv10-production.up.railway.app';
+                const response = await fetch(`${apiBaseUrl}/api/v1/upload`, {
                     method: 'POST',
                     body: formData
                 });
@@ -1248,7 +1255,10 @@
         async function loadExistingData() {
             // 기존 데이터 로드 - API에서 직원 목록 가져오기
             try {
-                const response = await fetch('http://localhost:8080/api/v1/employees/list');
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8080' 
+                    : 'https://ehrv10-production.up.railway.app';
+                const response = await fetch(`${apiBaseUrl}/api/v1/employees/list`);
                 if (response.ok) {
                     const data = await response.json();
                     console.log('직원 데이터 로드 완료:', data.employees?.length || 0, '명');
@@ -1266,20 +1276,50 @@
         
         // 네비게이션 함수 추가
         function navigateToSection(section) {
-            // 모든 섹션 숨기기
-            const sections = ['dashboard', 'upload', 'personnel', 'reports', 'settings'];
-            sections.forEach(s => {
-                const el = document.getElementById(s + 'Section');
+            console.log('Navigating to section:', section);
+            
+            // 모든 주요 섹션 숨기기
+            const allSections = document.querySelectorAll('.dashboard-section, .personnel-section, .quick-actions, .upload-section, #chartContainer');
+            allSections.forEach(el => {
                 if (el) el.style.display = 'none';
             });
             
-            // 선택한 섹션 표시
-            const targetSection = document.getElementById(section + 'Section');
-            if (targetSection) {
-                targetSection.style.display = 'block';
-            } else {
-                // 섹션이 없으면 생성
-                createSection(section);
+            // 선택한 섹션에 따라 표시
+            switch(section) {
+                case 'dashboard':
+                    // 대시보드 섹션들 표시
+                    const dashboardSection = document.querySelector('.dashboard-section');
+                    const personnelSection = document.querySelector('.personnel-section');
+                    const quickActions = document.querySelector('.quick-actions');
+                    if (dashboardSection) dashboardSection.style.display = 'block';
+                    if (personnelSection) personnelSection.style.display = 'block';
+                    if (quickActions) quickActions.style.display = 'grid';
+                    break;
+                    
+                case 'upload':
+                    // 업로드 섹션 표시
+                    const uploadSection = document.querySelector('.upload-section');
+                    if (uploadSection) {
+                        uploadSection.style.display = 'block';
+                    } else {
+                        createSection('upload');
+                    }
+                    break;
+                    
+                case 'personnel':
+                    // 인재 관리 섹션 표시
+                    const personnelSectionOnly = document.querySelector('.personnel-section');
+                    if (personnelSectionOnly) {
+                        personnelSectionOnly.style.display = 'block';
+                    } else {
+                        createSection('personnel');
+                    }
+                    break;
+                    
+                case 'reports':
+                case 'settings':
+                    createSection(section);
+                    break;
             }
             
             // 네비게이션 하이라이트 업데이트
@@ -1292,21 +1332,32 @@
         }
         
         function createSection(section) {
+            console.log('Creating section:', section);
+            
+            // 기존 임시 섹션 제거
+            const existingSection = document.getElementById(section + 'TempSection');
+            if (existingSection) {
+                existingSection.remove();
+            }
+            
             const container = document.querySelector('.container');
             const newSection = document.createElement('div');
-            newSection.id = section + 'Section';
+            newSection.id = section + 'TempSection';
             newSection.className = 'content-section';
+            newSection.style.padding = '40px 0';
             
             switch(section) {
                 case 'upload':
                     newSection.innerHTML = `
-                        <h2 class="section-title">📁 파일 업로드</h2>
-                        <div class="upload-area" id="uploadSection">
+                        <div class="section-header">
+                            <h2 class="section-title">📁 파일 업로드</h2>
+                        </div>
+                        <div class="upload-section" style="display: block;">
                             <div class="action-icon">📁</div>
-                            <h2>엑셀 파일을 업로드하세요</h2>
-                            <p>드래그 앤 드롭 또는 클릭하여 파일 선택</p>
-                            <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
-                            <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
+                            <h2 style="font-size: 24px; margin: 20px 0;">엑셀 파일을 업로드하세요</h2>
+                            <p style="color: var(--text-muted); margin-bottom: 30px;">드래그 앤 드롭 또는 클릭하여 파일 선택</p>
+                            <input type="file" id="fileInputTemp" accept=".xlsx,.xls" hidden>
+                            <button class="btn-primary" onclick="document.getElementById('fileInputTemp').click()">
                                 파일 선택
                             </button>
                         </div>
@@ -1314,25 +1365,40 @@
                     break;
                 case 'personnel':
                     newSection.innerHTML = `
-                        <h2 class="section-title">🎯 인재 관리</h2>
-                        <div class="personnel-management">
-                            <p>인재 관리 기능은 개발 중입니다.</p>
+                        <div class="section-header">
+                            <h2 class="section-title">🎯 인재 관리</h2>
+                        </div>
+                        <div class="dashboard-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">인재 관리 기능</div>
+                                <div class="metric-value">개발 중</div>
+                            </div>
                         </div>
                     `;
                     break;
                 case 'reports':
                     newSection.innerHTML = `
-                        <h2 class="section-title">📋 리포트</h2>
-                        <div class="reports-section">
-                            <button class="btn-primary" onclick="generateReport()">리포트 생성</button>
+                        <div class="section-header">
+                            <h2 class="section-title">📋 리포트</h2>
+                        </div>
+                        <div class="dashboard-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">리포트 생성</div>
+                                <button class="btn-primary" onclick="generateReport()">PDF 다운로드</button>
+                            </div>
                         </div>
                     `;
                     break;
                 case 'settings':
                     newSection.innerHTML = `
-                        <h2 class="section-title">⚙️ 설정</h2>
-                        <div class="settings-section">
-                            <p>설정 기능은 개발 중입니다.</p>
+                        <div class="section-header">
+                            <h2 class="section-title">⚙️ 설정</h2>
+                        </div>
+                        <div class="dashboard-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">시스템 설정</div>
+                                <div class="metric-value">개발 중</div>
+                            </div>
                         </div>
                     `;
                     break;
