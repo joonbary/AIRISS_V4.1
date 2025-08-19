@@ -613,7 +613,7 @@
                 <div class="metric-card">
                     <div class="metric-icon">👥</div>
                     <div class="metric-label">총 직원 수</div>
-                    <div class="metric-value" id="totalEmployees">420</div>
+                    <div class="metric-value" id="totalEmployees">-</div>
                     <div class="metric-change positive">
                         <span>▲</span> 12% 증가
                     </div>
@@ -621,7 +621,7 @@
                 <div class="metric-card">
                     <div class="metric-icon">📊</div>
                     <div class="metric-label">평균 성과</div>
-                    <div class="metric-value" id="avgPerformance">78%</div>
+                    <div class="metric-value" id="avgPerformance">-</div>
                     <div class="metric-change positive">
                         <span>▲</span> 5% 향상
                     </div>
@@ -629,7 +629,7 @@
                 <div class="metric-card">
                     <div class="metric-icon">✅</div>
                     <div class="metric-label">분석 완료</div>
-                    <div class="metric-value" id="analysisCount">420</div>
+                    <div class="metric-value" id="analysisCount">-</div>
                     <div class="metric-change positive">
                         <span>▲</span> 오늘 23건
                     </div>
@@ -637,7 +637,7 @@
                 <div class="metric-card">
                     <div class="metric-icon">⭐</div>
                     <div class="metric-label">S등급 인재</div>
-                    <div class="metric-value" id="topTalents">28</div>
+                    <div class="metric-value" id="topTalents">-</div>
                     <div class="metric-change negative">
                         <span>▼</span> 2명 감소
                     </div>
@@ -655,7 +655,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">🌟 핵심 인력</div>
-                        <div class="personnel-count">42</div>
+                        <div class="personnel-count">-</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -686,7 +686,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">📈 승진 후보자</div>
-                        <div class="personnel-count">63</div>
+                        <div class="personnel-count">-</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -717,7 +717,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">⚠️ 관리 필요 인력</div>
-                        <div class="personnel-count">21</div>
+                        <div class="personnel-count">-</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -744,7 +744,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">🚨 이직 위험군</div>
-                        <div class="personnel-count">15</div>
+                        <div class="personnel-count">-</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -771,7 +771,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">🎓 육성 대상자</div>
-                        <div class="personnel-count">84</div>
+                        <div class="personnel-count">-</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -798,7 +798,7 @@
                 <div class="personnel-card">
                     <div class="personnel-header">
                         <div class="personnel-title">🏆 성과 우수자</div>
-                        <div class="personnel-count">52</div>
+                        <div class="personnel-count">-</div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-label">
@@ -882,42 +882,62 @@
 
         // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', function() {
+            // 실제 DB 데이터만 사용 - 목업 데이터 완전 제거
             initializeDashboard();
             setupFileUpload();
             loadExistingData();
         });
 
         async function initializeDashboard() {
-            // API에서 실제 데이터 가져오기
+            // API에서 실제 데이터 가져오기 - 목업 데이터 없음
             try {
                 const response = await fetch('http://localhost:8001/api/v1/hr-dashboard/stats');
                 if (response.ok) {
                     const data = await response.json();
                     
-                    // 실제 DB 데이터로 애니메이션 카운트업
-                    animateNumber('totalEmployees', data.total_employees || 420);
-                    animateNumber('avgPerformance', data.average_score || 78);
-                    animateNumber('analysisCount', data.total_employees || 420);
-                    animateNumber('topTalents', data.top_talents?.count || 28);
+                    // 실제 DB 데이터로만 표시
+                    animateNumber('totalEmployees', data.total_employees || 0);
+                    animateNumber('avgPerformance', data.average_score || 0);
+                    animateNumber('analysisCount', data.total_employees || 0);
+                    animateNumber('topTalents', data.top_talents?.count || 0);
                     
                     // 인재 현황 데이터 업데이트
                     updatePersonnelData(data);
                 } else {
-                    // API 실패 시 기본값 사용
-                    console.warn('API 호출 실패, 기본값 사용');
-                    animateNumber('totalEmployees', 420);
-                    animateNumber('avgPerformance', 78);
-                    animateNumber('analysisCount', 420);
-                    animateNumber('topTalents', 28);
+                    // API 실패 시 데이터 없음 표시
+                    console.error('API 연결 실패 - DB 연동 필요');
+                    showNoDataMessage();
                 }
             } catch (error) {
-                console.error('Dashboard data load failed:', error);
-                // 에러 시 기본값 사용
-                animateNumber('totalEmployees', 420);
-                animateNumber('avgPerformance', 78);
-                animateNumber('analysisCount', 420);
-                animateNumber('topTalents', 28);
+                console.error('DB 연동 실패:', error);
+                showNoDataMessage();
             }
+        }
+        
+        function showNoDataMessage() {
+            // 데이터 없음 메시지 표시
+            document.getElementById('totalEmployees').textContent = '-';
+            document.getElementById('avgPerformance').textContent = '-';
+            document.getElementById('analysisCount').textContent = '-';
+            document.getElementById('topTalents').textContent = '-';
+            
+            // 알림 메시지 표시
+            const alertDiv = document.createElement('div');
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--error);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                z-index: 9999;
+                font-weight: 500;
+            `;
+            alertDiv.textContent = 'DB 연동 실패 - FastAPI 서버 실행 필요 (포트 8001)';
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => alertDiv.remove(), 5000);
         }
 
         function animateNumber(elementId, target) {
@@ -1127,20 +1147,36 @@
         }
 
         function updatePersonnelData(data) {
-            // 인재 현황 섹션 동적 업데이트
+            // 인재 현황 섹션 동적 업데이트 - 실제 데이터만
+            if (data.top_talents) {
+                const talentCount = document.querySelector('.personnel-card:nth-child(1) .personnel-count');
+                if (talentCount) talentCount.textContent = data.top_talents.count || 0;
+            }
+            
             if (data.promotion_candidates) {
                 const promotionCount = document.querySelector('.personnel-card:nth-child(2) .personnel-count');
-                if (promotionCount) promotionCount.textContent = data.promotion_candidates.count || 63;
+                if (promotionCount) promotionCount.textContent = data.promotion_candidates.count || 0;
             }
             
             if (data.risk_employees) {
                 const riskCount = document.querySelector('.personnel-card:nth-child(3) .personnel-count');
-                if (riskCount) riskCount.textContent = data.risk_employees.count || 21;
+                if (riskCount) riskCount.textContent = data.risk_employees.count || 0;
             }
             
-            if (data.top_talents) {
-                const talentCount = document.querySelector('.personnel-card:nth-child(1) .personnel-count');
-                if (talentCount) talentCount.textContent = data.top_talents.count || 42;
+            // 추가 데이터 업데이트
+            if (data.turnover_risk) {
+                const turnoverCount = document.querySelector('.personnel-card:nth-child(4) .personnel-count');
+                if (turnoverCount) turnoverCount.textContent = data.turnover_risk.count || 0;
+            }
+            
+            if (data.development_targets) {
+                const devCount = document.querySelector('.personnel-card:nth-child(5) .personnel-count');
+                if (devCount) devCount.textContent = data.development_targets.count || 0;
+            }
+            
+            if (data.high_performers) {
+                const perfCount = document.querySelector('.personnel-card:nth-child(6) .personnel-count');
+                if (perfCount) perfCount.textContent = data.high_performers.count || 0;
             }
         }
 
