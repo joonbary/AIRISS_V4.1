@@ -2170,40 +2170,8 @@ async def serve_dashboard():
     
     return {"message": "AIRISS v5.0 API - HR Analysis System"}
 
-# Catch-all for React Router - MUST BE ABSOLUTE LAST
-@app.get("/{full_path:path}")
-async def serve_spa(request: Request, full_path: str):
-    """Catch-all route for React SPA"""
-    # Skip if it's an API route or WebSocket
-    if full_path.startswith("api/") or full_path.startswith("ws"):
-        # Return 404 for undefined API routes
-        raise HTTPException(status_code=404, detail="API endpoint not found")
-    
-    # Skip HR dashboard routes - IMPORTANT
-    if full_path.startswith("hr-") or full_path == "hr":
-        # Let the specific hr- routes handle these
-        raise HTTPException(status_code=404, detail="Not a React route")
-    
-    # Skip specific routes that have their own handlers
-    # hr-dashboard는 위에서 처리되므로 여기서 제외하지 않음
-    if full_path in ["docs", "redoc", "openapi.json"]:
-        raise HTTPException(status_code=404, detail="Not found")
-    
-    # Check if static path exists
-    if not os.path.exists(static_path):
-        raise HTTPException(status_code=404, detail="Static files not found")
-    
-    # Try to serve the exact file if it exists
-    file_path = os.path.join(static_path, full_path)
-    if os.path.exists(file_path) and os.path.isfile(file_path):
-        return FileResponse(file_path)
-    
-    # Otherwise serve index.html for client-side routing
-    index_path = os.path.join(static_path, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    
-    raise HTTPException(status_code=404, detail="Page not found")
+# NOTE: Catch-all route removed to prevent API interference
+# Static files are served through mounted StaticFiles middleware above
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
