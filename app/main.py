@@ -320,8 +320,12 @@ async def add_security_headers(request, call_next):
     csp_header = "frame-ancestors 'self' https://ehrv10-production.up.railway.app http://localhost:* https://localhost:*;"
     response.headers["Content-Security-Policy"] = csp_header
     
-    # Log the CSP header for debugging
-    logger.info(f"Set CSP: {csp_header}")
+    # Add Railway-specific headers to identify as API server
+    response.headers["X-Powered-By"] = "FastAPI"
+    response.headers["X-API-Version"] = "v5.0"
+    
+    # Log request path for debugging
+    logger.info(f"Request path: {request.url.path}")
     
     return response
 
