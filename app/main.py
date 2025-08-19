@@ -23,7 +23,14 @@ from sqlalchemy.orm import Session
 load_dotenv(override=True)
 
 # Add project root to path
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent))
+
+# Debug path in Railway
+import platform
+if platform.system() != "Windows":
+    sys.path.insert(0, '/app')
+    sys.path.insert(0, '/app/app')
 
 # Local imports
 from app.db.database import get_db, engine, init_db
