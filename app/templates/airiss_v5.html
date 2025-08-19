@@ -108,13 +108,14 @@
 
         /* Navigation Bar */
         .navbar {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
+            background: linear-gradient(135deg, rgba(10, 14, 39, 0.95) 0%, rgba(5, 7, 20, 0.95) 100%);
+            backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--glass-border);
             padding: 20px 0;
             position: sticky;
             top: 0;
             z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
         }
 
         .nav-container {
@@ -600,8 +601,8 @@
     <div class="container">
         <!-- Hero Section -->
         <div class="hero-section">
-            <h1 class="hero-title">AI-Powered HR Intelligence System</h1>
-            <p class="hero-subtitle">OK Financial Group의 혁신적인 인사 분석 플랫폼</p>
+            <h1 class="hero-title">AI가 합류한 새로운 인사정보시스템</h1>
+            <p class="hero-subtitle">1,700여명의 임직원 데이터로 만드는 차세대 AI 기반 HRM 시스템에 오신 것을 환영합니다</p>
         </div>
 
         <!-- Main Dashboard Metrics -->
@@ -811,6 +812,107 @@
                     </div>
                     <div class="personnel-list" id="highPerformersList">
                         <!-- DB에서 데이터 로드 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evaluation Target Section -->
+        <div class="evaluation-section" style="margin-bottom: 60px;">
+            <div class="section-header">
+                <h2 class="section-title">📊 평가 대상자 분석</h2>
+            </div>
+            <div class="evaluation-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+                <!-- 기여도 평가 -->
+                <div class="evaluation-card" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.1), rgba(147, 51, 234, 0.05)); backdrop-filter: blur(10px); border: 1px solid rgba(147, 51, 234, 0.3); border-radius: 20px; padding: 30px;">
+                    <div class="eval-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <div class="eval-title" style="font-size: 20px; font-weight: 700; color: #ffffff;">💡 기여도 평가 대상자</div>
+                        <div class="eval-count" style="background: rgba(147, 51, 234, 0.3); padding: 8px 16px; border-radius: 20px; color: #ffffff; font-weight: 600;">156명</div>
+                    </div>
+                    <div class="eval-metrics" style="display: grid; gap: 15px;">
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">상위 10%</span>
+                            <span style="color: #9333EA; font-weight: 600;">23명</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">평균 기여도</span>
+                            <span style="color: #9333EA; font-weight: 600;">87.3점</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">전년 대비</span>
+                            <span style="color: #10B981; font-weight: 600;">▲ 12%</span>
+                        </div>
+                    </div>
+                    <div class="eval-progress" style="margin-top: 20px;">
+                        <div class="progress-label" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: rgba(255, 255, 255, 0.7); font-size: 14px;">평가 진행률</span>
+                            <span style="color: rgba(255, 255, 255, 0.9); font-weight: 600;">78%</span>
+                        </div>
+                        <div class="progress-bar" style="background: rgba(255, 255, 255, 0.1); height: 8px; border-radius: 10px; overflow: hidden;">
+                            <div class="progress-fill" style="width: 78%; height: 100%; background: linear-gradient(90deg, #9333EA, #7C3AED); border-radius: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 전문성 평가 -->
+                <div class="evaluation-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05)); backdrop-filter: blur(10px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px; padding: 30px;">
+                    <div class="eval-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <div class="eval-title" style="font-size: 20px; font-weight: 700; color: #ffffff;">🎯 전문성 평가 대상자</div>
+                        <div class="eval-count" style="background: rgba(59, 130, 246, 0.3); padding: 8px 16px; border-radius: 20px; color: #ffffff; font-weight: 600;">234명</div>
+                    </div>
+                    <div class="eval-metrics" style="display: grid; gap: 15px;">
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">전문가 등급</span>
+                            <span style="color: #3B82F6; font-weight: 600;">42명</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">평균 전문성</span>
+                            <span style="color: #3B82F6; font-weight: 600;">82.5점</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">자격증 보유</span>
+                            <span style="color: #10B981; font-weight: 600;">189명</span>
+                        </div>
+                    </div>
+                    <div class="eval-progress" style="margin-top: 20px;">
+                        <div class="progress-label" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: rgba(255, 255, 255, 0.7); font-size: 14px;">평가 진행률</span>
+                            <span style="color: rgba(255, 255, 255, 0.9); font-weight: 600;">85%</span>
+                        </div>
+                        <div class="progress-bar" style="background: rgba(255, 255, 255, 0.1); height: 8px; border-radius: 10px; overflow: hidden;">
+                            <div class="progress-fill" style="width: 85%; height: 100%; background: linear-gradient(90deg, #3B82F6, #06B6D4); border-radius: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 영향력 평가 -->
+                <div class="evaluation-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); backdrop-filter: blur(10px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; padding: 30px;">
+                    <div class="eval-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <div class="eval-title" style="font-size: 20px; font-weight: 700; color: #ffffff;">🌟 영향력 평가 대상자</div>
+                        <div class="eval-count" style="background: rgba(16, 185, 129, 0.3); padding: 8px 16px; border-radius: 20px; color: #ffffff; font-weight: 600;">178명</div>
+                    </div>
+                    <div class="eval-metrics" style="display: grid; gap: 15px;">
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">리더십 점수</span>
+                            <span style="color: #10B981; font-weight: 600;">91.2점</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">팀 영향력</span>
+                            <span style="color: #10B981; font-weight: 600;">상위 15%</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">멘토링 활동</span>
+                            <span style="color: #10B981; font-weight: 600;">67명</span>
+                        </div>
+                    </div>
+                    <div class="eval-progress" style="margin-top: 20px;">
+                        <div class="progress-label" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: rgba(255, 255, 255, 0.7); font-size: 14px;">평가 진행률</span>
+                            <span style="color: rgba(255, 255, 255, 0.9); font-weight: 600;">92%</span>
+                        </div>
+                        <div class="progress-bar" style="background: rgba(255, 255, 255, 0.1); height: 8px; border-radius: 10px; overflow: hidden;">
+                            <div class="progress-fill" style="width: 92%; height: 100%; background: linear-gradient(90deg, #10B981, #06B6D4); border-radius: 10px;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1152,6 +1254,228 @@
         function generateReport() {
             alert('리포트 생성 중... PDF 다운로드가 시작됩니다.');
         }
+        
+        // 리포트 카테고리 전환 함수
+        function showReportCategory(category) {
+            // 모든 리포트 섹션 숨기기
+            const reportSections = document.querySelectorAll('.report-section');
+            reportSections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // 선택된 카테고리 표시
+            const selectedReport = document.getElementById(category + 'Report');
+            if (selectedReport) {
+                selectedReport.style.display = 'block';
+            }
+            
+            // 탭 버튼 스타일 업데이트
+            const tabButtons = document.querySelectorAll('.report-tab-btn');
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.background = 'var(--glass-bg)';
+                btn.style.border = '1px solid var(--glass-border)';
+            });
+            
+            // 활성 탭 스타일 적용
+            const activeBtn = event ? event.target : document.querySelector('.report-tab-btn');
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.style.background = 'var(--primary-gradient)';
+                activeBtn.style.border = 'none';
+            }
+            
+            // 차트 초기화 (카테고리별)
+            initializeReportCharts(category);
+        }
+        
+        // 리포트별 차트 초기화
+        function initializeReportCharts(category) {
+            switch(category) {
+                case 'overview':
+                    // 조직 구성 차트
+                    const orgCanvas = document.getElementById('organizationChart');
+                    if (orgCanvas && orgCanvas.getContext) {
+                        const ctx = orgCanvas.getContext('2d');
+                        new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['영업부', 'IT부서', '경영지원', '연구개발', '제조부', '기타'],
+                                datasets: [{
+                                    data: [342, 256, 189, 421, 324, 200],
+                                    backgroundColor: [
+                                        'rgba(147, 51, 234, 0.8)',
+                                        'rgba(59, 130, 246, 0.8)',
+                                        'rgba(16, 185, 129, 0.8)',
+                                        'rgba(245, 158, 11, 0.8)',
+                                        'rgba(239, 68, 68, 0.8)',
+                                        'rgba(107, 114, 128, 0.8)'
+                                    ]
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'right',
+                                        labels: { color: '#fff' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'performance':
+                    // 성과 분포 차트
+                    const perfCanvas = document.getElementById('performanceDistChart');
+                    if (perfCanvas && perfCanvas.getContext) {
+                        const ctx = perfCanvas.getContext('2d');
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['S', 'A+', 'A', 'B+', 'B', 'C', 'D'],
+                                datasets: [{
+                                    label: '인원 분포',
+                                    data: [87, 156, 312, 423, 489, 198, 67],
+                                    backgroundColor: 'rgba(0, 212, 255, 0.5)',
+                                    borderColor: 'rgba(0, 212, 255, 1)',
+                                    borderWidth: 2
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                        ticks: { color: '#fff' }
+                                    },
+                                    x: {
+                                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                        ticks: { color: '#fff' }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        labels: { color: '#fff' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'department':
+                    // 부서별 성과 비교 차트
+                    const deptCanvas = document.getElementById('departmentCompChart');
+                    if (deptCanvas && deptCanvas.getContext) {
+                        const ctx = deptCanvas.getContext('2d');
+                        new Chart(ctx, {
+                            type: 'radar',
+                            data: {
+                                labels: ['성과', '생산성', '협업', '혁신', '만족도'],
+                                datasets: [
+                                    {
+                                        label: '영업부',
+                                        data: [89, 92, 85, 78, 88],
+                                        borderColor: 'rgba(147, 51, 234, 1)',
+                                        backgroundColor: 'rgba(147, 51, 234, 0.2)'
+                                    },
+                                    {
+                                        label: 'IT부서',
+                                        data: [91, 88, 90, 95, 86],
+                                        borderColor: 'rgba(59, 130, 246, 1)',
+                                        backgroundColor: 'rgba(59, 130, 246, 0.2)'
+                                    },
+                                    {
+                                        label: '연구개발',
+                                        data: [93, 85, 87, 98, 82],
+                                        borderColor: 'rgba(16, 185, 129, 1)',
+                                        backgroundColor: 'rgba(16, 185, 129, 0.2)'
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    r: {
+                                        beginAtZero: true,
+                                        max: 100,
+                                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                        ticks: { color: '#fff' }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        labels: { color: '#fff' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'compensation':
+                    // 직급별 보상 분포 차트
+                    const compCanvas = document.getElementById('compensationChart');
+                    if (compCanvas && compCanvas.getContext) {
+                        const ctx = compCanvas.getContext('2d');
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: ['사원', '대리', '과장', '차장', '부장', '임원'],
+                                datasets: [{
+                                    label: '평균 연봉 (백만원)',
+                                    data: [45, 58, 72, 85, 98, 150],
+                                    borderColor: 'rgba(0, 212, 255, 1)',
+                                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                                    tension: 0.3,
+                                    fill: true
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        beginAtZero: false,
+                                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                        ticks: { color: '#fff' }
+                                    },
+                                    x: {
+                                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                        ticks: { color: '#fff' }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        labels: { color: '#fff' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    break;
+            }
+        }
+        
+        // 전체 리포트 생성
+        function generateFullReport(type) {
+            console.log('Generating full report for:', type);
+            alert(`${type} 리포트를 PDF로 생성 중입니다...`);
+            // PDF 생성 로직 구현
+        }
+        
+        // 리포트 공유
+        function shareReport(type) {
+            console.log('Sharing report:', type);
+            alert(`${type} 리포트 공유 링크가 생성되었습니다.`);
+            // 공유 로직 구현
+        }
 
         function showAnalytics() {
             alert('상세 통계 분석 페이지로 이동합니다.');
@@ -1379,12 +1703,427 @@
                 case 'reports':
                     newSection.innerHTML = `
                         <div class="section-header">
-                            <h2 class="section-title">📋 리포트</h2>
+                            <h2 class="section-title">📋 종합 리포트</h2>
                         </div>
-                        <div class="dashboard-grid">
-                            <div class="metric-card">
-                                <div class="metric-label">리포트 생성</div>
-                                <button class="btn-primary" onclick="generateReport()">PDF 다운로드</button>
+                        
+                        <!-- 리포트 카테고리 탭 -->
+                        <div class="report-tabs" style="display: flex; gap: 10px; margin-bottom: 30px; overflow-x: auto; padding: 10px 0;">
+                            <button class="report-tab-btn active" onclick="showReportCategory('overview')" style="padding: 12px 24px; background: var(--primary-gradient); border: none; border-radius: 25px; color: white; font-weight: 600; cursor: pointer; white-space: nowrap;">전체 개요</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('performance')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">성과 분석</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('talent')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">인재 분석</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('department')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">부서별 분석</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('retention')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">이직 위험도</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('development')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">육성 계획</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('compensation')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">보상 분석</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('diversity')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">다양성 지표</button>
+                        </div>
+                        
+                        <!-- 리포트 콘텐츠 영역 -->
+                        <div id="reportContent">
+                            <!-- 전체 개요 리포트 -->
+                            <div id="overviewReport" class="report-section">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📊</div>
+                                        <div class="metric-label">전사 인력 현황</div>
+                                        <div class="metric-value">1,732명</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 3.2% 증가
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">💰</div>
+                                        <div class="metric-label">평균 인건비</div>
+                                        <div class="metric-value">72M</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 5.1% 증가
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📈</div>
+                                        <div class="metric-label">생산성 지수</div>
+                                        <div class="metric-value">87.3</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 8.7% 향상
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">😊</div>
+                                        <div class="metric-label">직원 만족도</div>
+                                        <div class="metric-value">4.2/5</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 0.3점 상승
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 추가 상세 리포트 섹션 -->
+                                <div class="chart-container" style="margin-top: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">조직 구성 현황</h3>
+                                    <canvas id="organizationChart"></canvas>
+                                </div>
+                                
+                                <div class="report-actions" style="margin-top: 30px; display: flex; gap: 15px;">
+                                    <button class="btn-primary" onclick="generateFullReport('overview')">
+                                        <span>📄</span> 전체 리포트 다운로드
+                                    </button>
+                                    <button class="btn-primary" style="background: var(--glass-bg); border: 1px solid var(--primary-color);" onclick="shareReport('overview')">
+                                        <span>🔗</span> 리포트 공유
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 성과 분석 리포트 -->
+                            <div id="performanceReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">⭐</div>
+                                        <div class="metric-label">S등급 인재</div>
+                                        <div class="metric-value">87명</div>
+                                        <div class="progress-container" style="margin-top: 15px;">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 5%;"></div>
+                                            </div>
+                                            <div class="progress-label" style="margin-top: 5px;">
+                                                <span>전체 5%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🎯</div>
+                                        <div class="metric-label">목표 달성률</div>
+                                        <div class="metric-value">92.3%</div>
+                                        <div class="progress-container" style="margin-top: 15px;">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 92.3%;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📊</div>
+                                        <div class="metric-label">평균 성과점수</div>
+                                        <div class="metric-value">82.7</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 4.2점 상승
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="chart-container" style="margin-top: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">성과 분포도</h3>
+                                    <canvas id="performanceDistChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- 인재 분석 리포트 -->
+                            <div id="talentReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🌟</div>
+                                        <div class="metric-label">핵심 인재</div>
+                                        <div class="metric-value">156명</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 12명 증가
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🎓</div>
+                                        <div class="metric-label">승진 대상자</div>
+                                        <div class="metric-value">234명</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 18명 증가
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">💎</div>
+                                        <div class="metric-label">잠재력 높음</div>
+                                        <div class="metric-value">312명</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 23명 증가
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 인재 매트릭스 -->
+                                <div class="talent-matrix" style="margin-top: 30px; background: var(--glass-bg); border-radius: 20px; padding: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">9-Box 인재 매트릭스</h3>
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; aspect-ratio: 1;">
+                                        <div style="background: var(--success); opacity: 0.3; border-radius: 10px; padding: 15px; display: flex; align-items: center; justify-content: center;">
+                                            <span style="font-weight: 600;">High Potential</span>
+                                        </div>
+                                        <div style="background: var(--success); opacity: 0.5; border-radius: 10px; padding: 15px; display: flex; align-items: center; justify-content: center;">
+                                            <span style="font-weight: 600;">Rising Star</span>
+                                        </div>
+                                        <div style="background: var(--success); opacity: 0.7; border-radius: 10px; padding: 15px; display: flex; align-items: center; justify-content: center;">
+                                            <span style="font-weight: 600;">Super Star</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 부서별 분석 리포트 -->
+                            <div id="departmentReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🏢</div>
+                                        <div class="metric-label">영업부</div>
+                                        <div class="metric-value">342명</div>
+                                        <div class="metric-change positive">
+                                            <span>성과</span> 89.2점
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">💻</div>
+                                        <div class="metric-label">IT부서</div>
+                                        <div class="metric-value">256명</div>
+                                        <div class="metric-change positive">
+                                            <span>성과</span> 91.7점
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📊</div>
+                                        <div class="metric-label">경영지원</div>
+                                        <div class="metric-value">189명</div>
+                                        <div class="metric-change positive">
+                                            <span>성과</span> 86.3점
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🔬</div>
+                                        <div class="metric-label">연구개발</div>
+                                        <div class="metric-value">421명</div>
+                                        <div class="metric-change positive">
+                                            <span>성과</span> 93.1점
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="chart-container" style="margin-top: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">부서별 성과 비교</h3>
+                                    <canvas id="departmentCompChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- 이직 위험도 리포트 -->
+                            <div id="retentionReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🚨</div>
+                                        <div class="metric-label">고위험군</div>
+                                        <div class="metric-value">42명</div>
+                                        <div class="metric-change negative">
+                                            <span>⚠️</span> 즉시 조치 필요
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">⚠️</div>
+                                        <div class="metric-label">중위험군</div>
+                                        <div class="metric-value">128명</div>
+                                        <div class="metric-change" style="color: var(--warning);">
+                                            <span>▲</span> 관찰 필요
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">✅</div>
+                                        <div class="metric-label">안정군</div>
+                                        <div class="metric-value">1,562명</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 90.2% 안정
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="risk-factors" style="margin-top: 30px; background: var(--glass-bg); border-radius: 20px; padding: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">주요 이직 요인</h3>
+                                    <div style="display: grid; gap: 15px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                                            <span>보상 불만족</span>
+                                            <span style="color: var(--error);">34%</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                                            <span>경력 개발 부족</span>
+                                            <span style="color: var(--warning);">28%</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                                            <span>업무 과부하</span>
+                                            <span style="color: var(--warning);">21%</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                                            <span>조직문화</span>
+                                            <span style="color: var(--info);">17%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 육성 계획 리포트 -->
+                            <div id="developmentReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🎓</div>
+                                        <div class="metric-label">교육 대상자</div>
+                                        <div class="metric-value">523명</div>
+                                        <div class="progress-container" style="margin-top: 15px;">
+                                            <div class="progress-label">
+                                                <span>진행률</span>
+                                                <span>67%</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 67%;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📚</div>
+                                        <div class="metric-label">리더십 과정</div>
+                                        <div class="metric-value">87명</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 진행중
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">💡</div>
+                                        <div class="metric-label">직무 전문 교육</div>
+                                        <div class="metric-value">256명</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 계획됨
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="training-programs" style="margin-top: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">주요 육성 프로그램</h3>
+                                    <div class="dashboard-grid">
+                                        <div class="personnel-card">
+                                            <div class="personnel-header">
+                                                <div class="personnel-title">차세대 리더 육성</div>
+                                                <div class="personnel-count">45명</div>
+                                            </div>
+                                            <div class="progress-container">
+                                                <div class="progress-label">
+                                                    <span>완료율</span>
+                                                    <span>78%</span>
+                                                </div>
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" style="width: 78%;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="personnel-card">
+                                            <div class="personnel-header">
+                                                <div class="personnel-title">DT 전문가 양성</div>
+                                                <div class="personnel-count">120명</div>
+                                            </div>
+                                            <div class="progress-container">
+                                                <div class="progress-label">
+                                                    <span>완료율</span>
+                                                    <span>45%</span>
+                                                </div>
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" style="width: 45%;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 보상 분석 리포트 -->
+                            <div id="compensationReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">💰</div>
+                                        <div class="metric-label">평균 연봉</div>
+                                        <div class="metric-value">72.3M</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 5.2% 인상
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📊</div>
+                                        <div class="metric-label">보상 경쟁력</div>
+                                        <div class="metric-value">87%</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 시장 대비
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🎁</div>
+                                        <div class="metric-label">성과급 비율</div>
+                                        <div class="metric-value">23.7%</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 2.3% 증가
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="chart-container" style="margin-top: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">직급별 보상 분포</h3>
+                                    <canvas id="compensationChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- 다양성 지표 리포트 -->
+                            <div id="diversityReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">👥</div>
+                                        <div class="metric-label">성별 다양성</div>
+                                        <div class="metric-value">42:58</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 균형 개선중
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🌍</div>
+                                        <div class="metric-label">연령 다양성</div>
+                                        <div class="metric-value">3.8세대</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 다양화 진행
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🎓</div>
+                                        <div class="metric-label">학력 다양성</div>
+                                        <div class="metric-value">균형</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 적정 수준
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="diversity-details" style="margin-top: 30px; background: var(--glass-bg); border-radius: 20px; padding: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">다양성 세부 지표</h3>
+                                    <div style="display: grid; gap: 20px;">
+                                        <div>
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                                <span>여성 임원 비율</span>
+                                                <span>28%</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 28%; background: var(--info);"></div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                                <span>MZ세대 비율</span>
+                                                <span>45%</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 45%; background: var(--success);"></div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                                <span>경력직 비율</span>
+                                                <span>62%</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 62%; background: var(--primary-color);"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `;
