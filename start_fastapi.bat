@@ -1,6 +1,6 @@
 @echo off
-echo Starting FastAPI server on port 8001...
+echo Starting FastAPI server on port 8080...
 cd app
-set PORT=8001
-uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+set PORT=8080
+uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 pause

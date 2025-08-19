@@ -884,7 +884,7 @@
         async function initializeDashboard() {
             // API에서 실제 데이터 가져오기 - 목업 데이터 없음
             try {
-                const response = await fetch('http://localhost:8001/api/v1/hr-dashboard/stats');
+                const response = await fetch('http://localhost:8080/api/v1/hr-dashboard/stats');
                 if (response.ok) {
                     const data = await response.json();
                     
@@ -948,7 +948,7 @@
                 z-index: 9999;
                 font-weight: 500;
             `;
-            alertDiv.textContent = 'DB 연동 실패 - FastAPI 서버 실행 필요 (포트 8001)';
+            alertDiv.textContent = 'DB 연동 실패 - FastAPI 서버 실행 필요 (포트 8080)';
             document.body.appendChild(alertDiv);
             
             setTimeout(() => alertDiv.remove(), 5000);
@@ -1032,7 +1032,7 @@
         async function uploadFile(formData) {
             try {
                 // 실제 API 호출
-                const response = await fetch('http://localhost:8001/api/v1/upload', {
+                const response = await fetch('http://localhost:8080/api/v1/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -1248,7 +1248,7 @@
         async function loadExistingData() {
             // 기존 데이터 로드 - API에서 직원 목록 가져오기
             try {
-                const response = await fetch('http://localhost:8001/api/v1/employees/list');
+                const response = await fetch('http://localhost:8080/api/v1/employees/list');
                 if (response.ok) {
                     const data = await response.json();
                     console.log('직원 데이터 로드 완료:', data.employees?.length || 0, '명');
