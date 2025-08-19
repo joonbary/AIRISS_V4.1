@@ -1,2 +1,1 @@
-# AIRISS v4.0 Application Package
-__version__ = "4.0.0"
+# AIRISS v5.0 Application Package
