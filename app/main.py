@@ -2120,20 +2120,8 @@ async def export_analysis_csv(analysis_type: str = "talent", db: Session = Depen
         logger.error(f"Error in CSV export API: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-# Root endpoint - Return API information instead of HTML for Railway
+# Serve AIRISS v5.0 Dashboard as HTML page - Root and all main paths
 @app.get("/")
-async def serve_root():
-    """API Root - Returns API information"""
-    return {
-        "name": "AIRISS v5.0 API",
-        "version": "5.0.0",
-        "status": "running",
-        "docs": "/docs",
-        "health": "/api/v1/health",
-        "description": "AI HR Intelligence System API"
-    }
-
-# Serve AIRISS v5.0 Dashboard as HTML page
 @app.get("/airiss")
 @app.get("/dashboard")
 async def serve_dashboard():
