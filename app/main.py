@@ -2109,14 +2109,27 @@ async def export_analysis_csv(analysis_type: str = "talent", db: Session = Depen
         logger.error(f"Error in CSV export API: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-# Serve AIRISS v5.0 Dashboard as main page - MSA integration for EHR
+# Root endpoint - Return API information instead of HTML for Railway
 @app.get("/")
 async def serve_root():
-    """Serve AIRISS v5.0 Dashboard for root path - MSA integrated version"""
+    """API Root - Returns API information"""
+    return {
+        "name": "AIRISS v5.0 API",
+        "version": "5.0.0",
+        "status": "running",
+        "docs": "/docs",
+        "health": "/api/v1/health",
+        "description": "AI HR Intelligence System API"
+    }
+
+# Serve AIRISS v5.0 Dashboard as HTML page
+@app.get("/dashboard")
+async def serve_dashboard():
+    """Serve AIRISS v5.0 Dashboard for web interface"""
     from fastapi.responses import Response
     import time
     
-    # AIRISS v5.0 대시보드를 메인으로 서빙
+    # AIRISS v5.0 대시보드를 서빙
     base_dir = os.path.dirname(os.path.abspath(__file__))
     filepath = os.path.join(base_dir, "templates", "airiss_v5.html")
     
