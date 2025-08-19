@@ -587,11 +587,11 @@
         <div class="nav-container">
             <div class="logo">AIRISS v5.0</div>
             <div class="nav-links">
-                <a href="#dashboard" class="nav-link">대시보드</a>
-                <a href="#upload" class="nav-link">파일 업로드</a>
-                <a href="#personnel" class="nav-link">인재 관리</a>
-                <a href="#reports" class="nav-link">리포트</a>
-                <a href="#settings" class="nav-link">설정</a>
+                <a href="#dashboard" class="nav-link" onclick="navigateToSection('dashboard'); return false;">대시보드</a>
+                <a href="#upload" class="nav-link" onclick="navigateToSection('upload'); return false;">파일 업로드</a>
+                <a href="#personnel" class="nav-link" onclick="navigateToSection('personnel'); return false;">인재 관리</a>
+                <a href="#reports" class="nav-link" onclick="navigateToSection('reports'); return false;">리포트</a>
+                <a href="#settings" class="nav-link" onclick="navigateToSection('settings'); return false;">설정</a>
             </div>
         </div>
     </nav>
@@ -614,32 +614,32 @@
                     <div class="metric-icon">👥</div>
                     <div class="metric-label">총 직원 수</div>
                     <div class="metric-value" id="totalEmployees">-</div>
-                    <div class="metric-change positive">
-                        <span>▲</span> 12% 증가
+                    <div class="metric-change" id="employeeChange" style="display: none;">
+                        <span></span>
                     </div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-icon">📊</div>
                     <div class="metric-label">평균 성과</div>
                     <div class="metric-value" id="avgPerformance">-</div>
-                    <div class="metric-change positive">
-                        <span>▲</span> 5% 향상
+                    <div class="metric-change" id="performanceChange" style="display: none;">
+                        <span></span>
                     </div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-icon">✅</div>
                     <div class="metric-label">분석 완료</div>
                     <div class="metric-value" id="analysisCount">-</div>
-                    <div class="metric-change positive">
-                        <span>▲</span> 오늘 23건
+                    <div class="metric-change" id="analysisChange" style="display: none;">
+                        <span></span>
                     </div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-icon">⭐</div>
                     <div class="metric-label">S등급 인재</div>
                     <div class="metric-value" id="topTalents">-</div>
-                    <div class="metric-change negative">
-                        <span>▼</span> 2명 감소
+                    <div class="metric-change" id="talentChange" style="display: none;">
+                        <span></span>
                     </div>
                 </div>
             </div>
@@ -809,15 +809,8 @@
                             <div class="progress-fill" style="width: 100%; background: var(--success);"></div>
                         </div>
                     </div>
-                    <div class="personnel-list">
-                        <div class="personnel-item">
-                            <span class="personnel-name">개발팀</span>
-                            <span class="personnel-score" style="background: var(--success);">5명</span>
-                        </div>
-                        <div class="personnel-item">
-                            <span class="personnel-name">영업팀</span>
-                            <span class="personnel-score" style="background: var(--success);">8명</span>
-                        </div>
+                    <div class="personnel-list" id="highPerformersList">
+                        <!-- DB에서 데이터 로드 -->
                     </div>
                 </div>
             </div>
@@ -896,10 +889,31 @@
                     const data = await response.json();
                     
                     // 실제 DB 데이터로만 표시
-                    animateNumber('totalEmployees', data.total_employees || 0);
-                    animateNumber('avgPerformance', data.average_score || 0);
-                    animateNumber('analysisCount', data.total_employees || 0);
-                    animateNumber('topTalents', data.top_talents?.count || 0);
+                    const totalEmployees = data.total_employees || 0;
+                    const avgScore = data.average_score || 0;
+                    const topTalentsCount = data.top_talents?.count || 0;
+                    
+                    animateNumber('totalEmployees', totalEmployees);
+                    animateNumber('avgPerformance', avgScore);
+                    animateNumber('analysisCount', totalEmployees);
+                    animateNumber('topTalents', topTalentsCount);
+                    
+                    // 변화율 표시 (실제 데이터가 있을 때만)
+                    if (totalEmployees > 0 && data.previous_total) {
+                        const changePercent = ((totalEmployees - data.previous_total) / data.previous_total * 100).toFixed(1);
+                        const changeDiv = document.getElementById('employeeChange');
+                        changeDiv.innerHTML = `<span>${changePercent > 0 ? '▲' : '▼'}</span> ${Math.abs(changePercent)}% ${changePercent > 0 ? '증가' : '감소'}`;
+                        changeDiv.className = changePercent > 0 ? 'metric-change positive' : 'metric-change negative';
+                        changeDiv.style.display = 'block';
+                    }
+                    
+                    if (avgScore > 0 && data.previous_avg_score) {
+                        const changePercent = ((avgScore - data.previous_avg_score) / data.previous_avg_score * 100).toFixed(1);
+                        const changeDiv = document.getElementById('performanceChange');
+                        changeDiv.innerHTML = `<span>${changePercent > 0 ? '▲' : '▼'}</span> ${Math.abs(changePercent)}% ${changePercent > 0 ? '향상' : '하락'}`;
+                        changeDiv.className = changePercent > 0 ? 'metric-change positive' : 'metric-change negative';
+                        changeDiv.style.display = 'block';
+                    }
                     
                     // 인재 현황 데이터 업데이트
                     updatePersonnelData(data);
@@ -1055,29 +1069,19 @@
                 }
             } catch (error) {
                 console.error('Upload failed:', error);
-                // 시뮬레이션 폴백
-                setTimeout(() => {
-                    document.getElementById('uploadSection').innerHTML = `
-                        <div class="action-icon">✅</div>
-                        <h2 style="font-size: 24px; margin: 20px 0;">업로드 완료!</h2>
-                        <p style="color: var(--text-muted); margin-bottom: 30px;">분석이 시작되었습니다.</p>
-                        <button class="btn-primary" onclick="showResults()">
-                            결과 확인하기
-                        </button>
-                    `;
-                    generateSampleResults();
-                }, 2000);
+                // 에러 표시만 - 목업 데이터 사용 안함
+                document.getElementById('uploadSection').innerHTML = `
+                    <div class="action-icon">❌</div>
+                    <h2 style="font-size: 24px; margin: 20px 0;">업로드 실패</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 30px;">FastAPI 서버 연결이 필요합니다.</p>
+                    <button class="btn-primary" onclick="location.reload()">
+                        다시 시도
+                    </button>
+                `;
             }
         }
 
-        function generateSampleResults() {
-            analysisResults = [
-                { name: '김민수', department: '개발팀', grade: 'A+', score: 92 },
-                { name: '이영희', department: '인사팀', grade: 'S', score: 95 },
-                { name: '박철수', department: '영업팀', grade: 'B', score: 78 },
-                { name: '정미영', department: '마케팅팀', grade: 'A', score: 85 },
-            ];
-        }
+        // 목업 데이터 생성 함수 제거 - DB 데이터만 사용
 
         function showResults() {
             // 차트 표시
@@ -1151,32 +1155,93 @@
             if (data.top_talents) {
                 const talentCount = document.querySelector('.personnel-card:nth-child(1) .personnel-count');
                 if (talentCount) talentCount.textContent = data.top_talents.count || 0;
+                
+                // 실제 직원 목록 업데이트
+                const keyPersonnelList = document.getElementById('keyPersonnelList');
+                if (keyPersonnelList && data.top_talents.employees) {
+                    keyPersonnelList.innerHTML = data.top_talents.employees.slice(0, 3).map(emp => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${emp.name}</span>
+                            <span class="personnel-score">${emp.grade}급</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
             }
             
             if (data.promotion_candidates) {
                 const promotionCount = document.querySelector('.personnel-card:nth-child(2) .personnel-count');
                 if (promotionCount) promotionCount.textContent = data.promotion_candidates.count || 0;
+                
+                const promotionList = document.getElementById('promotionList');
+                if (promotionList && data.promotion_candidates.employees) {
+                    promotionList.innerHTML = data.promotion_candidates.employees.slice(0, 3).map(emp => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${emp.name}</span>
+                            <span class="personnel-score">${emp.grade}급</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
             }
             
             if (data.risk_employees) {
                 const riskCount = document.querySelector('.personnel-card:nth-child(3) .personnel-count');
                 if (riskCount) riskCount.textContent = data.risk_employees.count || 0;
+                
+                const managementList = document.getElementById('managementList');
+                if (managementList && data.risk_employees.employees) {
+                    managementList.innerHTML = data.risk_employees.employees.slice(0, 2).map(emp => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${emp.name}</span>
+                            <span class="personnel-score" style="background: var(${emp.grade === 'D' ? '--error' : '--warning'});">${emp.grade}급</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
             }
             
             // 추가 데이터 업데이트
             if (data.turnover_risk) {
                 const turnoverCount = document.querySelector('.personnel-card:nth-child(4) .personnel-count');
                 if (turnoverCount) turnoverCount.textContent = data.turnover_risk.count || 0;
+                
+                const turnoverList = document.getElementById('turnoverList');
+                if (turnoverList && data.turnover_risk.employees) {
+                    turnoverList.innerHTML = data.turnover_risk.employees.slice(0, 2).map(emp => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${emp.name}</span>
+                            <span class="personnel-score" style="background: var(${emp.risk_level === '높음' ? '--error' : '--warning'});">${emp.risk_level}</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
             }
             
             if (data.development_targets) {
                 const devCount = document.querySelector('.personnel-card:nth-child(5) .personnel-count');
                 if (devCount) devCount.textContent = data.development_targets.count || 0;
+                
+                const developmentList = document.getElementById('developmentList');
+                if (developmentList && data.development_targets.programs) {
+                    developmentList.innerHTML = data.development_targets.programs.slice(0, 2).map(prog => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${prog.name}</span>
+                            <span class="personnel-score" style="background: var(${prog.status === '완료' ? '--success' : '--info'});">${prog.status}</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
             }
             
             if (data.high_performers) {
                 const perfCount = document.querySelector('.personnel-card:nth-child(6) .personnel-count');
                 if (perfCount) perfCount.textContent = data.high_performers.count || 0;
+                
+                const highPerformersList = document.getElementById('highPerformersList');
+                if (highPerformersList && data.high_performers.employees) {
+                    highPerformersList.innerHTML = data.high_performers.employees.slice(0, 3).map(emp => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${emp.name}</span>
+                            <span class="personnel-score" style="background: var(--success);">${emp.grade}급</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
             }
         }
 
@@ -1197,6 +1262,83 @@
             } catch (error) {
                 console.error('직원 데이터 로드 실패:', error);
             }
+        }
+        
+        // 네비게이션 함수 추가
+        function navigateToSection(section) {
+            // 모든 섹션 숨기기
+            const sections = ['dashboard', 'upload', 'personnel', 'reports', 'settings'];
+            sections.forEach(s => {
+                const el = document.getElementById(s + 'Section');
+                if (el) el.style.display = 'none';
+            });
+            
+            // 선택한 섹션 표시
+            const targetSection = document.getElementById(section + 'Section');
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            } else {
+                // 섹션이 없으면 생성
+                createSection(section);
+            }
+            
+            // 네비게이션 하이라이트 업데이트
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + section) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        function createSection(section) {
+            const container = document.querySelector('.container');
+            const newSection = document.createElement('div');
+            newSection.id = section + 'Section';
+            newSection.className = 'content-section';
+            
+            switch(section) {
+                case 'upload':
+                    newSection.innerHTML = `
+                        <h2 class="section-title">📁 파일 업로드</h2>
+                        <div class="upload-area" id="uploadSection">
+                            <div class="action-icon">📁</div>
+                            <h2>엑셀 파일을 업로드하세요</h2>
+                            <p>드래그 앤 드롭 또는 클릭하여 파일 선택</p>
+                            <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+                            <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
+                                파일 선택
+                            </button>
+                        </div>
+                    `;
+                    break;
+                case 'personnel':
+                    newSection.innerHTML = `
+                        <h2 class="section-title">🎯 인재 관리</h2>
+                        <div class="personnel-management">
+                            <p>인재 관리 기능은 개발 중입니다.</p>
+                        </div>
+                    `;
+                    break;
+                case 'reports':
+                    newSection.innerHTML = `
+                        <h2 class="section-title">📋 리포트</h2>
+                        <div class="reports-section">
+                            <button class="btn-primary" onclick="generateReport()">리포트 생성</button>
+                        </div>
+                    `;
+                    break;
+                case 'settings':
+                    newSection.innerHTML = `
+                        <h2 class="section-title">⚙️ 설정</h2>
+                        <div class="settings-section">
+                            <p>설정 기능은 개발 중입니다.</p>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            container.appendChild(newSection);
         }
     </script>
 </body>
