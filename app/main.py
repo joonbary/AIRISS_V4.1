@@ -297,7 +297,7 @@ origins = [
     "http://localhost:8080",
     "http://localhost:8000",
     "https://localhost:3000",
-    "https://ehrv10-production.up.railway.app",
+    "https://web-production-4066.up.railway.app",
     "*"  # Allow all origins for now
 ]
 
@@ -316,8 +316,8 @@ app.add_middleware(
 async def add_security_headers(request, call_next):
     response = await call_next(request)
     
-    # CSP header for Railway (ehrv10-production.up.railway.app 도메인 허용)
-    csp_header = "frame-ancestors 'self' https://ehrv10-production.up.railway.app http://localhost:* https://localhost:*;"
+    # CSP header for Railway (web-production-4066.up.railway.app 도메인 허용)
+    csp_header = "frame-ancestors 'self' https://web-production-4066.up.railway.app http://localhost:* https://localhost:*;"
     response.headers["Content-Security-Policy"] = csp_header
     
     # Add Railway-specific headers to identify as API server
