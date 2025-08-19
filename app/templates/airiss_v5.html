@@ -175,9 +175,10 @@
             font-weight: 900;
             line-height: 1.2;
             margin-bottom: 20px;
-            background: linear-gradient(135deg, #fff 0%, var(--primary-color) 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #667eea 50%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
         }
 
         .hero-subtitle {
@@ -566,6 +567,18 @@
             position: relative;
         }
 
+        /* Error Alert Animation */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
         /* Responsive */
         @media (max-width: 768px) {
             .dashboard-grid,
@@ -595,7 +608,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-                <span style="background: linear-gradient(135deg, #FFD700, #FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; font-size: 24px; white-space: nowrap;">OK금융그룹</span>
+                <span style="background: linear-gradient(135deg, #00d4ff, #667eea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; font-size: 24px; white-space: nowrap;">OK금융그룹</span>
                 <span style="color: var(--primary-color); font-weight: 700; font-size: 20px;">|</span>
                 <span style="color: var(--primary-color); font-weight: 800; letter-spacing: 1px;">AIRISS v5.0</span>
             </div>
@@ -613,8 +626,8 @@
     <div class="container">
         <!-- Hero Section -->
         <div class="hero-section">
-            <h1 class="hero-title">AI가 합류한 새로운 인사정보시스템</h1>
-            <p class="hero-subtitle">1,700여명의 임직원 데이터로 만드는 차세대 AI 기반 HRM 시스템에 오신 것을 환영합니다</p>
+            <h1 class="hero-title">AIRISS v5.0 - AI HR Intelligence System</h1>
+            <p class="hero-subtitle">데이터 기반 인재 분석으로 미래를 예측하고 최적의 HR 전략을 제시합니다</p>
         </div>
 
         <!-- Main Dashboard Metrics -->
@@ -989,32 +1002,90 @@
 
         // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', function() {
-            // 실제 DB 데이터만 사용 - 목업 데이터 완전 제거
-            initializeDashboard();
+            // DB 연결 상태 확인 후 초기화
+            checkAPIConnection();
             setupFileUpload();
-            loadExistingData();
         });
+        
+        // API 연결 상태 확인
+        async function checkAPIConnection() {
+            const apiBaseUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:8080' 
+                : 'https://ehrv10-production.up.railway.app';
+            
+            console.log('Checking API connection:', apiBaseUrl);
+            
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/v1/health`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                
+                if (response.ok) {
+                    console.log('API connection successful');
+                    initializeDashboard();
+                    loadExistingData();
+                } else {
+                    console.error('API health check failed:', response.status);
+                    showNoDataMessage('API 서버 상태 확인 실패');
+                }
+            } catch (error) {
+                console.error('Cannot connect to API:', error);
+                showNoDataMessage('API 서버에 연결할 수 없습니다');
+                // 재시도 버튼 추가
+                setTimeout(() => {
+                    if (confirm('API 서버에 연결할 수 없습니다. 다시 시도하시겠습니까?')) {
+                        checkAPIConnection();
+                    }
+                }, 3000);
+            }
+        }
 
         async function initializeDashboard() {
-            // API에서 실제 데이터 가져오기 - 목업 데이터 없음
+            // API에서 실제 데이터 가져오기
             try {
                 // Railway 배포 환경과 로컬 환경 자동 감지
                 const apiBaseUrl = window.location.hostname === 'localhost' 
                     ? 'http://localhost:8080' 
                     : 'https://ehrv10-production.up.railway.app';
-                const response = await fetch(`${apiBaseUrl}/api/v1/hr-dashboard/stats`);
+                
+                console.log('Fetching dashboard data from:', apiBaseUrl);
+                
+                const response = await fetch(`${apiBaseUrl}/api/v1/hr-dashboard/stats`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                
+                console.log('Dashboard API Response:', response.status);
+                
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('Dashboard data received:', data);
                     
-                    // 실제 DB 데이터로만 표시
+                    // 실제 DB 데이터로만 표시 (데이터가 없어도 0 표시)
                     const totalEmployees = data.total_employees || 0;
                     const avgScore = data.average_score || 0;
                     const topTalentsCount = data.top_talents?.count || 0;
                     
-                    animateNumber('totalEmployees', totalEmployees);
-                    animateNumber('avgPerformance', avgScore);
-                    animateNumber('analysisCount', totalEmployees);
-                    animateNumber('topTalents', topTalentsCount);
+                    // 데이터가 있든 없든 숫자로 표시
+                    document.getElementById('totalEmployees').textContent = totalEmployees.toString();
+                    document.getElementById('avgPerformance').textContent = avgScore + '%';
+                    document.getElementById('analysisCount').textContent = totalEmployees.toString();
+                    document.getElementById('topTalents').textContent = topTalentsCount.toString();
+                    
+                    // 애니메이션은 값이 있을 때만
+                    if (totalEmployees > 0) {
+                        animateNumber('totalEmployees', totalEmployees);
+                        animateNumber('avgPerformance', avgScore);
+                        animateNumber('analysisCount', totalEmployees);
+                        animateNumber('topTalents', topTalentsCount);
+                    }
                     
                     // 변화율 표시 (실제 데이터가 있을 때만)
                     if (totalEmployees > 0 && data.previous_total) {
@@ -1036,40 +1107,67 @@
                     // 인재 현황 데이터 업데이트
                     updatePersonnelData(data);
                 } else {
-                    // API 실패 시 데이터 없음 표시
-                    console.error('API 연결 실패 - DB 연동 필요');
-                    showNoDataMessage();
+                    // API 실패 시 상세 에러 정보
+                    const errorText = await response.text();
+                    console.error('Dashboard API Error:', response.status, errorText);
+                    showNoDataMessage(`API 오류 (${response.status}): ${errorText || response.statusText}`);
                 }
             } catch (error) {
-                console.error('DB 연동 실패:', error);
-                showNoDataMessage();
+                console.error('Network Error:', error);
+                showNoDataMessage(`네트워크 오류: ${error.message}`);
             }
         }
         
-        function showNoDataMessage() {
-            // 데이터 없음 메시지 표시
-            document.getElementById('totalEmployees').textContent = '-';
-            document.getElementById('avgPerformance').textContent = '-';
-            document.getElementById('analysisCount').textContent = '-';
-            document.getElementById('topTalents').textContent = '-';
+        function showNoDataMessage(errorMsg = null) {
+            // 데이터 없음 표시 (하이픈 대신 0 사용)
+            document.getElementById('totalEmployees').textContent = '0';
+            document.getElementById('avgPerformance').textContent = '0%';
+            document.getElementById('analysisCount').textContent = '0';
+            document.getElementById('topTalents').textContent = '0';
             
-            // 알림 메시지 표시
+            // 인재 현황 카운트도 0으로 표시
+            document.querySelectorAll('.personnel-count').forEach(el => {
+                el.textContent = '0';
+            });
+            
+            // 기존 에러 메시지 제거
+            const existingAlert = document.querySelector('.api-error-alert');
+            if (existingAlert) existingAlert.remove();
+            
+            // 상세 에러 메시지 표시
             const alertDiv = document.createElement('div');
+            alertDiv.className = 'api-error-alert';
             alertDiv.style.cssText = `
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                background: var(--error);
+                background: linear-gradient(135deg, #EF4444, #DC2626);
                 color: white;
-                padding: 15px 25px;
-                border-radius: 10px;
+                padding: 20px 30px;
+                border-radius: 12px;
                 z-index: 9999;
                 font-weight: 500;
+                box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+                max-width: 450px;
+                animation: slideIn 0.3s ease;
             `;
-            alertDiv.textContent = 'DB 연동 실패 - FastAPI 서버 실행 필요 (포트 8080)';
+            
+            const defaultMsg = 'FastAPI 서버를 실행해주세요';
+            alertDiv.innerHTML = `
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">⚠️ DB 연결 실패</div>
+                <div style="font-size: 14px; opacity: 0.95; line-height: 1.5;">${errorMsg || defaultMsg}</div>
+                <div style="font-size: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.2); opacity: 0.8;">
+                    <div>실행 명령:</div>
+                    <code style="display: block; margin-top: 5px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; font-family: monospace;">
+                        cd app && uvicorn main:app --reload --port 8080
+                    </code>
+                </div>
+                <button onclick="this.parentElement.remove()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.8;">&times;</button>
+            `;
             document.body.appendChild(alertDiv);
             
-            setTimeout(() => alertDiv.remove(), 5000);
+            // 10초 후 자동 제거
+            setTimeout(() => alertDiv.remove(), 10000);
         }
 
         function animateNumber(elementId, target) {
@@ -1178,23 +1276,34 @@
                     await loadExistingData();
                     
                 } else {
-                    // 에러 처리
+                    // 상세 에러 처리
+                    const errorText = await response.text();
+                    console.error('Upload Error:', response.status, errorText);
+                    
                     document.getElementById('uploadSection').innerHTML = `
                         <div class="action-icon">❌</div>
                         <h2 style="font-size: 24px; margin: 20px 0;">업로드 실패</h2>
-                        <p style="color: var(--text-muted); margin-bottom: 30px;">파일 업로드 중 오류가 발생했습니다.</p>
+                        <div style="color: var(--text-muted); margin-bottom: 20px;">
+                            <p style="margin-bottom: 10px;">에러 코드: ${response.status}</p>
+                            <p style="font-size: 14px; opacity: 0.8;">${errorText || '파일 업로드 중 오류가 발생했습니다.'}</p>
+                        </div>
                         <button class="btn-primary" onclick="location.reload()">
                             다시 시도
                         </button>
                     `;
                 }
             } catch (error) {
-                console.error('Upload failed:', error);
-                // 에러 표시만 - 목업 데이터 사용 안함
+                console.error('Upload Network Error:', error);
+                
                 document.getElementById('uploadSection').innerHTML = `
                     <div class="action-icon">❌</div>
-                    <h2 style="font-size: 24px; margin: 20px 0;">업로드 실패</h2>
-                    <p style="color: var(--text-muted); margin-bottom: 30px;">FastAPI 서버 연결이 필요합니다.</p>
+                    <h2 style="font-size: 24px; margin: 20px 0;">서버 연결 실패</h2>
+                    <div style="color: var(--text-muted); margin-bottom: 20px;">
+                        <p style="margin-bottom: 15px;">FastAPI 서버가 실행 중인지 확인해주세요.</p>
+                        <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 13px;">
+                            cd app && uvicorn main:app --reload --port 8080
+                        </div>
+                    </div>
                     <button class="btn-primary" onclick="location.reload()">
                         다시 시도
                     </button>
@@ -1202,7 +1311,7 @@
             }
         }
 
-        // 목업 데이터 생성 함수 제거 - DB 데이터만 사용
+        // DB 데이터만 사용 - 목업 데이터 완전 제거됨
 
         function showResults() {
             // 차트 표시

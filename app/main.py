@@ -345,6 +345,7 @@ async def startup_event():
 
 # Health check endpoint
 @app.get("/health")
+@app.get("/api/v1/health")
 async def health_check():
     """Health check endpoint"""
     import subprocess
@@ -355,20 +356,32 @@ async def health_check():
     except:
         git_hash = "unknown"
     
+    # DB 연결 상태 확인
+    db_status = "connected"
+    try:
+        from app.db.database import SessionLocal
+        db = SessionLocal()
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
+        db.close()
+    except Exception as e:
+        db_status = f"error: {str(e)[:50]}"
+    
     # 템플릿 파일 확인
     templates_dir = os.path.join(os.path.dirname(__file__), "templates")
     hr_files = []
     if os.path.exists(templates_dir):
         for f in os.listdir(templates_dir):
-            if "hr_dashboard" in f:
+            if "hr_dashboard" in f or "airiss" in f:
                 hr_files.append(f)
     
     return {
         "status": "healthy", 
         "timestamp": datetime.now().isoformat(),
         "git_commit": git_hash,
+        "database": db_status,
         "hr_dashboard_files": hr_files,
-        "deployment_version": "2025-08-07-v5.0.0"
+        "deployment_version": "2025-08-19-v5.0.1"
     }
 
 # API endpoint for root - return JSON for API calls
