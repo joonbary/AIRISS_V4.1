@@ -861,6 +861,8 @@ body {
     overflow: hidden;
     z-index: 1000;
     backdrop-filter: blur(10px);
+    /* 텍스트 잘림 방지 */
+    white-space: nowrap;
 }
 
 .sidebar:hover {
@@ -899,11 +901,16 @@ body {
 .sidebar-menu {
     padding: var(--spacing-2xl) 0;
     opacity: 0;
-    transition: opacity var(--transition);
+    visibility: hidden;
+    transition: opacity var(--transition), visibility var(--transition);
+    /* 완전한 숨김 처리 */
+    transform: translateX(-100%);
 }
 
 .sidebar:hover .sidebar-menu {
     opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
 }
 
 .sidebar-item {
@@ -917,6 +924,11 @@ body {
     position: relative;
     border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
     margin: 2px var(--spacing-sm) 2px 0;
+    /* 텍스트 오버플로우 방지 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 240px;
 }
 
 .sidebar-item::before {
@@ -947,6 +959,22 @@ body {
     width: 24px;
     text-align: center;
     font-size: 18px;
+    flex-shrink: 0; /* 아이콘 크기 고정 */
+    min-width: 24px;
+}
+
+/* 숨김 상태에서 아이콘만 보이도록 하는 처리 */
+.sidebar-item span {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition), visibility var(--transition);
+    transform: translateX(-10px);
+}
+
+.sidebar:hover .sidebar-item span {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
 }
 
 .sidebar-brand {
@@ -955,11 +983,16 @@ body {
     border-bottom: 1px solid var(--border-light);
     margin-bottom: var(--spacing-md);
     opacity: 0;
-    transition: opacity var(--transition);
+    visibility: hidden;
+    transition: opacity var(--transition), visibility var(--transition);
+    /* 완전한 숨김 처리 */
+    transform: translateX(-100%);
 }
 
 .sidebar:hover .sidebar-brand {
     opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
 }
 
 .sidebar-brand h3 {
