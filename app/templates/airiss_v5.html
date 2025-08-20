@@ -435,101 +435,11 @@
             50% { opacity: 0.5; }
         }
         
-        /* ===== 프리미엄 탭 네비게이션 - 깔끔하고 직관적인 UI ===== */
-        .tab-navigation {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 48px;
-            flex-wrap: wrap;
-            background: #FFFFFF;
-            padding: 8px;
-            border-radius: 16px;
-            box-shadow: var(--shadow-md);
-            border: none;
-            position: relative;
-            z-index: var(--z-dropdown);
-            width: 100%;
-        }
+        /* 탭 네비게이션 제거됨: 사이드바로 통합 */
         
-        @media (max-width: 1200px) {
-            .tab-navigation {
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-        }
+        /* 탭 네비게이션 관련 CSS 제거됨 */
         
-        .tab-button {
-            background: linear-gradient(135deg, rgba(52, 61, 84, 0.9) 0%, rgba(41, 49, 69, 0.85) 100%);
-            border: 1px solid rgba(88, 95, 112, 0.4);
-            padding: 18px 32px;
-            border-radius: var(--radius-lg);
-            cursor: pointer;
-            font-size: var(--font-size-base);
-            font-weight: 500;
-            color: var(--text-primary);
-            transition: var(--transition-smooth);
-            position: relative;
-            overflow: hidden;
-            white-space: nowrap;
-            letter-spacing: var(--letter-spacing-base);
-            font-family: var(--font-pretendard);
-        }
-        
-        .tab-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--primary-gradient);
-            opacity: 0;
-            transition: var(--transition-base);
-            z-index: 0;
-        }
-        
-        .tab-button:hover {
-            color: var(--text-primary);
-            background: linear-gradient(135deg, rgba(0, 217, 255, 0.15) 0%, rgba(123, 97, 255, 0.12) 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(0, 217, 255, 0.2);
-            border-color: rgba(0, 217, 255, 0.5);
-        }
-        
-        .tab-button.active {
-            background: linear-gradient(135deg, #00d9ff 0%, #7b61ff 100%) !important;
-            color: #FFFFFF !important;
-            font-weight: 600;
-            position: relative;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(255, 98, 0, 0.3);
-        }
-        
-        .tab-button.active::before {
-            display: none;  /* 그라디언트 오버레이 제거 */
-        }
-        
-        .tab-button.active span,
-        .tab-button.active i,
-        .tab-button.active * {
-            color: #FFFFFF !important;
-            opacity: 1 !important;
-        }
-        
-        .tab-button .badge {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: var(--primary-orange);
-            color: var(--text-inverse);
-            font-size: var(--font-size-xs);
-            padding: 4px 8px;
-            border-radius: var(--radius-sm);
-            font-weight: 700;
-            z-index: 2;
-            font-family: var(--font-pretendard);
-        }
+        /* 탭 버튼 관련 CSS 제거됨: 사이드바로 통합 */
         
         /* ===== OK금융 탭 콘텐츠 ===== */
         .tab-content {
@@ -1168,19 +1078,7 @@
                 grid-template-columns: 1fr;
             }
             
-            .tab-navigation {
-                justify-content: flex-start;
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                padding: 8px;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            .tab-button {
-                min-width: 120px;
-                white-space: nowrap;
-                flex-shrink: 0;
-            }
+            /* 탭 네비게이션 CSS 제거됨 */
             
             .card {
                 padding: 24px;
@@ -1239,28 +1137,7 @@
             </div>
         </header>
         
-        <!-- 탭 네비게이션 -->
-        <nav class="tab-navigation">
-            <button class="tab-button active" onclick="AIRISS.switchTab('dashboard')">
-                📊 대시보드
-            </button>
-            <button class="tab-button" onclick="AIRISS.switchTab('employees')">
-                👥 분석 직원 수
-            </button>
-            <button class="tab-button" onclick="AIRISS.switchTab('upload')">
-                📤 데이터 업로드
-                <span class="badge" style="display:none;">NEW</span>
-            </button>
-            <button class="tab-button" onclick="AIRISS.switchTab('insights')">
-                💡 AI 인사이트
-            </button>
-            <button class="tab-button" onclick="AIRISS.switchTab('opinion')">
-                💬 의견 분석
-            </button>
-            <button class="tab-button" onclick="AIRISS.switchTab('reports')">
-                📑 리포트
-            </button>
-        </nav>
+        <!-- 기존 탭 네비게이션 제거: 사이드바로 통합 -->
         
         <!-- 대시보드 탭 -->
         <div id="dashboard-tab" class="tab-content active">
@@ -1889,19 +1766,24 @@
             
             // 탭 전환
             switchTab(tabName) {
-                // 모든 탭 비활성화
-                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                console.log(`🔄 탭 전환: ${tabName}`);
+                
+                // 모든 탭 컨텐츠 비활성화
                 document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
                 
-                // 선택된 탭 버튼 찾아서 활성화
-                document.querySelectorAll('.tab-button').forEach(btn => {
-                    if (btn.onclick && btn.onclick.toString().includes(`'${tabName}'`)) {
-                        btn.classList.add('active');
-                    }
-                });
-                
                 // 선택된 탭 컨텐츠 활성화
-                document.getElementById(`${tabName}-tab`).classList.add('active');
+                const targetTab = document.getElementById(`${tabName}-tab`);
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                    console.log(`✅ 탭 활성화: ${tabName}-tab`);
+                } else {
+                    console.error(`❌ 탭을 찾을 수 없습니다: ${tabName}-tab`);
+                }
+                
+                // 사이드바 메뉴 활성 상태 업데이트
+                if (typeof updateSidebarActiveState === 'function') {
+                    updateSidebarActiveState(tabName);
+                }
                 
                 // 상태 업데이트
                 this.state.currentTab = tabName;

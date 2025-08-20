@@ -1621,6 +1621,9 @@ function initializeSidebarMenus() {
     
     menuItems.forEach(item => {
         item.addEventListener('click', (e) => {
+            // onclick으로 이미 탭 전환 처리되므로 중복 처리 방지
+            // preventDefault는 onclick에서 return false로 처리
+            
             // 현재 활성 메뉴 제거
             menuItems.forEach(i => i.classList.remove('active'));
             
@@ -1639,9 +1642,26 @@ function initializeSidebarMenus() {
             }, 300);
             
             const menuText = item.querySelector('span')?.textContent || 'Unknown';
-            addDebugLog(`메뉴 선택: ${menuText}`, 'info');
+            const section = item.getAttribute('data-section');
+            addDebugLog(`사이드바 메뉴 선택: ${menuText} (${section})`, 'info');
         });
     });
+}
+
+// 사이드바 메뉴 활성 상태 업데이트 (탭 전환 시 호출)
+function updateSidebarActiveState(activeSection) {
+    const menuItems = document.querySelectorAll('.sidebar-item');
+    
+    menuItems.forEach(item => {
+        const section = item.getAttribute('data-section');
+        if (section === activeSection) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+    
+    addDebugLog(`사이드바 활성 상태 업데이트: ${activeSection}`, 'info');
 }
 
 // 사이드바 애니메이션 CSS 추가
@@ -1690,39 +1710,34 @@ function createSidebarMenu() {
         </div>
         
         <nav class="sidebar-menu">
-            <a href="#dashboard" class="sidebar-item active" data-section="dashboard">
+            <a href="#dashboard" class="sidebar-item active" data-section="dashboard" onclick="AIRISS.switchTab('dashboard'); return false;">
                 <i class="fas fa-tachometer-alt"></i>
-                <span>대시보드</span>
+                <span>📊 대시보드</span>
             </a>
             
-            <a href="#analysis" class="sidebar-item" data-section="analysis">
-                <i class="fas fa-chart-bar"></i>
-                <span>AI 분석</span>
+            <a href="#employees" class="sidebar-item" data-section="employees" onclick="AIRISS.switchTab('employees'); return false;">
+                <i class="fas fa-users"></i>
+                <span>👥 분석 직원 수</span>
             </a>
             
-            <a href="#upload" class="sidebar-item" data-section="upload">
+            <a href="#upload" class="sidebar-item" data-section="upload" onclick="AIRISS.switchTab('upload'); return false;">
                 <i class="fas fa-cloud-upload-alt"></i>
-                <span>파일 업로드</span>
+                <span>📤 데이터 업로드</span>
             </a>
             
-            <a href="#results" class="sidebar-item" data-section="results">
-                <i class="fas fa-poll"></i>
-                <span>분석 결과</span>
+            <a href="#insights" class="sidebar-item" data-section="insights" onclick="AIRISS.switchTab('insights'); return false;">
+                <i class="fas fa-lightbulb"></i>
+                <span>💡 AI 인사이트</span>
             </a>
             
-            <a href="#reports" class="sidebar-item" data-section="reports">
+            <a href="#opinion" class="sidebar-item" data-section="opinion" onclick="AIRISS.switchTab('opinion'); return false;">
+                <i class="fas fa-comments"></i>
+                <span>💬 의견 분석</span>
+            </a>
+            
+            <a href="#reports" class="sidebar-item" data-section="reports" onclick="AIRISS.switchTab('reports'); return false;">
                 <i class="fas fa-file-alt"></i>
-                <span>보고서</span>
-            </a>
-            
-            <a href="#settings" class="sidebar-item" data-section="settings">
-                <i class="fas fa-cog"></i>
-                <span>설정</span>
-            </a>
-            
-            <a href="#help" class="sidebar-item" data-section="help">
-                <i class="fas fa-question-circle"></i>
-                <span>도움말</span>
+                <span>📑 리포트</span>
             </a>
         </nav>
         
