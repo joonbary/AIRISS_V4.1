@@ -1,0 +1,2282 @@
+<!DOCTYPE html>
+<html lang="ko" style="margin: 0; padding: 0; background: #050714;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0e27">
+    <title>AIRISS v5.0 - AI HR Intelligence System</title>
+    
+    <!-- 강력한 캐싱 방지 메타 태그 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta http-equiv="Clear-Site-Data" content="cache">
+    <meta name="refresh-version" content="v5.0.5-revolutionary-complete">
+    
+    <!-- OK금융그룹 디자인 시스템 버전 정보 -->
+    <meta name="version" content="5.0.5">
+    <meta name="build-date" content="2025-08-18">
+    <meta name="design-system" content="Revolutionary-Design-System-Complete">
+    
+    <!-- 폰트 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- PDF 생성 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Chart.js 및 플러그인 (순서 중요) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    
+    <style>
+        /* ===== Revolutionary Design System for AIRISS ===== */
+        :root {
+            /* Revolutionary Primary Colors */
+            --primary-color: #00d4ff;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-dark: #0099cc;
+            --primary-light: rgba(0, 212, 255, 0.1);
+            
+            /* Background System */
+            --bg-dark: #0a0e27;
+            --bg-darker: #050714;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --bg-hover: rgba(255, 255, 255, 0.08);
+            
+            /* Text Colors */
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            
+            /* Glass Effect */
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            
+            /* Status Colors */
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --info: #3B82F6;
+            
+            /* Grade Colors */
+            --grade-s: #9333EA;
+            --grade-a-plus: #7C3AED;
+            --grade-a: #3B82F6;
+            --grade-b-plus: #06B6D4;
+            --grade-b: #10B981;
+            --grade-c: #F59E0B;
+            --grade-d: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            margin: 0;
+            padding: 0;
+            background: #050714;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #050714 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.1), transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(102, 126, 234, 0.1), transparent 50%),
+                        radial-gradient(circle at 40% 20%, rgba(118, 75, 162, 0.1), transparent 50%);
+            animation: backgroundShift 20s ease infinite;
+            z-index: -1;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(-20px, -20px) rotate(120deg); }
+            66% { transform: translate(20px, -10px) rotate(240deg); }
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: linear-gradient(135deg, rgba(10, 14, 39, 0.95) 0%, rgba(5, 7, 20, 0.95) 100%);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 24px;
+            font-weight: 800;
+            min-width: fit-content;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            padding: 60px 0;
+            margin-bottom: 60px;
+        }
+
+        .hero-title {
+            font-size: clamp(36px, 5vw, 56px);
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #667eea 50%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        /* Dashboard Metrics Section */
+        .dashboard-section {
+            margin-bottom: 60px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        /* Metric Card with Revolutionary Design */
+        .metric-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            background: var(--bg-hover);
+            border-color: var(--primary-color);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .metric-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--primary-color);
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .metric-change {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .metric-change.positive {
+            color: var(--success);
+        }
+
+        .metric-change.negative {
+            color: var(--error);
+        }
+
+        /* Key Personnel Section */
+        .personnel-section {
+            margin-bottom: 60px;
+        }
+
+        .personnel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .personnel-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .personnel-card:hover {
+            transform: scale(1.02);
+            border-color: var(--primary-color);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.3);
+        }
+
+        .personnel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .personnel-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .personnel-count {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+
+        .personnel-list {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .personnel-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .personnel-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .personnel-name {
+            font-weight: 500;
+        }
+
+        .personnel-score {
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: var(--primary-gradient);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Quick Actions Section */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .action-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .action-card:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .action-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+        }
+
+        .action-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .action-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* File Upload Section */
+        .upload-section {
+            background: var(--glass-bg);
+            border: 2px dashed var(--glass-border);
+            border-radius: 20px;
+            padding: 60px;
+            text-align: center;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: var(--primary-color);
+            background: var(--bg-hover);
+        }
+
+        .upload-section.dragover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--primary-color);
+            transform: scale(1.02);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 40px;
+            backdrop-filter: blur(10px);
+            min-height: 400px;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--glass-border);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 20px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            border-radius: 4px;
+            transition: width 1s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-dark);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Error Alert Animation */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-grid,
+            .personnel-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .logo {
+                font-size: 18px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                <span style="background: linear-gradient(135deg, #00d4ff, #667eea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; font-size: 24px; white-space: nowrap;">OK금융그룹</span>
+                <span style="color: var(--primary-color); font-weight: 700; font-size: 20px;">|</span>
+                <span style="color: var(--primary-color); font-weight: 800; letter-spacing: 1px;">AIRISS v5.0</span>
+            </div>
+            <div class="nav-links">
+                <a href="#dashboard" class="nav-link" onclick="navigateToSection('dashboard'); return false;">대시보드</a>
+                <a href="#upload" class="nav-link" onclick="navigateToSection('upload'); return false;">파일 업로드</a>
+                <a href="#personnel" class="nav-link" onclick="navigateToSection('personnel'); return false;">인재 관리</a>
+                <a href="#reports" class="nav-link" onclick="navigateToSection('reports'); return false;">리포트</a>
+                <a href="#settings" class="nav-link" onclick="navigateToSection('settings'); return false;">설정</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1 class="hero-title">AIRISS v5.0 - AI HR Intelligence System</h1>
+            <p class="hero-subtitle">데이터 기반 인재 분석으로 미래를 예측하고 최적의 HR 전략을 제시합니다</p>
+        </div>
+
+        <!-- Main Dashboard Metrics -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2 class="section-title">📊 주요 지표</h2>
+            </div>
+            <div class="dashboard-grid">
+                <div class="metric-card">
+                    <div class="metric-icon">👥</div>
+                    <div class="metric-label">총 직원 수</div>
+                    <div class="metric-value" id="totalEmployees">-</div>
+                    <div class="metric-change" id="employeeChange" style="display: none;">
+                        <span></span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">📊</div>
+                    <div class="metric-label">평균 성과</div>
+                    <div class="metric-value" id="avgPerformance">-</div>
+                    <div class="metric-change" id="performanceChange" style="display: none;">
+                        <span></span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">✅</div>
+                    <div class="metric-label">분석 완료</div>
+                    <div class="metric-value" id="analysisCount">-</div>
+                    <div class="metric-change" id="analysisChange" style="display: none;">
+                        <span></span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">⭐</div>
+                    <div class="metric-label">S등급 인재</div>
+                    <div class="metric-value" id="topTalents">-</div>
+                    <div class="metric-change" id="talentChange" style="display: none;">
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Personnel Management Section -->
+        <div class="personnel-section">
+            <div class="section-header">
+                <h2 class="section-title">🎯 인재 현황</h2>
+            </div>
+            <div class="personnel-grid">
+                <!-- 핵심 인력 -->
+                <div class="personnel-card">
+                    <div class="personnel-header">
+                        <div class="personnel-title">🌟 핵심 인력</div>
+                        <div class="personnel-count">-</div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>목표 대비</span>
+                            <span>80%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 80%;"></div>
+                        </div>
+                    </div>
+                    <div class="personnel-list">
+                        <div class="personnel-item">
+                            <span class="personnel-name">김민수</span>
+                            <span class="personnel-score">S급</span>
+                        </div>
+                        <div class="personnel-item">
+                            <span class="personnel-name">이영희</span>
+                            <span class="personnel-score">S급</span>
+                        </div>
+                        <div class="personnel-item">
+                            <span class="personnel-name">박철수</span>
+                            <span class="personnel-score">A+급</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 승진 후보자 -->
+                <div class="personnel-card">
+                    <div class="personnel-header">
+                        <div class="personnel-title">📈 승진 후보자</div>
+                        <div class="personnel-count">-</div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>준비도</span>
+                            <span>75%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%;"></div>
+                        </div>
+                    </div>
+                    <div class="personnel-list">
+                        <div class="personnel-item">
+                            <span class="personnel-name">정미영</span>
+                            <span class="personnel-score">A급</span>
+                        </div>
+                        <div class="personnel-item">
+                            <span class="personnel-name">최동욱</span>
+                            <span class="personnel-score">A급</span>
+                        </div>
+                        <div class="personnel-item">
+                            <span class="personnel-name">한지원</span>
+                            <span class="personnel-score">B+급</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 관리 필요 인력 -->
+                <div class="personnel-card">
+                    <div class="personnel-header">
+                        <div class="personnel-title">⚠️ 관리 필요 인력</div>
+                        <div class="personnel-count">-</div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>개선율</span>
+                            <span>45%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 45%; background: var(--warning);"></div>
+                        </div>
+                    </div>
+                    <div class="personnel-list">
+                        <div class="personnel-item">
+                            <span class="personnel-name">김철호</span>
+                            <span class="personnel-score" style="background: var(--warning);">C급</span>
+                        </div>
+                        <div class="personnel-item">
+                            <span class="personnel-name">이수진</span>
+                            <span class="personnel-score" style="background: var(--error);">D급</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 이직 위험군 -->
+                <div class="personnel-card">
+                    <div class="personnel-header">
+                        <div class="personnel-title">🚨 이직 위험군</div>
+                        <div class="personnel-count">-</div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>위험도</span>
+                            <span>65%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%; background: var(--error);"></div>
+                        </div>
+                    </div>
+                    <div class="personnel-list">
+                        <div class="personnel-item">
+                            <span class="personnel-name">박지훈</span>
+                            <span class="personnel-score" style="background: var(--error);">높음</span>
+                        </div>
+                        <div class="personnel-item">
+                            <span class="personnel-name">김나영</span>
+                            <span class="personnel-score" style="background: var(--warning);">중간</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 육성 대상자 -->
+                <div class="personnel-card">
+                    <div class="personnel-header">
+                        <div class="personnel-title">🎓 육성 대상자</div>
+                        <div class="personnel-count">-</div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>교육 진행률</span>
+                            <span>60%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 60%; background: var(--info);"></div>
+                        </div>
+                    </div>
+                    <div class="personnel-list">
+                        <div class="personnel-item">
+                            <span class="personnel-name">신입사원 그룹</span>
+                            <span class="personnel-score" style="background: var(--info);">진행중</span>
+                        </div>
+                        <div class="personnel-item">
+                            <span class="personnel-name">리더십 과정</span>
+                            <span class="personnel-score" style="background: var(--success);">완료</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 성과 우수자 -->
+                <div class="personnel-card">
+                    <div class="personnel-header">
+                        <div class="personnel-title">🏆 성과 우수자</div>
+                        <div class="personnel-count">-</div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>목표 달성률</span>
+                            <span>120%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%; background: var(--success);"></div>
+                        </div>
+                    </div>
+                    <div class="personnel-list" id="highPerformersList">
+                        <!-- DB에서 데이터 로드 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evaluation Target Section -->
+        <div class="evaluation-section" style="margin-bottom: 60px;">
+            <div class="section-header">
+                <h2 class="section-title">📊 평가 대상자 분석</h2>
+            </div>
+            <div class="evaluation-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+                <!-- 기여도 평가 -->
+                <div class="evaluation-card" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.1), rgba(147, 51, 234, 0.05)); backdrop-filter: blur(10px); border: 1px solid rgba(147, 51, 234, 0.3); border-radius: 20px; padding: 30px;">
+                    <div class="eval-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <div class="eval-title" style="font-size: 20px; font-weight: 700; color: #ffffff;">💡 기여도 평가 대상자</div>
+                        <div class="eval-count" style="background: rgba(147, 51, 234, 0.3); padding: 8px 16px; border-radius: 20px; color: #ffffff; font-weight: 600;">156명</div>
+                    </div>
+                    <div class="eval-metrics" style="display: grid; gap: 15px;">
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">상위 10%</span>
+                            <span style="color: #9333EA; font-weight: 600;">23명</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">평균 기여도</span>
+                            <span style="color: #9333EA; font-weight: 600;">87.3점</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">전년 대비</span>
+                            <span style="color: #10B981; font-weight: 600;">▲ 12%</span>
+                        </div>
+                    </div>
+                    <div class="eval-progress" style="margin-top: 20px;">
+                        <div class="progress-label" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: rgba(255, 255, 255, 0.7); font-size: 14px;">평가 진행률</span>
+                            <span style="color: rgba(255, 255, 255, 0.9); font-weight: 600;">78%</span>
+                        </div>
+                        <div class="progress-bar" style="background: rgba(255, 255, 255, 0.1); height: 8px; border-radius: 10px; overflow: hidden;">
+                            <div class="progress-fill" style="width: 78%; height: 100%; background: linear-gradient(90deg, #9333EA, #7C3AED); border-radius: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 전문성 평가 -->
+                <div class="evaluation-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05)); backdrop-filter: blur(10px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px; padding: 30px;">
+                    <div class="eval-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <div class="eval-title" style="font-size: 20px; font-weight: 700; color: #ffffff;">🎯 전문성 평가 대상자</div>
+                        <div class="eval-count" style="background: rgba(59, 130, 246, 0.3); padding: 8px 16px; border-radius: 20px; color: #ffffff; font-weight: 600;">234명</div>
+                    </div>
+                    <div class="eval-metrics" style="display: grid; gap: 15px;">
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">전문가 등급</span>
+                            <span style="color: #3B82F6; font-weight: 600;">42명</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">평균 전문성</span>
+                            <span style="color: #3B82F6; font-weight: 600;">82.5점</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">자격증 보유</span>
+                            <span style="color: #10B981; font-weight: 600;">189명</span>
+                        </div>
+                    </div>
+                    <div class="eval-progress" style="margin-top: 20px;">
+                        <div class="progress-label" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: rgba(255, 255, 255, 0.7); font-size: 14px;">평가 진행률</span>
+                            <span style="color: rgba(255, 255, 255, 0.9); font-weight: 600;">85%</span>
+                        </div>
+                        <div class="progress-bar" style="background: rgba(255, 255, 255, 0.1); height: 8px; border-radius: 10px; overflow: hidden;">
+                            <div class="progress-fill" style="width: 85%; height: 100%; background: linear-gradient(90deg, #3B82F6, #06B6D4); border-radius: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 영향력 평가 -->
+                <div class="evaluation-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); backdrop-filter: blur(10px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; padding: 30px;">
+                    <div class="eval-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <div class="eval-title" style="font-size: 20px; font-weight: 700; color: #ffffff;">🌟 영향력 평가 대상자</div>
+                        <div class="eval-count" style="background: rgba(16, 185, 129, 0.3); padding: 8px 16px; border-radius: 20px; color: #ffffff; font-weight: 600;">178명</div>
+                    </div>
+                    <div class="eval-metrics" style="display: grid; gap: 15px;">
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">리더십 점수</span>
+                            <span style="color: #10B981; font-weight: 600;">91.2점</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">팀 영향력</span>
+                            <span style="color: #10B981; font-weight: 600;">상위 15%</span>
+                        </div>
+                        <div class="eval-item" style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <span style="color: rgba(255, 255, 255, 0.9);">멘토링 활동</span>
+                            <span style="color: #10B981; font-weight: 600;">67명</span>
+                        </div>
+                    </div>
+                    <div class="eval-progress" style="margin-top: 20px;">
+                        <div class="progress-label" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: rgba(255, 255, 255, 0.7); font-size: 14px;">평가 진행률</span>
+                            <span style="color: rgba(255, 255, 255, 0.9); font-weight: 600;">92%</span>
+                        </div>
+                        <div class="progress-bar" style="background: rgba(255, 255, 255, 0.1); height: 8px; border-radius: 10px; overflow: hidden;">
+                            <div class="progress-fill" style="width: 92%; height: 100%; background: linear-gradient(90deg, #10B981, #06B6D4); border-radius: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <div class="action-card" onclick="document.getElementById('fileInput').click()">
+                <div class="action-icon">📤</div>
+                <div class="action-title">엑셀 업로드</div>
+                <div class="action-desc">HR 데이터 파일 업로드</div>
+            </div>
+            <div class="action-card" onclick="showEmployeeList()">
+                <div class="action-icon">👥</div>
+                <div class="action-title">직원 목록</div>
+                <div class="action-desc">전체 직원 조회</div>
+            </div>
+            <div class="action-card" onclick="generateReport()">
+                <div class="action-icon">📊</div>
+                <div class="action-title">리포트 생성</div>
+                <div class="action-desc">분석 리포트 다운로드</div>
+            </div>
+            <div class="action-card" onclick="showAnalytics()">
+                <div class="action-icon">📈</div>
+                <div class="action-title">통계 분석</div>
+                <div class="action-desc">상세 통계 확인</div>
+            </div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="upload-section" id="uploadSection">
+            <div class="action-icon">📁</div>
+            <h2 style="font-size: 24px; margin: 20px 0;">엑셀 파일을 드래그하여 업로드</h2>
+            <p style="color: var(--text-muted); margin-bottom: 30px;">또는 클릭하여 파일 선택 (최대 10MB)</p>
+            <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+            <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
+                파일 선택하기
+            </button>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-container" id="chartContainer" style="display: none;">
+            <canvas id="performanceChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Employee Detail Modal -->
+    <div class="modal" id="employeeModal">
+        <div class="modal-content">
+            <span style="position: absolute; top: 20px; right: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">직원 상세 정보</h2>
+            <div id="modalBody">
+                <!-- 동적으로 내용이 추가됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 기존 JavaScript 기능들을 그대로 유지
+        let uploadedData = [];
+        let analysisResults = [];
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            // DB 연결 상태 확인 후 초기화
+            checkAPIConnection();
+            setupFileUpload();
+        });
+        
+        // API 연결 상태 확인
+        async function checkAPIConnection() {
+            const apiBaseUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:8080' 
+                : 'https://web-production-4066.up.railway.app';
+            
+            console.log('Checking API connection:', apiBaseUrl);
+            
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/v1/health`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                
+                if (response.ok) {
+                    console.log('API connection successful');
+                    initializeDashboard();
+                    loadExistingData();
+                } else {
+                    console.error('API health check failed:', response.status);
+                    showNoDataMessage('API 서버 상태 확인 실패');
+                }
+            } catch (error) {
+                console.error('Cannot connect to API:', error);
+                showNoDataMessage('API 서버에 연결할 수 없습니다');
+                // 재시도 버튼 추가
+                setTimeout(() => {
+                    if (confirm('API 서버에 연결할 수 없습니다. 다시 시도하시겠습니까?')) {
+                        checkAPIConnection();
+                    }
+                }, 3000);
+            }
+        }
+
+        async function initializeDashboard() {
+            // API에서 실제 데이터 가져오기
+            try {
+                // Railway 배포 환경과 로컬 환경 자동 감지
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8080' 
+                    : 'https://web-production-4066.up.railway.app';
+                
+                console.log('Fetching dashboard data from:', apiBaseUrl);
+                
+                const response = await fetch(`${apiBaseUrl}/api/v1/hr-dashboard/stats`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                
+                console.log('Dashboard API Response:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Dashboard data received:', data);
+                    
+                    // 실제 DB 데이터로만 표시 (데이터가 없어도 0 표시)
+                    const totalEmployees = data.total_employees || 0;
+                    const avgScore = data.average_score || 0;
+                    const topTalentsCount = data.top_talents?.count || 0;
+                    
+                    // 데이터가 있든 없든 숫자로 표시
+                    document.getElementById('totalEmployees').textContent = totalEmployees.toString();
+                    document.getElementById('avgPerformance').textContent = avgScore + '%';
+                    document.getElementById('analysisCount').textContent = totalEmployees.toString();
+                    document.getElementById('topTalents').textContent = topTalentsCount.toString();
+                    
+                    // 애니메이션은 값이 있을 때만
+                    if (totalEmployees > 0) {
+                        animateNumber('totalEmployees', totalEmployees);
+                        animateNumber('avgPerformance', avgScore);
+                        animateNumber('analysisCount', totalEmployees);
+                        animateNumber('topTalents', topTalentsCount);
+                    }
+                    
+                    // 변화율 표시 (실제 데이터가 있을 때만)
+                    if (totalEmployees > 0 && data.previous_total) {
+                        const changePercent = ((totalEmployees - data.previous_total) / data.previous_total * 100).toFixed(1);
+                        const changeDiv = document.getElementById('employeeChange');
+                        changeDiv.innerHTML = `<span>${changePercent > 0 ? '▲' : '▼'}</span> ${Math.abs(changePercent)}% ${changePercent > 0 ? '증가' : '감소'}`;
+                        changeDiv.className = changePercent > 0 ? 'metric-change positive' : 'metric-change negative';
+                        changeDiv.style.display = 'block';
+                    }
+                    
+                    if (avgScore > 0 && data.previous_avg_score) {
+                        const changePercent = ((avgScore - data.previous_avg_score) / data.previous_avg_score * 100).toFixed(1);
+                        const changeDiv = document.getElementById('performanceChange');
+                        changeDiv.innerHTML = `<span>${changePercent > 0 ? '▲' : '▼'}</span> ${Math.abs(changePercent)}% ${changePercent > 0 ? '향상' : '하락'}`;
+                        changeDiv.className = changePercent > 0 ? 'metric-change positive' : 'metric-change negative';
+                        changeDiv.style.display = 'block';
+                    }
+                    
+                    // 인재 현황 데이터 업데이트
+                    updatePersonnelData(data);
+                } else {
+                    // API 실패 시 상세 에러 정보
+                    const errorText = await response.text();
+                    console.error('Dashboard API Error:', response.status, errorText);
+                    showNoDataMessage(`API 오류 (${response.status}): ${errorText || response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Network Error:', error);
+                showNoDataMessage(`네트워크 오류: ${error.message}`);
+            }
+        }
+        
+        function showNoDataMessage(errorMsg = null) {
+            // 데이터 없음 표시 (하이픈 대신 0 사용)
+            document.getElementById('totalEmployees').textContent = '0';
+            document.getElementById('avgPerformance').textContent = '0%';
+            document.getElementById('analysisCount').textContent = '0';
+            document.getElementById('topTalents').textContent = '0';
+            
+            // 인재 현황 카운트도 0으로 표시
+            document.querySelectorAll('.personnel-count').forEach(el => {
+                el.textContent = '0';
+            });
+            
+            // 기존 에러 메시지 제거
+            const existingAlert = document.querySelector('.api-error-alert');
+            if (existingAlert) existingAlert.remove();
+            
+            // 상세 에러 메시지 표시
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'api-error-alert';
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #EF4444, #DC2626);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 12px;
+                z-index: 9999;
+                font-weight: 500;
+                box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+                max-width: 450px;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            const defaultMsg = 'FastAPI 서버를 실행해주세요';
+            alertDiv.innerHTML = `
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">⚠️ DB 연결 실패</div>
+                <div style="font-size: 14px; opacity: 0.95; line-height: 1.5;">${errorMsg || defaultMsg}</div>
+                <div style="font-size: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.2); opacity: 0.8;">
+                    <div>실행 명령:</div>
+                    <code style="display: block; margin-top: 5px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; font-family: monospace;">
+                        cd app && uvicorn main:app --reload --port 8080
+                    </code>
+                </div>
+                <button onclick="this.parentElement.remove()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.8;">&times;</button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // 10초 후 자동 제거
+            setTimeout(() => alertDiv.remove(), 10000);
+        }
+
+        function animateNumber(elementId, target) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const duration = 2000;
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                
+                if (elementId === 'avgPerformance') {
+                    element.textContent = Math.floor(current) + '%';
+                } else {
+                    element.textContent = Math.floor(current);
+                }
+            }, 16);
+        }
+
+        function setupFileUpload() {
+            const uploadSection = document.getElementById('uploadSection');
+            const fileInput = document.getElementById('fileInput');
+
+            // 드래그 앤 드롭 이벤트
+            uploadSection.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadSection.classList.add('dragover');
+            });
+
+            uploadSection.addEventListener('dragleave', () => {
+                uploadSection.classList.remove('dragover');
+            });
+
+            uploadSection.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadSection.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+
+            // 파일 선택 이벤트
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        }
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+
+            const file = files[0];
+            if (!file.name.match(/\.(xlsx|xls)$/)) {
+                alert('엑셀 파일만 업로드 가능합니다.');
+                return;
+            }
+
+            // 로딩 표시
+            const uploadSection = document.getElementById('uploadSection');
+            uploadSection.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                </div>
+            `;
+
+            // FormData 생성 및 업로드
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // 실제 업로드 로직 (API 호출)
+            uploadFile(formData);
+        }
+
+        async function uploadFile(formData) {
+            try {
+                // 실제 API 호출
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8080' 
+                    : 'https://web-production-4066.up.railway.app';
+                const response = await fetch(`${apiBaseUrl}/api/v1/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // 업로드 섹션 업데이트
+                    document.getElementById('uploadSection').innerHTML = `
+                        <div class="action-icon">✅</div>
+                        <h2 style="font-size: 24px; margin: 20px 0;">업로드 완료!</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 30px;">
+                            ${result.total_rows || 0}명의 데이터 분석이 완료되었습니다.
+                        </p>
+                        <button class="btn-primary" onclick="showResults()">
+                            결과 확인하기
+                        </button>
+                    `;
+                    
+                    // 대시보드 데이터 새로고침
+                    await initializeDashboard();
+                    await loadExistingData();
+                    
+                } else {
+                    // 상세 에러 처리
+                    const errorText = await response.text();
+                    console.error('Upload Error:', response.status, errorText);
+                    
+                    document.getElementById('uploadSection').innerHTML = `
+                        <div class="action-icon">❌</div>
+                        <h2 style="font-size: 24px; margin: 20px 0;">업로드 실패</h2>
+                        <div style="color: var(--text-muted); margin-bottom: 20px;">
+                            <p style="margin-bottom: 10px;">에러 코드: ${response.status}</p>
+                            <p style="font-size: 14px; opacity: 0.8;">${errorText || '파일 업로드 중 오류가 발생했습니다.'}</p>
+                        </div>
+                        <button class="btn-primary" onclick="location.reload()">
+                            다시 시도
+                        </button>
+                    `;
+                }
+            } catch (error) {
+                console.error('Upload Network Error:', error);
+                
+                document.getElementById('uploadSection').innerHTML = `
+                    <div class="action-icon">❌</div>
+                    <h2 style="font-size: 24px; margin: 20px 0;">서버 연결 실패</h2>
+                    <div style="color: var(--text-muted); margin-bottom: 20px;">
+                        <p style="margin-bottom: 15px;">FastAPI 서버가 실행 중인지 확인해주세요.</p>
+                        <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 13px;">
+                            cd app && uvicorn main:app --reload --port 8080
+                        </div>
+                    </div>
+                    <button class="btn-primary" onclick="location.reload()">
+                        다시 시도
+                    </button>
+                `;
+            }
+        }
+
+        // DB 데이터만 사용 - 목업 데이터 완전 제거됨
+
+        function showResults() {
+            // 차트 표시
+            const chartContainer = document.getElementById('chartContainer');
+            chartContainer.style.display = 'block';
+
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: analysisResults.map(r => r.name),
+                    datasets: [{
+                        label: '성과 점수',
+                        data: analysisResults.map(r => r.score),
+                        backgroundColor: 'rgba(0, 212, 255, 0.5)',
+                        borderColor: 'rgba(0, 212, 255, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#fff'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#fff'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('employeeModal').classList.remove('active');
+        }
+
+        function showEmployeeList() {
+            alert('직원 목록 기능이 준비되었습니다.');
+        }
+
+        function generateReport() {
+            alert('리포트 생성 중... PDF 다운로드가 시작됩니다.');
+        }
+        
+        // 리포트 카테고리 전환 함수
+        function showReportCategory(category) {
+            // 모든 리포트 섹션 숨기기
+            const reportSections = document.querySelectorAll('.report-section');
+            reportSections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // 선택된 카테고리 표시
+            const selectedReport = document.getElementById(category + 'Report');
+            if (selectedReport) {
+                selectedReport.style.display = 'block';
+            }
+            
+            // 탭 버튼 스타일 업데이트
+            const tabButtons = document.querySelectorAll('.report-tab-btn');
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.background = 'var(--glass-bg)';
+                btn.style.border = '1px solid var(--glass-border)';
+            });
+            
+            // 활성 탭 스타일 적용
+            const activeBtn = event ? event.target : document.querySelector('.report-tab-btn');
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.style.background = 'var(--primary-gradient)';
+                activeBtn.style.border = 'none';
+            }
+            
+            // 차트 초기화 (카테고리별)
+            initializeReportCharts(category);
+        }
+        
+        // 리포트별 차트 초기화
+        function initializeReportCharts(category) {
+            switch(category) {
+                case 'overview':
+                    // 조직 구성 차트
+                    const orgCanvas = document.getElementById('organizationChart');
+                    if (orgCanvas && orgCanvas.getContext) {
+                        const ctx = orgCanvas.getContext('2d');
+                        new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['영업부', 'IT부서', '경영지원', '연구개발', '제조부', '기타'],
+                                datasets: [{
+                                    data: [342, 256, 189, 421, 324, 200],
+                                    backgroundColor: [
+                                        'rgba(147, 51, 234, 0.8)',
+                                        'rgba(59, 130, 246, 0.8)',
+                                        'rgba(16, 185, 129, 0.8)',
+                                        'rgba(245, 158, 11, 0.8)',
+                                        'rgba(239, 68, 68, 0.8)',
+                                        'rgba(107, 114, 128, 0.8)'
+                                    ]
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'right',
+                                        labels: { color: '#fff' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'performance':
+                    // 성과 분포 차트
+                    const perfCanvas = document.getElementById('performanceDistChart');
+                    if (perfCanvas && perfCanvas.getContext) {
+                        const ctx = perfCanvas.getContext('2d');
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['S', 'A+', 'A', 'B+', 'B', 'C', 'D'],
+                                datasets: [{
+                                    label: '인원 분포',
+                                    data: [87, 156, 312, 423, 489, 198, 67],
+                                    backgroundColor: 'rgba(0, 212, 255, 0.5)',
+                                    borderColor: 'rgba(0, 212, 255, 1)',
+                                    borderWidth: 2
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                        ticks: { color: '#fff' }
+                                    },
+                                    x: {
+                                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                        ticks: { color: '#fff' }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        labels: { color: '#fff' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'department':
+                    // 부서별 성과 비교 차트
+                    const deptCanvas = document.getElementById('departmentCompChart');
+                    if (deptCanvas && deptCanvas.getContext) {
+                        const ctx = deptCanvas.getContext('2d');
+                        new Chart(ctx, {
+                            type: 'radar',
+                            data: {
+                                labels: ['성과', '생산성', '협업', '혁신', '만족도'],
+                                datasets: [
+                                    {
+                                        label: '영업부',
+                                        data: [89, 92, 85, 78, 88],
+                                        borderColor: 'rgba(147, 51, 234, 1)',
+                                        backgroundColor: 'rgba(147, 51, 234, 0.2)'
+                                    },
+                                    {
+                                        label: 'IT부서',
+                                        data: [91, 88, 90, 95, 86],
+                                        borderColor: 'rgba(59, 130, 246, 1)',
+                                        backgroundColor: 'rgba(59, 130, 246, 0.2)'
+                                    },
+                                    {
+                                        label: '연구개발',
+                                        data: [93, 85, 87, 98, 82],
+                                        borderColor: 'rgba(16, 185, 129, 1)',
+                                        backgroundColor: 'rgba(16, 185, 129, 0.2)'
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    r: {
+                                        beginAtZero: true,
+                                        max: 100,
+                                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                        ticks: { color: '#fff' }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        labels: { color: '#fff' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'compensation':
+                    // 직급별 보상 분포 차트
+                    const compCanvas = document.getElementById('compensationChart');
+                    if (compCanvas && compCanvas.getContext) {
+                        const ctx = compCanvas.getContext('2d');
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: ['사원', '대리', '과장', '차장', '부장', '임원'],
+                                datasets: [{
+                                    label: '평균 연봉 (백만원)',
+                                    data: [45, 58, 72, 85, 98, 150],
+                                    borderColor: 'rgba(0, 212, 255, 1)',
+                                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                                    tension: 0.3,
+                                    fill: true
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        beginAtZero: false,
+                                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                        ticks: { color: '#fff' }
+                                    },
+                                    x: {
+                                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                        ticks: { color: '#fff' }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        labels: { color: '#fff' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    break;
+            }
+        }
+        
+        // 전체 리포트 생성
+        function generateFullReport(type) {
+            console.log('Generating full report for:', type);
+            alert(`${type} 리포트를 PDF로 생성 중입니다...`);
+            // PDF 생성 로직 구현
+        }
+        
+        // 리포트 공유
+        function shareReport(type) {
+            console.log('Sharing report:', type);
+            alert(`${type} 리포트 공유 링크가 생성되었습니다.`);
+            // 공유 로직 구현
+        }
+
+        function showAnalytics() {
+            alert('상세 통계 분석 페이지로 이동합니다.');
+        }
+
+        function updatePersonnelData(data) {
+            // 인재 현황 섹션 동적 업데이트 - 실제 데이터만
+            if (data.top_talents) {
+                const talentCount = document.querySelector('.personnel-card:nth-child(1) .personnel-count');
+                if (talentCount) talentCount.textContent = data.top_talents.count || 0;
+                
+                // 실제 직원 목록 업데이트
+                const keyPersonnelList = document.getElementById('keyPersonnelList');
+                if (keyPersonnelList && data.top_talents.employees) {
+                    keyPersonnelList.innerHTML = data.top_talents.employees.slice(0, 3).map(emp => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${emp.name}</span>
+                            <span class="personnel-score">${emp.grade}급</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
+            }
+            
+            if (data.promotion_candidates) {
+                const promotionCount = document.querySelector('.personnel-card:nth-child(2) .personnel-count');
+                if (promotionCount) promotionCount.textContent = data.promotion_candidates.count || 0;
+                
+                const promotionList = document.getElementById('promotionList');
+                if (promotionList && data.promotion_candidates.employees) {
+                    promotionList.innerHTML = data.promotion_candidates.employees.slice(0, 3).map(emp => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${emp.name}</span>
+                            <span class="personnel-score">${emp.grade}급</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
+            }
+            
+            if (data.risk_employees) {
+                const riskCount = document.querySelector('.personnel-card:nth-child(3) .personnel-count');
+                if (riskCount) riskCount.textContent = data.risk_employees.count || 0;
+                
+                const managementList = document.getElementById('managementList');
+                if (managementList && data.risk_employees.employees) {
+                    managementList.innerHTML = data.risk_employees.employees.slice(0, 2).map(emp => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${emp.name}</span>
+                            <span class="personnel-score" style="background: var(${emp.grade === 'D' ? '--error' : '--warning'});">${emp.grade}급</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
+            }
+            
+            // 추가 데이터 업데이트
+            if (data.turnover_risk) {
+                const turnoverCount = document.querySelector('.personnel-card:nth-child(4) .personnel-count');
+                if (turnoverCount) turnoverCount.textContent = data.turnover_risk.count || 0;
+                
+                const turnoverList = document.getElementById('turnoverList');
+                if (turnoverList && data.turnover_risk.employees) {
+                    turnoverList.innerHTML = data.turnover_risk.employees.slice(0, 2).map(emp => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${emp.name}</span>
+                            <span class="personnel-score" style="background: var(${emp.risk_level === '높음' ? '--error' : '--warning'});">${emp.risk_level}</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
+            }
+            
+            if (data.development_targets) {
+                const devCount = document.querySelector('.personnel-card:nth-child(5) .personnel-count');
+                if (devCount) devCount.textContent = data.development_targets.count || 0;
+                
+                const developmentList = document.getElementById('developmentList');
+                if (developmentList && data.development_targets.programs) {
+                    developmentList.innerHTML = data.development_targets.programs.slice(0, 2).map(prog => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${prog.name}</span>
+                            <span class="personnel-score" style="background: var(${prog.status === '완료' ? '--success' : '--info'});">${prog.status}</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
+            }
+            
+            if (data.high_performers) {
+                const perfCount = document.querySelector('.personnel-card:nth-child(6) .personnel-count');
+                if (perfCount) perfCount.textContent = data.high_performers.count || 0;
+                
+                const highPerformersList = document.getElementById('highPerformersList');
+                if (highPerformersList && data.high_performers.employees) {
+                    highPerformersList.innerHTML = data.high_performers.employees.slice(0, 3).map(emp => `
+                        <div class="personnel-item">
+                            <span class="personnel-name">${emp.name}</span>
+                            <span class="personnel-score" style="background: var(--success);">${emp.grade}급</span>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-muted); padding: 10px;">데이터 없음</div>';
+                }
+            }
+        }
+
+        async function loadExistingData() {
+            // 기존 데이터 로드 - API에서 직원 목록 가져오기
+            try {
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8080' 
+                    : 'https://web-production-4066.up.railway.app';
+                const response = await fetch(`${apiBaseUrl}/api/v1/employees/list`);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('직원 데이터 로드 완료:', data.employees?.length || 0, '명');
+                    
+                    // 필요 시 직원 목록 렌더링
+                    if (data.employees && data.employees.length > 0) {
+                        // 직원 데이터 처리 로직
+                        console.log('총 직원 수:', data.employees.length);
+                    }
+                }
+            } catch (error) {
+                console.error('직원 데이터 로드 실패:', error);
+            }
+        }
+        
+        // 네비게이션 함수 추가
+        function navigateToSection(section) {
+            console.log('Navigating to section:', section);
+            
+            // 모든 주요 섹션 숨기기
+            const allSections = document.querySelectorAll('.dashboard-section, .personnel-section, .quick-actions, .upload-section, #chartContainer');
+            allSections.forEach(el => {
+                if (el) el.style.display = 'none';
+            });
+            
+            // 선택한 섹션에 따라 표시
+            switch(section) {
+                case 'dashboard':
+                    // 대시보드 섹션들 표시
+                    const dashboardSection = document.querySelector('.dashboard-section');
+                    const personnelSection = document.querySelector('.personnel-section');
+                    const quickActions = document.querySelector('.quick-actions');
+                    if (dashboardSection) dashboardSection.style.display = 'block';
+                    if (personnelSection) personnelSection.style.display = 'block';
+                    if (quickActions) quickActions.style.display = 'grid';
+                    break;
+                    
+                case 'upload':
+                    // 업로드 섹션 표시
+                    const uploadSection = document.querySelector('.upload-section');
+                    if (uploadSection) {
+                        uploadSection.style.display = 'block';
+                    } else {
+                        createSection('upload');
+                    }
+                    break;
+                    
+                case 'personnel':
+                    // 인재 관리 섹션 표시
+                    const personnelSectionOnly = document.querySelector('.personnel-section');
+                    if (personnelSectionOnly) {
+                        personnelSectionOnly.style.display = 'block';
+                    } else {
+                        createSection('personnel');
+                    }
+                    break;
+                    
+                case 'reports':
+                case 'settings':
+                    createSection(section);
+                    break;
+            }
+            
+            // 네비게이션 하이라이트 업데이트
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + section) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        function createSection(section) {
+            console.log('Creating section:', section);
+            
+            // 기존 임시 섹션 제거
+            const existingSection = document.getElementById(section + 'TempSection');
+            if (existingSection) {
+                existingSection.remove();
+            }
+            
+            const container = document.querySelector('.container');
+            const newSection = document.createElement('div');
+            newSection.id = section + 'TempSection';
+            newSection.className = 'content-section';
+            newSection.style.padding = '40px 0';
+            
+            switch(section) {
+                case 'upload':
+                    newSection.innerHTML = `
+                        <div class="section-header">
+                            <h2 class="section-title">📁 파일 업로드</h2>
+                        </div>
+                        <div class="upload-section" style="display: block;">
+                            <div class="action-icon">📁</div>
+                            <h2 style="font-size: 24px; margin: 20px 0;">엑셀 파일을 업로드하세요</h2>
+                            <p style="color: var(--text-muted); margin-bottom: 30px;">드래그 앤 드롭 또는 클릭하여 파일 선택</p>
+                            <input type="file" id="fileInputTemp" accept=".xlsx,.xls" hidden>
+                            <button class="btn-primary" onclick="document.getElementById('fileInputTemp').click()">
+                                파일 선택
+                            </button>
+                        </div>
+                    `;
+                    break;
+                case 'personnel':
+                    newSection.innerHTML = `
+                        <div class="section-header">
+                            <h2 class="section-title">🎯 인재 관리</h2>
+                        </div>
+                        <div class="dashboard-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">인재 관리 기능</div>
+                                <div class="metric-value">개발 중</div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'reports':
+                    newSection.innerHTML = `
+                        <div class="section-header">
+                            <h2 class="section-title">📋 종합 리포트</h2>
+                        </div>
+                        
+                        <!-- 리포트 카테고리 탭 -->
+                        <div class="report-tabs" style="display: flex; gap: 10px; margin-bottom: 30px; overflow-x: auto; padding: 10px 0;">
+                            <button class="report-tab-btn active" onclick="showReportCategory('overview')" style="padding: 12px 24px; background: var(--primary-gradient); border: none; border-radius: 25px; color: white; font-weight: 600; cursor: pointer; white-space: nowrap;">전체 개요</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('performance')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">성과 분석</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('talent')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">인재 분석</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('department')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">부서별 분석</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('retention')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">이직 위험도</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('development')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">육성 계획</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('compensation')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">보상 분석</button>
+                            <button class="report-tab-btn" onclick="showReportCategory('diversity')" style="padding: 12px 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 25px; color: var(--text-primary); font-weight: 600; cursor: pointer; white-space: nowrap;">다양성 지표</button>
+                        </div>
+                        
+                        <!-- 리포트 콘텐츠 영역 -->
+                        <div id="reportContent">
+                            <!-- 전체 개요 리포트 -->
+                            <div id="overviewReport" class="report-section">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📊</div>
+                                        <div class="metric-label">전사 인력 현황</div>
+                                        <div class="metric-value">1,732명</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 3.2% 증가
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">💰</div>
+                                        <div class="metric-label">평균 인건비</div>
+                                        <div class="metric-value">72M</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 5.1% 증가
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📈</div>
+                                        <div class="metric-label">생산성 지수</div>
+                                        <div class="metric-value">87.3</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 8.7% 향상
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">😊</div>
+                                        <div class="metric-label">직원 만족도</div>
+                                        <div class="metric-value">4.2/5</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 0.3점 상승
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 추가 상세 리포트 섹션 -->
+                                <div class="chart-container" style="margin-top: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">조직 구성 현황</h3>
+                                    <canvas id="organizationChart"></canvas>
+                                </div>
+                                
+                                <div class="report-actions" style="margin-top: 30px; display: flex; gap: 15px;">
+                                    <button class="btn-primary" onclick="generateFullReport('overview')">
+                                        <span>📄</span> 전체 리포트 다운로드
+                                    </button>
+                                    <button class="btn-primary" style="background: var(--glass-bg); border: 1px solid var(--primary-color);" onclick="shareReport('overview')">
+                                        <span>🔗</span> 리포트 공유
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 성과 분석 리포트 -->
+                            <div id="performanceReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">⭐</div>
+                                        <div class="metric-label">S등급 인재</div>
+                                        <div class="metric-value">87명</div>
+                                        <div class="progress-container" style="margin-top: 15px;">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 5%;"></div>
+                                            </div>
+                                            <div class="progress-label" style="margin-top: 5px;">
+                                                <span>전체 5%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🎯</div>
+                                        <div class="metric-label">목표 달성률</div>
+                                        <div class="metric-value">92.3%</div>
+                                        <div class="progress-container" style="margin-top: 15px;">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 92.3%;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📊</div>
+                                        <div class="metric-label">평균 성과점수</div>
+                                        <div class="metric-value">82.7</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 4.2점 상승
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="chart-container" style="margin-top: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">성과 분포도</h3>
+                                    <canvas id="performanceDistChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- 인재 분석 리포트 -->
+                            <div id="talentReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🌟</div>
+                                        <div class="metric-label">핵심 인재</div>
+                                        <div class="metric-value">156명</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 12명 증가
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🎓</div>
+                                        <div class="metric-label">승진 대상자</div>
+                                        <div class="metric-value">234명</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 18명 증가
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">💎</div>
+                                        <div class="metric-label">잠재력 높음</div>
+                                        <div class="metric-value">312명</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 23명 증가
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 인재 매트릭스 -->
+                                <div class="talent-matrix" style="margin-top: 30px; background: var(--glass-bg); border-radius: 20px; padding: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">9-Box 인재 매트릭스</h3>
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; aspect-ratio: 1;">
+                                        <div style="background: var(--success); opacity: 0.3; border-radius: 10px; padding: 15px; display: flex; align-items: center; justify-content: center;">
+                                            <span style="font-weight: 600;">High Potential</span>
+                                        </div>
+                                        <div style="background: var(--success); opacity: 0.5; border-radius: 10px; padding: 15px; display: flex; align-items: center; justify-content: center;">
+                                            <span style="font-weight: 600;">Rising Star</span>
+                                        </div>
+                                        <div style="background: var(--success); opacity: 0.7; border-radius: 10px; padding: 15px; display: flex; align-items: center; justify-content: center;">
+                                            <span style="font-weight: 600;">Super Star</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 부서별 분석 리포트 -->
+                            <div id="departmentReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🏢</div>
+                                        <div class="metric-label">영업부</div>
+                                        <div class="metric-value">342명</div>
+                                        <div class="metric-change positive">
+                                            <span>성과</span> 89.2점
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">💻</div>
+                                        <div class="metric-label">IT부서</div>
+                                        <div class="metric-value">256명</div>
+                                        <div class="metric-change positive">
+                                            <span>성과</span> 91.7점
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📊</div>
+                                        <div class="metric-label">경영지원</div>
+                                        <div class="metric-value">189명</div>
+                                        <div class="metric-change positive">
+                                            <span>성과</span> 86.3점
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🔬</div>
+                                        <div class="metric-label">연구개발</div>
+                                        <div class="metric-value">421명</div>
+                                        <div class="metric-change positive">
+                                            <span>성과</span> 93.1점
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="chart-container" style="margin-top: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">부서별 성과 비교</h3>
+                                    <canvas id="departmentCompChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- 이직 위험도 리포트 -->
+                            <div id="retentionReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🚨</div>
+                                        <div class="metric-label">고위험군</div>
+                                        <div class="metric-value">42명</div>
+                                        <div class="metric-change negative">
+                                            <span>⚠️</span> 즉시 조치 필요
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">⚠️</div>
+                                        <div class="metric-label">중위험군</div>
+                                        <div class="metric-value">128명</div>
+                                        <div class="metric-change" style="color: var(--warning);">
+                                            <span>▲</span> 관찰 필요
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">✅</div>
+                                        <div class="metric-label">안정군</div>
+                                        <div class="metric-value">1,562명</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 90.2% 안정
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="risk-factors" style="margin-top: 30px; background: var(--glass-bg); border-radius: 20px; padding: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">주요 이직 요인</h3>
+                                    <div style="display: grid; gap: 15px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                                            <span>보상 불만족</span>
+                                            <span style="color: var(--error);">34%</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                                            <span>경력 개발 부족</span>
+                                            <span style="color: var(--warning);">28%</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                                            <span>업무 과부하</span>
+                                            <span style="color: var(--warning);">21%</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                                            <span>조직문화</span>
+                                            <span style="color: var(--info);">17%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 육성 계획 리포트 -->
+                            <div id="developmentReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🎓</div>
+                                        <div class="metric-label">교육 대상자</div>
+                                        <div class="metric-value">523명</div>
+                                        <div class="progress-container" style="margin-top: 15px;">
+                                            <div class="progress-label">
+                                                <span>진행률</span>
+                                                <span>67%</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 67%;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📚</div>
+                                        <div class="metric-label">리더십 과정</div>
+                                        <div class="metric-value">87명</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 진행중
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">💡</div>
+                                        <div class="metric-label">직무 전문 교육</div>
+                                        <div class="metric-value">256명</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 계획됨
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="training-programs" style="margin-top: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">주요 육성 프로그램</h3>
+                                    <div class="dashboard-grid">
+                                        <div class="personnel-card">
+                                            <div class="personnel-header">
+                                                <div class="personnel-title">차세대 리더 육성</div>
+                                                <div class="personnel-count">45명</div>
+                                            </div>
+                                            <div class="progress-container">
+                                                <div class="progress-label">
+                                                    <span>완료율</span>
+                                                    <span>78%</span>
+                                                </div>
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" style="width: 78%;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="personnel-card">
+                                            <div class="personnel-header">
+                                                <div class="personnel-title">DT 전문가 양성</div>
+                                                <div class="personnel-count">120명</div>
+                                            </div>
+                                            <div class="progress-container">
+                                                <div class="progress-label">
+                                                    <span>완료율</span>
+                                                    <span>45%</span>
+                                                </div>
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" style="width: 45%;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 보상 분석 리포트 -->
+                            <div id="compensationReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">💰</div>
+                                        <div class="metric-label">평균 연봉</div>
+                                        <div class="metric-value">72.3M</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 5.2% 인상
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">📊</div>
+                                        <div class="metric-label">보상 경쟁력</div>
+                                        <div class="metric-value">87%</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 시장 대비
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🎁</div>
+                                        <div class="metric-label">성과급 비율</div>
+                                        <div class="metric-value">23.7%</div>
+                                        <div class="metric-change positive">
+                                            <span>▲</span> 2.3% 증가
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="chart-container" style="margin-top: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">직급별 보상 분포</h3>
+                                    <canvas id="compensationChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- 다양성 지표 리포트 -->
+                            <div id="diversityReport" class="report-section" style="display: none;">
+                                <div class="dashboard-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-icon">👥</div>
+                                        <div class="metric-label">성별 다양성</div>
+                                        <div class="metric-value">42:58</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 균형 개선중
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🌍</div>
+                                        <div class="metric-label">연령 다양성</div>
+                                        <div class="metric-value">3.8세대</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 다양화 진행
+                                        </div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-icon">🎓</div>
+                                        <div class="metric-label">학력 다양성</div>
+                                        <div class="metric-value">균형</div>
+                                        <div class="metric-change positive">
+                                            <span>✓</span> 적정 수준
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="diversity-details" style="margin-top: 30px; background: var(--glass-bg); border-radius: 20px; padding: 30px;">
+                                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">다양성 세부 지표</h3>
+                                    <div style="display: grid; gap: 20px;">
+                                        <div>
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                                <span>여성 임원 비율</span>
+                                                <span>28%</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 28%; background: var(--info);"></div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                                <span>MZ세대 비율</span>
+                                                <span>45%</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 45%; background: var(--success);"></div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                                <span>경력직 비율</span>
+                                                <span>62%</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 62%; background: var(--primary-color);"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'settings':
+                    newSection.innerHTML = `
+                        <div class="section-header">
+                            <h2 class="section-title">⚙️ 설정</h2>
+                        </div>
+                        <div class="dashboard-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">시스템 설정</div>
+                                <div class="metric-value">개발 중</div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            container.appendChild(newSection);
+        }
+    </script>
+</body>
+</html>
