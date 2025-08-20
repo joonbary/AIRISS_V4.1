@@ -19,6 +19,12 @@
     <meta name="design-update" content="glassmorphism-neon-dark-theme">
     <meta name="design-system" content="Revolutionary-Glass-Neon">
     
+    <!-- 브라우저 테마 색상 제어 -->
+    <meta name="theme-color" content="#00d4ff">
+    <meta name="msapplication-TileColor" content="#00d4ff">
+    <meta name="msapplication-navbutton-color" content="#00d4ff">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -899,7 +905,7 @@
         }
         
         .upload-area:hover {
-            border-color: var(--primary-orange);
+            border-color: var(--primary-color);
             background: #FFFFFF;
             transform: translateY(-4px);
             box-shadow: var(--shadow-lg);
@@ -910,7 +916,7 @@
         }
         
         .upload-area.dragover {
-            border-color: var(--primary-orange);
+            border-color: var(--primary-color);
             background: var(--glassmorphism-bg);
             box-shadow: var(--shadow-neumorphic-hover);
             transform: scale(1.02);
@@ -925,7 +931,7 @@
             margin-bottom: 32px;
             opacity: 0.6;
             transition: var(--transition-base);
-            color: var(--primary-orange);
+            color: var(--primary-color);
         }
         
         .upload-area:hover .upload-icon {
@@ -1033,7 +1039,7 @@
             width: 48px;
             height: 48px;
             border: 3px solid var(--bg-secondary);
-            border-top: 3px solid var(--primary-orange);
+            border-top: 3px solid var(--primary-color);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 24px auto;
@@ -1214,7 +1220,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">🏆 승진 후보자 명단</h2>
-                        <span class="badge" style="background: var(--primary-orange); color: white; padding: 8px 16px; border-radius: 8px;">
+                        <span class="badge" style="background: var(--primary-color); color: white; padding: 8px 16px; border-radius: 8px;">
                             <span id="stat-promotion-table">0</span>명
                         </span>
                     </div>
@@ -1243,7 +1249,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">⭐ 핵심 인재 명단</h2>
-                        <span class="badge" style="background: var(--primary-orange); color: white; padding: 8px 16px; border-radius: 8px;">
+                        <span class="badge" style="background: var(--primary-color); color: white; padding: 8px 16px; border-radius: 8px;">
                             <span id="stat-talent-table">0</span>명
                         </span>
                     </div>
@@ -1306,7 +1312,7 @@
                     <div style="display: flex; gap: 12px;">
                         <input type="text" id="search-input" placeholder="이름, 사번으로 검색..." 
                                style="padding: 14px 20px; border: 2px solid #E0E0E0; border-radius: 12px; width: 320px; font-size: 16px; transition: all 0.3s; outline: none;" 
-                               onfocus="this.style.borderColor='var(--primary-orange)'; this.style.boxShadow='0 0 0 3px rgba(255,107,0,0.1)'" 
+                               onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(0,212,255,0.1)'" 
                                onblur="this.style.borderColor='#E0E0E0'; this.style.boxShadow='none'">
                         <button class="btn btn-primary" onclick="AIRISS.searchEmployees()">
                             🔍 검색
@@ -1871,7 +1877,7 @@
                         <td>${emp.name || emp.employee_name || '익명'}</td>
                         <td>${emp.department || '-'}</td>
                         <td>${emp.position || '-'}</td>
-                        <td style="font-weight: 600; color: var(--primary-orange);">${Math.round(score)}</td>
+                        <td style="font-weight: 600; color: var(--primary-color);">${Math.round(score)}</td>
                         <td><span class="btn btn-success" style="padding: 8px 16px; font-size: 14px; border-radius: 8px; color: white !important;">${grade}</span></td>
                         <td>${emp.reason || '우수한 성과 및 리더십'}</td>
                         <td>
@@ -1903,7 +1909,7 @@
                         <td>${emp.name || emp.employee_name || '익명'}</td>
                         <td>${emp.department || '-'}</td>
                         <td>${emp.position || '-'}</td>
-                        <td style="font-weight: 600; color: var(--primary-orange);">${Math.round(score)}</td>
+                        <td style="font-weight: 600; color: var(--primary-color);">${Math.round(score)}</td>
                         <td><span class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; border-radius: 8px; color: white !important;">${grade}</span></td>
                         <td>${emp.reason || '리더십, 전문성'}</td>
                         <td>
@@ -2009,11 +2015,23 @@
                                     ticks: {
                                         stepSize: 5,
                                         font: {
-                                            size: 12
-                                        }
+                                            size: 14,
+                                            weight: '600'
+                                        },
+                                        color: '#ffffff'
                                     },
                                     grid: {
-                                        drawBorder: false
+                                        drawBorder: false,
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: '인원수',
+                                        color: '#ffffff',
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold'
+                                        }
                                     }
                                 },
                                 x: {
@@ -2021,6 +2039,16 @@
                                         display: false
                                     },
                                     ticks: {
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold'
+                                        },
+                                        color: '#ffffff'
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: '등급',
+                                        color: '#ffffff',
                                         font: {
                                             size: 14,
                                             weight: 'bold'
@@ -2042,7 +2070,7 @@
                                 datalabels: useDataLabels ? {
                                     anchor: 'end',
                                     align: 'top',
-                                    color: '#333',
+                                    color: '#ffffff',
                                     font: {
                                         weight: 'bold',
                                         size: 14
@@ -2139,7 +2167,46 @@
                                     // max 값을 데이터에 따라 동적으로 설정
                                     max: Math.max(...topDepartments.map(d => d.avg)) > 100 ? 1000 : 100,
                                     ticks: {
-                                        stepSize: Math.max(...topDepartments.map(d => d.avg)) > 100 ? 200 : 20
+                                        stepSize: Math.max(...topDepartments.map(d => d.avg)) > 100 ? 200 : 20,
+                                        font: {
+                                            size: 14,
+                                            weight: '600'
+                                        },
+                                        color: '#ffffff'
+                                    },
+                                    grid: {
+                                        drawBorder: false,
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: '평균 점수',
+                                        color: '#ffffff',
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold'
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold'
+                                        },
+                                        color: '#ffffff'
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: '부서명',
+                                        color: '#ffffff',
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold'
+                                        }
                                     }
                                 }
                             },
@@ -2157,7 +2224,7 @@
                                 datalabels: useDataLabels ? {
                                     anchor: 'end',
                                     align: 'top',
-                                    color: '#333',
+                                    color: '#ffffff',
                                     font: {
                                         weight: 'bold',
                                         size: 14
@@ -2315,7 +2382,7 @@
                         <td>${department}</td>
                         <td>${position}</td>
                         <td><span class="btn btn-${gradeColor}" style="padding: 8px 16px; font-size: 14px; font-weight: 600; border-radius: 8px; color: white !important;">${grade}</span></td>
-                        <td style="font-weight: 600; color: var(--primary-orange); font-size: 18px;">${Math.round(score)}</td>
+                        <td style="font-weight: 600; color: var(--primary-color); font-size: 18px;">${Math.round(score)}</td>
                         <td>
                             <button class="btn btn-primary" style="padding: 10px 20px; font-size: 14px; border-radius: 8px; font-weight: 500;" 
                                     onclick="AIRISS.viewEmployeeDetail('${employeeId}')">
@@ -3168,7 +3235,7 @@
                                 border-radius: 15px;
                                 padding: 25px;
                                 margin-top: 30px;
-                                border-top: 3px solid var(--primary-orange);
+                                border-top: 3px solid var(--primary-color);
                             ">
                                 <h4 style="color: #2c3e50; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">
                                     📋 분석 리포트 정보
@@ -3197,7 +3264,7 @@
                                     padding: 15px;
                                     background: rgba(255, 107, 53, 0.1);
                                     border-radius: 10px;
-                                    border-left: 4px solid var(--primary-orange);
+                                    border-left: 4px solid var(--primary-color);
                                 ">
                                     <div style="font-size: 14px; color: #2c3e50; line-height: 1.6;">
                                         <strong>💡 이 리포트는</strong> AI 기반 종합 분석으로 생성된 개인맞춤형 인사평가 보고서입니다. 

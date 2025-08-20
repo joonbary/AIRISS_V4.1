@@ -854,19 +854,33 @@ body {
     left: 0;
     top: 0;
     height: 100vh;
-    width: 4px;
-    background: var(--bg-modal);
-    border-right: 1px solid var(--border-light);
-    transition: width var(--transition-smooth);
+    width: 0;
+    background: transparent;
+    border-right: none;
+    transition: width var(--transition-smooth), background var(--transition-smooth);
     overflow: hidden;
     z-index: 1000;
-    backdrop-filter: blur(10px);
     /* 완전 숨김 처리 */
     white-space: nowrap;
 }
 
-.sidebar:hover {
+.sidebar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20px;
+    height: 100%;
+    background: transparent;
+    z-index: 1001;
+}
+
+.sidebar:hover,
+.sidebar::before:hover + .sidebar {
     width: 260px;
+    background: var(--bg-modal);
+    border-right: 1px solid var(--border-light);
+    backdrop-filter: blur(10px);
 }
 
 .sidebar-toggle {
@@ -1011,7 +1025,7 @@ body {
 
 /* Main Content Adjustment for Sidebar */
 .main-content {
-    margin-left: 4px;
+    margin-left: 0;
     transition: margin-left var(--transition-smooth);
 }
 
