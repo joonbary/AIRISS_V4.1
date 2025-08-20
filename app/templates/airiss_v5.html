@@ -2522,7 +2522,7 @@
                                 border: 1px solid rgba(88, 95, 112, 0.4);
                                 border-radius: 8px;
                                 padding: 30px;
-                                color: #2c3e50;
+                                color: #ffffff;
                                 margin-bottom: 30px;
                                 box-shadow: 0 2px 8px rgba(0,0,0,0.08);
                             ">
@@ -2531,7 +2531,7 @@
                                         <h2 style="font-size: 32px; margin-bottom: 10px; font-weight: 700;">
                                             ${data.name || '익명'}
                                         </h2>
-                                        <div style="display: flex; gap: 20px; margin-bottom: 20px; color: #495057;">
+                                        <div style="display: flex; gap: 20px; margin-bottom: 20px; color: rgba(255, 255, 255, 0.85);">
                                             <span>📍 ${data.department || '미지정'}</span>
                                             <span>💼 ${data.position || '미지정'}</span>
                                             <span>👨‍💼 추정경력 ${data.estimated_experience || '3-5년'}</span>
@@ -2539,42 +2539,42 @@
                                         </div>
                                         <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                                             <span style="
-                                                background: #e9ecef;
+                                                background: rgba(0, 217, 255, 0.15);
                                                 padding: 6px 14px;
                                                 border-radius: 4px;
                                                 font-size: 14px;
-                                                color: #495057;
-                                                border: 1px solid #dee2e6;
+                                                color: #ffffff;
+                                                border: 1px solid rgba(0, 217, 255, 0.3);
                                             ">
                                                 🏆 ${data.performance_indicators?.overall_ranking || '상위 50%'}
                                             </span>
                                             <span style="
-                                                background: #e9ecef;
+                                                background: rgba(0, 217, 255, 0.15);
                                                 padding: 6px 14px;
                                                 border-radius: 4px;
                                                 font-size: 14px;
-                                                color: #495057;
-                                                border: 1px solid #dee2e6;
+                                                color: #ffffff;
+                                                border: 1px solid rgba(0, 217, 255, 0.3);
                                             ">
                                                 📈 성장잠재력 ${data.performance_indicators?.growth_potential || '보통'}
                                             </span>
                                             <span style="
-                                                background: #e9ecef;
+                                                background: rgba(0, 217, 255, 0.15);
                                                 padding: 6px 14px;
                                                 border-radius: 4px;
                                                 font-size: 14px;
-                                                color: #495057;
-                                                border: 1px solid #dee2e6;
+                                                color: #ffffff;
+                                                border: 1px solid rgba(0, 217, 255, 0.3);
                                             ">
                                                 ⚖️ 역량균형 ${data.performance_indicators?.competency_balance || '보통'}
                                             </span>
                                             <span style="
-                                                background: #e9ecef;
+                                                background: rgba(0, 217, 255, 0.15);
                                                 padding: 6px 14px;
                                                 border-radius: 4px;
                                                 font-size: 14px;
-                                                color: #495057;
-                                                border: 1px solid #dee2e6;
+                                                color: #ffffff;
+                                                border: 1px solid rgba(0, 217, 255, 0.3);
                                             ">
                                                 👑 리더십준비도 ${data.performance_indicators?.leadership_readiness || '개발필요'}
                                             </span>
@@ -2593,10 +2593,10 @@
                                             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
                                             position: relative;
                                         ">
-                                            <div style="font-size: 48px; font-weight: bold; color: #2c3e50;">
+                                            <div style="font-size: 48px; font-weight: bold; color: #00d9ff;">
                                                 ${data.ai_score || 0}
                                             </div>
-                                            <div style="font-size: 14px; color: #999; margin-top: 5px;">AI SCORE</div>
+                                            <div style="font-size: 14px; color: rgba(255, 255, 255, 0.8); margin-top: 5px;">AI SCORE</div>
                                             <div style="
                                                 position: absolute;
                                                 top: -10px;
@@ -2611,7 +2611,7 @@
                                         </div>
                                         <div style="
                                             margin-top: 15px;
-                                            background: #6c757d;
+                                            background: linear-gradient(135deg, #00d9ff 0%, #7b61ff 100%);
                                             color: white;
                                             padding: 8px 20px;
                                             border-radius: 4px;
@@ -2634,7 +2634,7 @@
                             ">
                                 <div class="metric-card" style="
                                     background: linear-gradient(135deg, rgba(52, 61, 84, 0.95) 0%, rgba(41, 49, 69, 0.9) 100%);
-                                    color: #2c3e50;
+                                    color: #ffffff;
                                     padding: 20px;
                                     border-radius: 8px;
                                     text-align: center;
@@ -2643,11 +2643,11 @@
                                 ">
                                     <div style="font-size: 20px; margin-bottom: 8px;">📊</div>
                                     <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">${data.performance_indicators?.overall_ranking || '상위 50%'}</div>
-                                    <div style="font-size: 13px; color: #6c757d;">전체 순위</div>
+                                    <div style="font-size: 13px; color: rgba(255, 255, 255, 0.7);">전체 순위</div>
                                 </div>
                                 <div class="metric-card" style="
                                     background: linear-gradient(135deg, rgba(52, 61, 84, 0.95) 0%, rgba(41, 49, 69, 0.9) 100%);
-                                    color: #2c3e50;
+                                    color: #ffffff;
                                     padding: 20px;
                                     border-radius: 8px;
                                     text-align: center;
@@ -2656,11 +2656,11 @@
                                 ">
                                     <div style="font-size: 20px; margin-bottom: 8px;">📈</div>
                                     <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">${data.performance_indicators?.growth_potential || '보통'}</div>
-                                    <div style="font-size: 13px; color: #6c757d;">성장 잠재력</div>
+                                    <div style="font-size: 13px; color: rgba(255, 255, 255, 0.7);">성장 잠재력</div>
                                 </div>
                                 <div class="metric-card" style="
                                     background: linear-gradient(135deg, rgba(52, 61, 84, 0.95) 0%, rgba(41, 49, 69, 0.9) 100%);
-                                    color: #2c3e50;
+                                    color: #ffffff;
                                     padding: 20px;
                                     border-radius: 8px;
                                     text-align: center;
@@ -2669,11 +2669,11 @@
                                 ">
                                     <div style="font-size: 20px; margin-bottom: 8px;">⚠️</div>
                                     <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">${data.performance_indicators?.risk_level || '보통'}</div>
-                                    <div style="font-size: 13px; color: #6c757d;">이직 위험도</div>
+                                    <div style="font-size: 13px; color: rgba(255, 255, 255, 0.7);">이직 위험도</div>
                                 </div>
                                 <div class="metric-card" style="
                                     background: linear-gradient(135deg, rgba(52, 61, 84, 0.95) 0%, rgba(41, 49, 69, 0.9) 100%);
-                                    color: #2c3e50;
+                                    color: #ffffff;
                                     padding: 20px;
                                     border-radius: 8px;
                                     text-align: center;
@@ -2682,7 +2682,7 @@
                                 ">
                                     <div style="font-size: 20px; margin-bottom: 8px;">👑</div>
                                     <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">${data.performance_indicators?.leadership_readiness || '개발필요'}</div>
-                                    <div style="font-size: 13px; color: #6c757d;">리더십 준비도</div>
+                                    <div style="font-size: 13px; color: rgba(255, 255, 255, 0.7);">리더십 준비도</div>
                                 </div>
                             </div>
                             
@@ -2696,7 +2696,7 @@
                                 box-shadow: 0 2px 4px rgba(0,0,0,0.08);
                             ">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                    <h3 style="color: #2c3e50; font-size: 20px; font-weight: 600; margin: 0;">
+                                    <h3 style="color: #00d9ff; font-size: 20px; font-weight: 600; margin: 0;">
                                         🎯 8대 핵심 역량 분석
                                     </h3>
                                     <div style="
@@ -2765,7 +2765,7 @@
                                 margin-bottom: 30px;
                                 box-shadow: 0 5px 20px rgba(0,0,0,0.05);
                             ">
-                                <h3 style="color: #2c3e50; font-size: 24px; font-weight: 600; margin-bottom: 25px;">
+                                <h3 style="color: #00d9ff; font-size: 24px; font-weight: 600; margin-bottom: 25px;">
                                     📈 역량 상세 분석
                                 </h3>
                                 
@@ -3083,7 +3083,7 @@
                                 border: 1px solid #e9ecef;
                                 box-shadow: 0 2px 4px rgba(0,0,0,0.08);
                             ">
-                                <h3 style="color: #2c3e50; font-size: 20px; font-weight: 600; margin-bottom: 20px;">
+                                <h3 style="color: #00d9ff; font-size: 20px; font-weight: 600; margin-bottom: 20px;">
                                     🎯 종합 인사이트 & 액션 플랜
                                 </h3>
                                 
@@ -3099,7 +3099,7 @@
                                         <h4 style="color: #28a745; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
                                             ⚡ 즉시 실행 (1-3개월)
                                         </h4>
-                                        <ul style="margin: 0; padding-left: 20px; color: #2c3e50; line-height: 1.6;">
+                                        <ul style="margin: 0; padding-left: 20px; color: rgba(255, 255, 255, 0.9); line-height: 1.6;">
                                             ${data.low_competencies && data.low_competencies.length > 0 ? `
                                                 <li>${data.low_competencies[0][0]} 역량 집중 개발</li>
                                                 <li>멘토링 프로그램 참여</li>
@@ -3123,7 +3123,7 @@
                                         <h4 style="color: #007bff; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
                                             🎯 중기 목표 (6-12개월)
                                         </h4>
-                                        <ul style="margin: 0; padding-left: 20px; color: #2c3e50; line-height: 1.6;">
+                                        <ul style="margin: 0; padding-left: 20px; color: rgba(255, 255, 255, 0.9); line-height: 1.6;">
                                             ${data.ai_score >= 70 ? `
                                                 <li>팀 프로젝트 리딩 경험</li>
                                                 <li>교차 부서 협업 확대</li>
@@ -3147,7 +3147,7 @@
                                         <h4 style="color: #e67e22; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
                                             🚀 장기 비전 (1-2년)
                                         </h4>
-                                        <ul style="margin: 0; padding-left: 20px; color: #2c3e50; line-height: 1.6;">
+                                        <ul style="margin: 0; padding-left: 20px; color: rgba(255, 255, 255, 0.9); line-height: 1.6;">
                                             ${data.ai_score >= 80 ? `
                                                 <li>리더십 포지션 도전</li>
                                                 <li>전략 기획 참여</li>
@@ -3175,7 +3175,7 @@
                                 border: 1px solid #e9ecef;
                                 box-shadow: 0 2px 4px rgba(0,0,0,0.08);
                             ">
-                                <h3 style="color: #2c3e50; font-size: 20px; font-weight: 600; margin-bottom: 20px;">
+                                <h3 style="color: #00d9ff; font-size: 20px; font-weight: 600; margin-bottom: 20px;">
                                     🔮 AI 예측 분석 & 리스크 관리
                                 </h3>
                                 
@@ -4485,13 +4485,13 @@
                         <h2 style="color: #00d9ff; border-bottom: 2px solid #00d9ff; padding-bottom: 10px;">🌟 핵심 인재 분석 리포트</h2>
                         
                         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                            <h3 style="color: #2c3e50; margin-bottom: 15px;">🏆 Top Talent (AI 점수 85점 이상)</h3>
+                            <h3 style="color: #00d9ff; margin-bottom: 15px;">🏆 Top Talent (AI 점수 85점 이상)</h3>
                             <p style="color: #6c757d; margin-bottom: 15px;">총 ${talents.length}명의 핵심 인재가 식별되었습니다.</p>
                             ${talentCards || '<p style="color: #999;">현재 해당하는 인재가 없습니다.</p>'}
                         </div>
                         
                         <div style="background: #e7f5ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                            <h3 style="color: #2c3e50; margin-bottom: 15px;">🚀 승진 후보자</h3>
+                            <h3 style="color: #00d9ff; margin-bottom: 15px;">🚀 승진 후보자</h3>
                             <p style="color: #6c757d; margin-bottom: 15px;">승진 검토 대상 ${promotions.length}명</p>
                             ${promotionCards || '<p style="color: #999;">현재 해당하는 인재가 없습니다.</p>'}
                         </div>
@@ -4748,7 +4748,7 @@
                             <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.8;">보고일: ${new Date().toLocaleDateString('ko-KR')}</p>
                         </div>
 
-                        <div style="background: #e3f2fd; padding: 25px; border-radius: 8px; margin-bottom: 30px; border-left: 5px solid #2196f3;">
+                        <div style="background: rgba(0, 217, 255, 0.1); padding: 25px; border-radius: 8px; margin-bottom: 30px; border-left: 5px solid #00d9ff;">
                             <h2 style="margin: 0 0 15px 0; color: #1976d2;">📊 경영 핵심 지표 (Executive Summary)</h2>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                                 <div style="text-align: center;">
