@@ -1486,4 +1486,277 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
         showOnboarding();
     }
+    
+    // Ctrl + S: 사이드바 토글 (모바일)
+    if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        toggleSidebar();
+    }
+});
+
+// ===================================================================
+// Revolutionary Sidebar System v2.0
+// ===================================================================
+
+// 사이드바 상태 관리
+let sidebarState = {
+    isExpanded: false,
+    isMobile: window.innerWidth <= 768,
+    isActive: false
+};
+
+// 사이드바 초기화
+function initializeSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (!sidebar) return;
+    
+    // 화면 크기 체크
+    updateSidebarResponsive();
+    
+    // 사이드바 호버 이벤트 (데스크톱)
+    if (!sidebarState.isMobile) {
+        sidebar.addEventListener('mouseenter', () => {
+            sidebarState.isExpanded = true;
+            updateMainContentMargin();
+        });
+        
+        sidebar.addEventListener('mouseleave', () => {
+            sidebarState.isExpanded = false;
+            updateMainContentMargin();
+        });
+    }
+    
+    // 모바일 오버레이 클릭
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+    }
+    
+    // 윈도우 리사이즈 이벤트
+    window.addEventListener('resize', updateSidebarResponsive);
+    
+    // 사이드바 메뉴 아이템 활성화
+    initializeSidebarMenus();
+    
+    addDebugLog('Revolutionary Sidebar 시스템 초기화 완료', 'success');
+}
+
+// 사이드바 반응형 업데이트
+function updateSidebarResponsive() {
+    const wasMobile = sidebarState.isMobile;
+    sidebarState.isMobile = window.innerWidth <= 768;
+    
+    if (wasMobile !== sidebarState.isMobile) {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebarState.isMobile) {
+            // 모바일로 전환
+            sidebar?.classList.remove('expanded');
+            sidebarState.isExpanded = false;
+            sidebarState.isActive = false;
+        } else {
+            // 데스크톱으로 전환
+            sidebar?.classList.remove('active');
+            sidebarState.isActive = false;
+        }
+        updateMainContentMargin();
+    }
+}
+
+// 메인 컨텐츠 여백 업데이트
+function updateMainContentMargin() {
+    const mainContent = document.querySelector('.main-content');
+    if (!mainContent) return;
+    
+    if (sidebarState.isMobile) {
+        mainContent.style.marginLeft = '0';
+    } else {
+        mainContent.style.marginLeft = sidebarState.isExpanded ? '260px' : '20px';
+    }
+}
+
+// 사이드바 토글 (모바일)
+function toggleSidebar() {
+    if (!sidebarState.isMobile) return;
+    
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (!sidebar) return;
+    
+    sidebarState.isActive = !sidebarState.isActive;
+    
+    sidebar.classList.toggle('active', sidebarState.isActive);
+    overlay?.classList.toggle('active', sidebarState.isActive);
+    
+    // 애니메이션 효과
+    if (sidebarState.isActive) {
+        sidebar.style.animation = 'slideIn 0.3s ease-out';
+    } else {
+        sidebar.style.animation = 'slideOut 0.3s ease-in';
+    }
+    
+    addDebugLog(`사이드바 ${sidebarState.isActive ? '열림' : '닫힘'}`, 'info');
+}
+
+// 사이드바 닫기
+function closeSidebar() {
+    if (!sidebarState.isMobile) return;
+    
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    sidebarState.isActive = false;
+    
+    sidebar?.classList.remove('active');
+    overlay?.classList.remove('active');
+    
+    addDebugLog('사이드바 닫힘', 'info');
+}
+
+// 사이드바 메뉴 초기화
+function initializeSidebarMenus() {
+    const menuItems = document.querySelectorAll('.sidebar-item');
+    
+    menuItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            // 현재 활성 메뉴 제거
+            menuItems.forEach(i => i.classList.remove('active'));
+            
+            // 클릭된 메뉴 활성화
+            item.classList.add('active');
+            
+            // 모바일에서 메뉴 클릭 시 사이드바 닫기
+            if (sidebarState.isMobile) {
+                setTimeout(closeSidebar, 300);
+            }
+            
+            // 메뉴 클릭 효과
+            item.style.animation = 'pulse 0.3s ease';
+            setTimeout(() => {
+                item.style.animation = '';
+            }, 300);
+            
+            const menuText = item.querySelector('span')?.textContent || 'Unknown';
+            addDebugLog(`메뉴 선택: ${menuText}`, 'info');
+        });
+    });
+}
+
+// 사이드바 애니메이션 CSS 추가
+function addSidebarAnimations() {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// 사이드바 메뉴 동적 생성
+function createSidebarMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+    
+    const menuHTML = `
+        <div class="sidebar-brand">
+            <h3>AIRISS v5.0</h3>
+            <div class="version">Revolutionary Design</div>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="#dashboard" class="sidebar-item active" data-section="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>대시보드</span>
+            </a>
+            
+            <a href="#analysis" class="sidebar-item" data-section="analysis">
+                <i class="fas fa-chart-bar"></i>
+                <span>AI 분석</span>
+            </a>
+            
+            <a href="#upload" class="sidebar-item" data-section="upload">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>파일 업로드</span>
+            </a>
+            
+            <a href="#results" class="sidebar-item" data-section="results">
+                <i class="fas fa-poll"></i>
+                <span>분석 결과</span>
+            </a>
+            
+            <a href="#reports" class="sidebar-item" data-section="reports">
+                <i class="fas fa-file-alt"></i>
+                <span>보고서</span>
+            </a>
+            
+            <a href="#settings" class="sidebar-item" data-section="settings">
+                <i class="fas fa-cog"></i>
+                <span>설정</span>
+            </a>
+            
+            <a href="#help" class="sidebar-item" data-section="help">
+                <i class="fas fa-question-circle"></i>
+                <span>도움말</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-toggle" onclick="toggleSidebar()" title="사이드바 토글">
+            <i class="fas fa-chevron-left"></i>
+        </div>
+    `;
+    
+    sidebar.innerHTML = menuHTML;
+}
+
+// 사이드바 오버레이 생성
+function createSidebarOverlay() {
+    if (document.querySelector('.sidebar-overlay')) return;
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    document.body.appendChild(overlay);
+}
+
+// Revolutionary Sidebar 전체 초기화
+function initializeRevolutionarySidebar() {
+    addSidebarAnimations();
+    createSidebarOverlay();
+    createSidebarMenu();
+    initializeSidebar();
+    
+    addDebugLog('Revolutionary Sidebar v2.0 초기화 완료', 'success');
+}
+
+// DOMContentLoaded에 사이드바 초기화 추가
+document.addEventListener('DOMContentLoaded', function() {
+    // 기존 초기화 코드...
+    
+    // Revolutionary Sidebar 초기화
+    setTimeout(initializeRevolutionarySidebar, 100);
 });

@@ -801,29 +801,40 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 768px) {
     .sidebar {
         width: 0;
+        transform: translateX(-100%);
     }
     
     .sidebar.active {
         width: 260px;
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
     }
     
     .grid-stats,
     .grid-actions {
         grid-template-columns: 1fr;
+        gap: var(--spacing-md);
     }
     
     .modal-content {
         padding: var(--spacing-md);
         border-radius: var(--radius-lg);
+        margin: var(--spacing-sm);
+        max-width: calc(100vw - var(--spacing-md) * 2);
     }
     
     .table {
         font-size: 14px;
+        overflow-x: auto;
     }
     
     .table th,
     .table td {
         padding: var(--spacing-sm);
+        white-space: nowrap;
     }
     
     .hero-title {
@@ -832,6 +843,56 @@ h1, h2, h3, h4, h5, h6 {
     
     .section-title {
         font-size: clamp(24px, 4vw, 36px);
+    }
+    
+    .card {
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    .btn + .btn {
+        margin-left: 0;
+    }
+    
+    /* Touch-friendly buttons */
+    .btn,
+    .sidebar-item,
+    .notification-close {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Improved mobile form elements */
+    .form-control {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    /* Mobile-specific animations */
+    .sidebar {
+        transition: transform var(--transition-smooth);
+    }
+    
+    /* Mobile sidebar overlay */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(3px);
+        z-index: 999;
+        opacity: 0;
+        transition: opacity var(--transition);
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
     }
 }
 
