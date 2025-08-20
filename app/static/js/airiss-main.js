@@ -9,19 +9,19 @@ let resultsChart = null;
 let tourStep = 0;
 let lastAnalysisResult = null;
 
-// 샘플 분석 결과 데이터 (테스트용)
+// 샘플 분석 결과 데이터 (테스트용) - Revolutionary Design 색상 적용
 const sampleAnalysisResults = {
     labels: ['업무성과', 'KPI달성', '태도', '커뮤니케이션', '리더십', '협업', '전문성', '창의혁신'],
     datasets: [{
         label: '평균 점수',
         data: [85, 78, 92, 76, 88, 94, 82, 75],
-        backgroundColor: 'rgba(255, 87, 34, 0.2)',
-        borderColor: 'rgba(255, 87, 34, 1)',
-        borderWidth: 2,
-        pointBackgroundColor: 'rgba(255, 87, 34, 1)',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 6
+        backgroundColor: 'rgba(0, 212, 255, 0.2)',
+        borderColor: 'rgba(0, 212, 255, 1)',
+        borderWidth: 3,
+        pointBackgroundColor: 'rgba(0, 212, 255, 1)',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 3,
+        pointRadius: 8
     }]
 };
 
@@ -685,10 +685,10 @@ function showResultsChart() {
     
     const ctx = document.getElementById('resultsChart').getContext('2d');
     
-    // 그라데이션 배경 생성
+    // Revolutionary Design 그라데이션 배경 생성
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(255, 87, 34, 0.4)');
-    gradient.addColorStop(1, 'rgba(248, 156, 38, 0.1)');
+    gradient.addColorStop(0, 'rgba(0, 212, 255, 0.4)');
+    gradient.addColorStop(1, 'rgba(0, 153, 255, 0.1)');
     
     resultsChart = new Chart(ctx, {
         type: 'radar',
@@ -698,18 +698,18 @@ function showResultsChart() {
                 label: '현재 역량',
                 data: analysisData.datasets[0].data,
                 backgroundColor: gradient,
-                borderColor: 'rgba(255, 87, 34, 1)',
+                borderColor: 'rgba(0, 212, 255, 1)',
                 borderWidth: 3,
-                pointBackgroundColor: 'rgba(255, 87, 34, 1)',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
+                pointBackgroundColor: 'rgba(0, 212, 255, 1)',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 3,
                 pointRadius: 8,
-                pointHoverRadius: 10
+                pointHoverRadius: 12
             }, {
                 label: '목표 수준',
                 data: [85, 85, 85, 85, 85, 85, 85, 85], // 목표선
-                backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                borderColor: 'rgba(76, 175, 80, 0.5)',
+                backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                borderColor: 'rgba(16, 185, 129, 0.8)',
                 borderWidth: 2,
                 borderDash: [5, 5],
                 pointRadius: 0
@@ -725,20 +725,23 @@ function showResultsChart() {
                     ticks: {
                         stepSize: 20,
                         font: {
-                            size: 11
-                        }
+                            size: 14,
+                            weight: '600'
+                        },
+                        color: '#ffffff',
+                        backdropColor: 'transparent'
                     },
                     grid: {
-                        color: 'rgba(255, 87, 34, 0.1)',
+                        color: 'rgba(0, 212, 255, 0.2)',
                         circular: true
                     },
                     pointLabels: {
                         font: {
-                            size: 13,
+                            size: 14,
                             weight: 'bold'
                         },
-                        color: '#333',
-                        padding: 15
+                        color: '#ffffff',
+                        padding: 20
                     }
                 }
             },
@@ -750,17 +753,17 @@ function showResultsChart() {
                             size: 14,
                             weight: 'bold'
                         },
-                        color: '#333',
+                        color: '#ffffff',
                         padding: 20,
                         usePointStyle: true
                     }
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(255, 87, 34, 0.95)',
+                    backgroundColor: 'rgba(0, 212, 255, 0.95)',
                     titleColor: 'white',
                     bodyColor: 'white',
-                    cornerRadius: 8,
-                    padding: 12,
+                    cornerRadius: 12,
+                    padding: 16,
                     displayColors: false,
                     callbacks: {
                         label: function(context) {
@@ -1342,13 +1345,13 @@ function processResultsForChart(results) {
         datasets: [{
             label: '평균 점수',
             data: scores,
-            backgroundColor: 'rgba(255, 87, 34, 0.2)',
-            borderColor: 'rgba(255, 87, 34, 1)',
-            borderWidth: 2,
-            pointBackgroundColor: 'rgba(255, 87, 34, 1)',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointRadius: 6
+            backgroundColor: 'rgba(0, 212, 255, 0.2)',
+            borderColor: 'rgba(0, 212, 255, 1)',
+            borderWidth: 3,
+            pointBackgroundColor: 'rgba(0, 212, 255, 1)',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 3,
+            pointRadius: 8
         }]
     };
 }

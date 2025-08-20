@@ -1,0 +1,120 @@
+● 📋 메인 대시보드 디자인 가이드 요약
+
+  🎨 디자인 시스템 개요
+
+  핵심 컨셉: "Revolutionary Landing-Inspired Design"
+
+  - 랜딩페이지 스타일을 전체 시스템에 적용
+  - 미래지향적이고 혁신적인 AI 중심 디자인
+  - 다크 테마 기반의 네온 글로우 효과
+
+  🎯 디자인 원칙
+
+  1. 색상 체계 (Color System)
+
+  - Primary: #00d4ff (Cyan Blue)
+  - Primary Gradient: linear-gradient(135deg, #00d4ff, #0099ff)
+  - Background: linear-gradient(135deg, #0a0f1b 0%, #1a1f2e 100%)
+  - Card Background: rgba(255, 255, 255, 0.05)
+  - Text Primary: #ffffff
+  - Text Secondary: rgba(255, 255, 255, 0.8)
+
+  2. 타이포그래피 (Typography)
+
+  - Font Family: 'Inter', 'Noto Sans KR', sans-serif
+  - Hero Title: clamp(48px, 8vw, 96px) - 반응형
+  - Section Title: 32-64px
+  - Body Text: 14-18px
+  - Weight: 300-900 범위 사용
+
+  3. 레이아웃 구조 (Layout Structure)
+
+  - 사이드바: 자동 숨김/펼침 (호버 방식)
+    - 기본: 숨김 상태 (20px만 노출)
+    - 호버: 260px 너비로 확장
+  - 메인 컨텐츠: 동적 너비 조정
+    - 사이드바 숨김: 전체 화면 활용
+    - 사이드바 표시: 260px 여백 확보
+
+  💫 주요 디자인 요소
+
+  1. 히어로 섹션
+
+  - 그라디언트 배경 + 회전 애니메이션
+  - 글로우 텍스트 효과
+  - 중앙 정렬 레이아웃
+
+  2. 통계 카드 (Stat Cards)
+
+  - 배경: rgba(255, 255, 255, 0.05)
+  - 테두리: 1px solid rgba(255, 255, 255, 0.1)
+  - 호버 효과:
+    - Y축 -8px 이동
+    - 글로우 그림자 효과
+    - 스위프 애니메이션
+  - 둥근 모서리: 20px
+
+  3. 액션 카드 (Action Cards)
+
+  - 네온 테두리 효과
+  - 호버시 배경 밝기 증가
+  - 부드러운 전환 효과 (0.4s cubic-bezier)
+
+  🎭 애니메이션 & 인터랙션
+
+  1. 전환 효과
+
+  - 모든 전환: 0.3s ease 또는 cubic-bezier(0.4, 0, 0.2, 1)
+  - 호버 효과: transform, box-shadow, background 변화
+
+  2. 특수 효과
+
+  - 글로우 효과: text-shadow: 0 0 20px rgba(0, 212, 255, 0.5)
+  - 그라디언트 텍스트: -webkit-background-clip: text
+  - 백드롭 블러: backdrop-filter: blur(10px)
+
+  📱 반응형 디자인
+
+  브레이크포인트
+
+  - 모바일: < 768px
+  - 태블릿: 768px - 992px
+  - 데스크톱: > 992px
+
+  그리드 시스템
+
+  - 통계 그리드: repeat(auto-fit, minmax(280px, 1fr))
+  - 액션 그리드: repeat(auto-fit, minmax(320px, 1fr))
+  - 간격: 2rem (32px)
+
+  🌈 테마 시스템
+
+  사용 가능한 테마
+
+  1. Revolutionary (기본): 다크 + 네온 사이안
+  2. Professional: 밝은 배경 + 블루 계열
+  3. Nature: 따뜻한 그린 계열
+  4. Corporate: 진한 네이비 + 오렌지 포인트
+
+  🔧 CSS 프레임워크 통합
+
+  - Tailwind CSS: 유틸리티 클래스
+  - Bootstrap 5.3: 그리드 시스템 (선택적)
+  - Font Awesome 6.4: 아이콘
+
+  📐 간격 시스템
+
+  --spacing-xs: 8px
+  --spacing-sm: 15px
+  --spacing-md: 20px
+  --spacing-lg: 30px
+  --spacing-xl: 40px
+  --spacing-2xl: 60px
+
+  ✨ 핵심 디자인 특징
+
+  1. 미래지향적 UI: 네온 글로우, 그라디언트
+  2. 부드러운 애니메이션: cubic-bezier 이징
+  3. 계층적 깊이: 투명도와 블러 효과 활용
+  4. 일관된 둥근 모서리: 15-30px 범위
+  5. 동적 반응성: 호버 효과와 상태 변화
