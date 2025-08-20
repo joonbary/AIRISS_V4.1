@@ -22,7 +22,10 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Revolutionary Design System CSS -->
+    <link rel="stylesheet" href="/static/css/revolutionary-design-system.css">
     
     <!-- PDF 생성 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -35,18 +38,18 @@
     <style>
         /* ===== Revolutionary Design System for AIRISS ===== */
         :root {
-            /* Revolutionary Primary Colors - Enhanced */
-            --primary-color: #00d9ff;
-            --primary-gradient: linear-gradient(135deg, #00d9ff 0%, #7b61ff 100%);
-            --primary-dark: #0099cc;
-            --primary-light: rgba(0, 217, 255, 0.15);
-            --primary-glow: 0 0 30px rgba(0, 217, 255, 0.4);
+            /* Primary Colors - As per Design Guide */
+            --primary-color: #00d4ff;
+            --primary-gradient: linear-gradient(135deg, #00d4ff 0%, #0099ff 100%);
+            --primary-dark: #0099ff;
+            --primary-light: rgba(0, 212, 255, 0.15);
+            --primary-glow: 0 0 20px rgba(0, 212, 255, 0.5);
             
-            /* Primary Orange Colors - Kept for compatibility */
+            /* Compatibility Aliases */
             --primary-orange: #00d4ff;
-            --primary-orange-hover: #00a8cc;
+            --primary-orange-hover: #0099ff;
             --primary-orange-light: rgba(0, 212, 255, 0.1);
-            --primary-orange-dark: #0099cc;
+            --primary-orange-dark: #0099ff;
             --primary-orange-soft: rgba(0, 212, 255, 0.08);
             --primary-orange-medium: rgba(0, 212, 255, 0.15);
             
@@ -83,21 +86,22 @@
             --grade-c: #F59E0B;
             --grade-d: #EF4444;
             
-            /* Background System - Balanced Light-Dark Theme */
-            --bg-primary: #1e2538;  /* Lighter navy blue */
-            --bg-secondary: #293145;  /* Medium blue-gray */
-            --bg-tertiary: #343d54;  /* Light blue-gray */
-            --bg-soft: rgba(52, 61, 84, 0.4);
-            --bg-card: rgba(41, 49, 69, 0.95);
-            --bg-hover: rgba(0, 217, 255, 0.08);
-            --glass-bg: linear-gradient(135deg, rgba(52, 61, 84, 0.9) 0%, rgba(41, 49, 69, 0.85) 100%);
-            --glass-border: rgba(88, 95, 112, 0.4);
+            /* Background System - As per Design Guide */
+            --bg-primary: linear-gradient(135deg, #0a0f1b 0%, #1a1f2e 100%);
+            --bg-dark: #0a0f1b;
+            --bg-darker: #1a1f2e;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --bg-card-hover: rgba(255, 255, 255, 0.08);
+            --bg-modal: rgba(10, 15, 27, 0.95);
+            --bg-soft: rgba(255, 255, 255, 0.03);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
             
-            /* Text System - Maximum Readability */
+            /* Text System - As per Design Guide */
             --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.92);
-            --text-tertiary: rgba(255, 255, 255, 0.8);
-            --text-muted: rgba(255, 255, 255, 0.65);
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-tertiary: rgba(255, 255, 255, 0.6);
+            --text-muted: rgba(255, 255, 255, 0.4);
             --text-inverse: #0f1419;
             --text-link: #00d9ff;
             --text-highlight: #ffffff;

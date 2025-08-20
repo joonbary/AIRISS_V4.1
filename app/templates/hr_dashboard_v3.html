@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIRISS v5.0 - Revolutionary HR Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/revolutionary-design-system.css') }}">
+    <style>
+        :root {
+            /* Revolutionary Design System Colors */
+            --primary-color: #00d4ff;
+            --primary-gradient: linear-gradient(135deg, #00d4ff 0%, #0099ff 100%);
+            --bg-primary: linear-gradient(135deg, #0a0f1b 0%, #1a1f2e 100%);
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --bg-card-hover: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --border-light: rgba(255, 255, 255, 0.1);
+            --border-primary: rgba(0, 212, 255, 0.5);
+            --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.3);
+            --shadow-glow-hover: 0 0 30px rgba(0, 212, 255, 0.5);
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --info: #3B82F6;
+            --grade-s: #9333EA;
+            --grade-a-plus: #7C3AED;
+            --grade-a: #3B82F6;
+            --grade-b: #10B981;
+            --grade-c: #F59E0B;
+            --grade-d: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.1), transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(0, 212, 255, 0.08), transparent 50%);
+            animation: backgroundShift 20s ease infinite;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        @keyframes backgroundShift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(-20px, -20px) rotate(120deg); }
+            66% { transform: translate(20px, -10px) rotate(240deg); }
+        }
+
+        /* Revolutionary AppBar Style */
+        .app-bar {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-light);
+            box-shadow: var(--shadow-glow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .app-bar h1 {
+            font-size: clamp(24px, 3vw, 32px);
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .theme-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-glow);
+            transform: translateY(-2px);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Header Section */
+        .header-section {
+            margin-bottom: 32px;
+        }
+
+        .header-section h2 {
+            font-size: clamp(32px, 4vw, 48px);
+            font-weight: 900;
+            margin-bottom: 10px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-section p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        /* Revolutionary Card Style */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            background: var(--bg-card-hover);
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* Data Card */
+        .data-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .data-card-content {
+            flex: 1;
+        }
+
+        .data-card-subtitle {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .data-card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .data-card-value {
+            font-size: clamp(36px, 4vw, 48px);
+            font-weight: 900;
+            color: var(--primary-color);
+            text-shadow: var(--shadow-glow);
+        }
+
+        .data-card-unit {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-left: 8px;
+        }
+
+        .data-card-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: var(--shadow-glow);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Progress Card */
+        .progress-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .progress-bar-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary-gradient);
+            transition: width 0.5s ease;
+            border-radius: 5px;
+            position: relative;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Metric Card */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .metric-item {
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .metric-change {
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        .metric-change.positive {
+            color: var(--success);
+        }
+
+        .metric-change.negative {
+            color: var(--error);
+        }
+
+        /* Department List */
+        .department-item {
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .department-item:hover {
+            background: #e3f2fd;
+            transform: translateX(4px);
+        }
+
+        .department-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .department-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .employee-count {
+            background: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            color: #666;
+            border: 1px solid #e0e0e0;
+        }
+
+        .department-metrics {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Grade Badge */
+        .grade-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .grade-s { background: var(--grade-s); }
+        .grade-a-plus { background: var(--grade-a-plus); }
+        .grade-a { background: var(--grade-a); }
+        .grade-b { background: var(--grade-b); }
+        .grade-c { background: var(--grade-c); }
+        .grade-d { background: var(--grade-d); }
+
+        .performance-score {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .performance-high {
+            color: var(--success);
+        }
+
+        .performance-medium {
+            color: var(--warning);
+        }
+
+        .performance-low {
+            color: var(--error);
+        }
+
+        /* AI Insights Card */
+        .ai-insights-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .ai-insights-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 24px;
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .insight-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .insight-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .insight-value {
+            font-size: 1.125rem;
+            font-weight: 500;
+        }
+
+        /* Status indicators */
+        .status-online { color: var(--success); }
+        .status-offline { color: var(--error); }
+        .status-processing { color: var(--warning); }
+
+        /* Updated design for old elements */
+        .old-card {
+            background: white !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+            border: none !important;
+        }
+
+        .old-progress-bar {
+            background: var(--success) !important;
+            border-radius: 5px !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .insight-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .app-bar {
+                padding: 12px 16px;
+            }
+            
+            .container {
+                padding: 16px;
+            }
+        }
+
+        /* Animation for real-time updates */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .real-time-indicator {
+            animation: pulse 2s infinite;
+        }
+
+        /* WebSocket connection status */
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            z-index: 1000;
+        }
+
+        .connection-status.connected {
+            background: var(--success);
+            color: white;
+        }
+
+        .connection-status.disconnected {
+            background: var(--error);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Material-UI AppBar -->
+    <div class="app-bar">
+        <h1>AIRISS v4.0 - AI 인사 분석 시스템</h1>
+        <button class="theme-toggle" onclick="toggleTheme()">🌙 다크 모드</button>
+    </div>
+
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="connection-status connected">
+        🟢 실시간 연결됨
+    </div>
+
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <h2>AIRISS 대시보드</h2>
+            <p>실시간 인사 분석 및 성과 모니터링 - Material-UI 디자인 시스템 적용</p>
+        </div>
+
+        <!-- Main Metrics Grid -->
+        <div class="grid">
+            <!-- Data Card 1 -->
+            <div class="card data-card">
+                <div class="data-card-content">
+                    <div class="data-card-subtitle">Active Employees</div>
+                    <div class="data-card-title">전체 직원</div>
+                    <div>
+                        <span class="data-card-value" id="totalEmployees">156</span>
+                        <span class="data-card-unit">명</span>
+                    </div>
+                </div>
+                <div class="data-card-icon">👥</div>
+            </div>
+
+            <!-- Data Card 2 -->
+            <div class="card data-card">
+                <div class="data-card-content">
+                    <div class="data-card-subtitle">Average Grade</div>
+                    <div class="data-card-title">평균 등급</div>
+                    <div>
+                        <span class="data-card-value" id="averageGrade">B</span>
+                    </div>
+                </div>
+                <div class="data-card-icon">📊</div>
+            </div>
+
+            <!-- Progress Card 1 -->
+            <div class="card progress-card">
+                <h3>성과 점수</h3>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="performanceProgress" style="width: 78%;"></div>
+                </div>
+                <div class="progress-label">
+                    <span>진행률</span>
+                    <span id="performanceScore">78%</span>
+                </div>
+            </div>
+
+            <!-- Progress Card 2 -->
+            <div class="card progress-card">
+                <h3>교육 이수율</h3>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="trainingProgress" style="width: 65%; background: var(--info);"></div>
+                </div>
+                <div class="progress-label">
+                    <span>진행률</span>
+                    <span id="trainingScore">65%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Second Row Grid -->
+        <div class="grid">
+            <!-- Metrics Card -->
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">주요 성과 지표</h3>
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-label">생산성</div>
+                        <div class="metric-value">92%</div>
+                        <div class="metric-change positive">+5%</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">만족도</div>
+                        <div class="metric-value">4.5</div>
+                        <div class="metric-change positive">+0.3</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">이직률</div>
+                        <div class="metric-value">3.2%</div>
+                        <div class="metric-change positive">-0.5%</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">교육 참여율</div>
+                        <div class="metric-value">87%</div>
+                        <div class="metric-change positive">+12%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Department Status Card -->
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">부서별 현황</h3>
+                <div class="department-list">
+                    <div class="department-item">
+                        <div class="department-info">
+                            <span class="department-name">인사부</span>
+                            <span class="employee-count">12명</span>
+                        </div>
+                        <div class="department-metrics">
+                            <div class="grade-badge grade-a">A</div>
+                            <span class="performance-score performance-high">85%</span>
+                        </div>
+                    </div>
+                    <div class="department-item">
+                        <div class="department-info">
+                            <span class="department-name">개발부</span>
+                            <span class="employee-count">45명</span>
+                        </div>
+                        <div class="department-metrics">
+                            <div class="grade-badge grade-a-plus">A+</div>
+                            <span class="performance-score performance-high">92%</span>
+                        </div>
+                    </div>
+                    <div class="department-item">
+                        <div class="department-info">
+                            <span class="department-name">영업부</span>
+                            <span class="employee-count">34명</span>
+                        </div>
+                        <div class="department-metrics">
+                            <div class="grade-badge grade-b">B</div>
+                            <span class="performance-score performance-medium">78%</span>
+                        </div>
+                    </div>
+                    <div class="department-item">
+                        <div class="department-info">
+                            <span class="department-name">마케팅부</span>
+                            <span class="employee-count">23명</span>
+                        </div>
+                        <div class="department-metrics">
+                            <div class="grade-badge grade-b">B</div>
+                            <span class="performance-score performance-medium">75%</span>
+                        </div>
+                    </div>
+                    <div class="department-item">
+                        <div class="department-info">
+                            <span class="department-name">재무부</span>
+                            <span class="employee-count">18명</span>
+                        </div>
+                        <div class="department-metrics">
+                            <div class="grade-badge grade-a">A</div>
+                            <span class="performance-score performance-high">88%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Insights -->
+        <div class="ai-insights-card">
+            <h3>📊 AI 분석 인사이트</h3>
+            <div class="insight-grid">
+                <div class="insight-item">
+                    <div class="insight-label">이번 분기 추천</div>
+                    <div class="insight-value">개발부 인력 15% 증원 필요</div>
+                </div>
+                <div class="insight-item">
+                    <div class="insight-label">성과 예측</div>
+                    <div class="insight-value">다음 분기 생산성 8% 상승 예상</div>
+                </div>
+                <div class="insight-item">
+                    <div class="insight-label">위험 알림</div>
+                    <div class="insight-value">영업부 이직 위험도 상승 감지</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time WebSocket Section -->
+        <div class="card" style="margin-top: 32px;">
+            <h3>실시간 업데이트</h3>
+            <div id="realTimeUpdates">
+                <p>WebSocket 연결을 통한 실시간 데이터 업데이트 중...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const button = document.querySelector('.theme-toggle');
+            if (document.body.classList.contains('dark-mode')) {
+                button.textContent = '☀️ 라이트 모드';
+                document.body.style.background = 'linear-gradient(135deg, #121212 0%, #1e1e1e 100%)';
+                document.body.style.color = '#fff';
+            } else {
+                button.textContent = '🌙 다크 모드';
+                document.body.style.background = 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)';
+                document.body.style.color = '#333';
+            }
+        }
+
+        // Simulate real-time updates
+        function updateMetrics() {
+            const totalEmployees = document.getElementById('totalEmployees');
+            const performanceScore = document.getElementById('performanceScore');
+            const performanceProgress = document.getElementById('performanceProgress');
+            
+            // Random updates to simulate real-time data
+            const newEmployeeCount = 156 + Math.floor(Math.random() * 10) - 5;
+            const newPerformance = 75 + Math.floor(Math.random() * 20);
+            
+            totalEmployees.textContent = newEmployeeCount;
+            performanceScore.textContent = newPerformance + '%';
+            performanceProgress.style.width = newPerformance + '%';
+            
+            // Add pulse animation
+            totalEmployees.classList.add('real-time-indicator');
+            performanceScore.classList.add('real-time-indicator');
+            
+            setTimeout(() => {
+                totalEmployees.classList.remove('real-time-indicator');
+                performanceScore.classList.remove('real-time-indicator');
+            }, 2000);
+        }
+
+        // WebSocket simulation
+        let ws;
+        function connectWebSocket() {
+            const connectionStatus = document.getElementById('connectionStatus');
+            const realTimeUpdates = document.getElementById('realTimeUpdates');
+            
+            try {
+                // This would normally connect to your WebSocket server
+                // ws = new WebSocket('ws://localhost:8000/ws');
+                
+                // Simulate connection
+                connectionStatus.className = 'connection-status connected';
+                connectionStatus.innerHTML = '🟢 실시간 연결됨';
+                
+                // Simulate real-time updates every 10 seconds
+                setInterval(updateMetrics, 10000);
+                
+                realTimeUpdates.innerHTML = `
+                    <p style="color: var(--success);">✅ 실시간 데이터 스트림 활성화</p>
+                    <p style="font-size: 0.875rem; color: #666; margin-top: 8px;">
+                        마지막 업데이트: ${new Date().toLocaleTimeString('ko-KR')}
+                    </p>
+                `;
+                
+            } catch (error) {
+                connectionStatus.className = 'connection-status disconnected';
+                connectionStatus.innerHTML = '🔴 연결 끊김';
+                
+                realTimeUpdates.innerHTML = `
+                    <p style="color: var(--error);">❌ WebSocket 연결 실패</p>
+                    <p style="font-size: 0.875rem; color: #666; margin-top: 8px;">
+                        5초 후 재연결 시도...
+                    </p>
+                `;
+                
+                setTimeout(connectWebSocket, 5000);
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            // Animate progress bars on load
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach((bar, index) => {
+                setTimeout(() => {
+                    bar.style.transition = 'width 1s ease';
+                }, index * 200);
+            });
+            
+            // Connect WebSocket
+            connectWebSocket();
+            
+            // Add hover effects
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px)';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+
+        // Update time every second
+        setInterval(() => {
+            const timeElements = document.querySelectorAll('[data-time]');
+            timeElements.forEach(el => {
+                el.textContent = new Date().toLocaleTimeString('ko-KR');
+            });
+        }, 1000);
+    </script>
+</body>
+</html>
