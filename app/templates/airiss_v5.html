@@ -12,12 +12,17 @@
     <meta http-equiv="Clear-Site-Data" content="cache">
     <meta name="refresh-version" content="v5.0.3-20250809-fixed">
     
-    <!-- OK금융그룹 디자인 시스템 버전 정보 -->
+    <!-- Revolutionary Design System 버전 정보 -->
     <meta name="version" content="5.0.0">
-    <meta name="build-date" content="2025-08-07">
-    <meta name="ui-version" content="ok-financial-design-system-2025-08-07">
-    <meta name="design-update" content="neumorphism-glassmorphism-ok-branding">
-    <meta name="design-system" content="OK금융그룹-Pretendard-Neumorphism">
+    <meta name="build-date" content="2025-08-20">
+    <meta name="ui-version" content="revolutionary-design-system-2025-08-20">
+    <meta name="design-update" content="glassmorphism-neon-dark-theme">
+    <meta name="design-system" content="Revolutionary-Glass-Neon">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- PDF 생성 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -30,11 +35,12 @@
     <style>
         /* ===== Revolutionary Design System for AIRISS ===== */
         :root {
-            /* Revolutionary Primary Colors */
-            --primary-color: #00d4ff;
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* Revolutionary Primary Colors - Enhanced */
+            --primary-color: #00d9ff;
+            --primary-gradient: linear-gradient(135deg, #00d9ff 0%, #7b61ff 100%);
             --primary-dark: #0099cc;
-            --primary-light: rgba(0, 212, 255, 0.1);
+            --primary-light: rgba(0, 217, 255, 0.15);
+            --primary-glow: 0 0 30px rgba(0, 217, 255, 0.4);
             
             /* Primary Orange Colors - Kept for compatibility */
             --primary-orange: #00d4ff;
@@ -77,52 +83,60 @@
             --grade-c: #F59E0B;
             --grade-d: #EF4444;
             
-            /* Background System - Dark Theme */
-            --bg-primary: #0a0e27;
-            --bg-secondary: #050714;
-            --bg-tertiary: #0f1320;
-            --bg-soft: rgba(255, 255, 255, 0.02);
-            --bg-card: rgba(255, 255, 255, 0.05);
-            --bg-hover: rgba(0, 212, 255, 0.1);
+            /* Background System - Improved Dark Theme */
+            --bg-primary: #0f1419;
+            --bg-secondary: #0a0f14;
+            --bg-tertiary: #141b22;
+            --bg-soft: rgba(255, 255, 255, 0.03);
+            --bg-card: rgba(20, 27, 34, 0.6);
+            --bg-hover: rgba(0, 217, 255, 0.08);
+            --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.03) 100%);
+            --glass-border: rgba(255, 255, 255, 0.12);
             
-            /* Text System - Dark Theme */
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.8);
-            --text-tertiary: rgba(255, 255, 255, 0.6);
-            --text-muted: rgba(255, 255, 255, 0.5);
-            --text-inverse: #0a0e27;
-            --text-link: #00d4ff;
+            /* Text System - Enhanced Readability */
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            --text-tertiary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.55);
+            --text-inverse: #0f1419;
+            --text-link: #00d9ff;
+            --text-highlight: #ffffff;
             
             /* Enhanced Border System */
-            --border-light: #E2E8F0;
-            --border-medium: #CBD5E1;
-            --border-dark: #94A3B8;
-            --border-focus: var(--primary-orange)
+            --border-light: rgba(255, 255, 255, 0.08);
+            --border-medium: rgba(255, 255, 255, 0.15);
+            --border-dark: rgba(255, 255, 255, 0.25);
+            --border-focus: var(--primary-color);
+            --border-glass: rgba(255, 255, 255, 0.1)
             
-            /* Professional Shadow System - Subtle & Modern */
-            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            /* Glass Shadow System - Enhanced */
+            --shadow-xs: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 4px 8px rgba(0, 0, 0, 0.15);
+            --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.25);
+            --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.3);
+            --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.05);
             
-            /* Card Shadow System */
-            --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-            --shadow-card-hover: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
-            --shadow-card-active: 0 2px 4px rgba(0, 0, 0, 0.06);
+            /* Card Shadow System - Glass Effect */
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            --shadow-card-hover: 0 12px 40px rgba(0, 217, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            --shadow-card-active: 0 4px 20px rgba(0, 217, 255, 0.2);
             
-            /* Colored Shadow System */
-            --shadow-orange: 0 4px 14px rgba(255, 107, 53, 0.15);
-            --shadow-blue: 0 4px 14px rgba(33, 150, 243, 0.15);
+            /* Colored Shadow System - Neon Glow */
+            --shadow-neon-blue: 0 0 20px rgba(0, 217, 255, 0.5);
+            --shadow-neon-purple: 0 0 20px rgba(123, 97, 255, 0.5);
+            --shadow-glow: 0 0 40px rgba(0, 217, 255, 0.3);
             
-            /* Professional Gradient System */
-            --gradient-primary: linear-gradient(135deg, #FF6B35 0%, #FF8E53 100%);
-            --gradient-secondary: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+            /* Professional Gradient System - Revolutionary */
+            --gradient-primary: linear-gradient(135deg, #00d9ff 0%, #7b61ff 100%);
+            --gradient-secondary: linear-gradient(135deg, #7b61ff 0%, #ff61dc 100%);
             --gradient-success: linear-gradient(135deg, #10B981 0%, #34D399 100%);
             --gradient-info: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
-            --gradient-subtle: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
-            --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+            --gradient-dark: linear-gradient(180deg, #0f1419 0%, #0a0f14 100%);
+            --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            --gradient-mesh: radial-gradient(at 20% 50%, rgba(0, 217, 255, 0.15) 0%, transparent 50%),
+                            radial-gradient(at 80% 80%, rgba(123, 97, 255, 0.15) 0%, transparent 50%),
+                            radial-gradient(at 40% 20%, rgba(255, 97, 220, 0.15) 0%, transparent 50%);
             
             /* Professional Animation System */
             --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -271,14 +285,16 @@
             }
         }
         
-        /* ===== 프리미엄 카드 시스템 - 미니멀하고 세련된 디자인 ===== */
+        /* ===== Revolutionary Card System - Enhanced Glass ===== */
         .premium-card {
-            background: #FFFFFF;
-            border-radius: 16px;
-            padding: 48px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            border-radius: 24px;
+            padding: 40px;
             margin-bottom: 32px;
-            box-shadow: var(--shadow-lg);
-            border: none;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--glass-border);
             transition: var(--transition-smooth);
             position: relative;
             overflow: hidden;
@@ -290,32 +306,38 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 3px;
-            background: var(--primary-gradient);
-            opacity: 0;
+            height: 2px;
+            background: var(--gradient-primary);
+            opacity: 0.8;
             transition: var(--transition-base);
         }
         
         .premium-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-xl);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-card-hover);
+            border-color: rgba(0, 217, 255, 0.2);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
         }
         
         .premium-card:hover::before {
             opacity: 1;
+            height: 3px;
+            box-shadow: var(--shadow-neon-blue);
         }
         
-        /* ===== 프리미엄 헤더 - 공간감과 가독성 극대화 ===== */
+        /* ===== Revolutionary Header - Glass Design ===== */
         .app-header {
-            background: #FFFFFF;
-            border-radius: 24px;
-            padding: 64px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 28px;
+            padding: 48px;
             margin-bottom: 48px;
-            box-shadow: var(--shadow-lg);
+            box-shadow: var(--shadow-glass);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: none;
+            border: 1px solid var(--glass-border);
             position: relative;
             overflow: hidden;
             transform: translateY(0);
@@ -606,16 +628,18 @@
         }
         
         .stat-card {
-            background: #FFFFFF;
-            border-radius: 16px;
-            padding: 36px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.03) 100%);
+            backdrop-filter: blur(15px) saturate(150%);
+            -webkit-backdrop-filter: blur(15px) saturate(150%);
+            border-radius: 20px;
+            padding: 32px;
             text-align: center;
             transition: var(--transition-smooth);
             cursor: pointer;
             position: relative;
             overflow: hidden;
-            box-shadow: var(--shadow-md);
-            border: none;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--glass-border);
         }
         
         .stat-card::before {
@@ -624,13 +648,22 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
-            background: var(--primary-gradient);
+            height: 3px;
+            background: var(--gradient-primary);
+            opacity: 0.9;
         }
         
         .stat-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-lg);
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: var(--shadow-card-hover);
+            border-color: rgba(0, 217, 255, 0.2);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.04) 100%);
+        }
+        
+        .stat-card:hover::before {
+            height: 4px;
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
         }
         
         .stat-icon {
@@ -639,23 +672,28 @@
         }
         
         .stat-value {
-            font-size: 2.5rem;
-            font-weight: 600;
+            font-size: 2.8rem;
+            font-weight: 700;
             background: var(--gradient-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 8px;
-            font-family: var(--font-primary);
+            font-family: 'Inter', var(--font-primary);
             line-height: 1.2;
+            letter-spacing: -0.02em;
+            filter: drop-shadow(0 0 20px rgba(0, 217, 255, 0.3));
         }
         
         .stat-label {
             color: var(--text-secondary);
-            font-size: 1.125rem;
-            font-weight: 400;
-            font-family: var(--font-pretendard);
-            margin-top: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            font-family: 'Inter', var(--font-pretendard);
+            margin-top: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            opacity: 0.9;
         }
         
         .stat-change {
@@ -671,15 +709,17 @@
         .stat-change.positive { color: var(--success); }
         .stat-change.negative { color: var(--error); }
         
-        /* ===== OK금융 프리미엄 버튼 시스템 (Neumorphism) ===== */
+        /* ===== Revolutionary Button System - Neon Glass ===== */
         .btn {
-            border: none;
-            padding: 16px 36px;
-            border-radius: var(--radius-lg);
-            font-size: var(--font-size-base);
-            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
             transition: var(--transition-smooth);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             display: inline-flex;
             align-items: center;
             gap: 12px;
@@ -710,58 +750,70 @@
         .btn-primary {
             background: var(--gradient-primary) !important;
             color: white !important;
-            box-shadow: var(--shadow-md);
-            font-weight: 500;
-            border: none !important;
+            box-shadow: 0 4px 20px rgba(0, 217, 255, 0.3);
+            font-weight: 600;
+            border: 1px solid rgba(0, 217, 255, 0.2) !important;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
         
         .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-lg);
-            filter: brightness(1.08);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 6px 30px rgba(0, 217, 255, 0.5);
+            filter: brightness(1.1);
             color: white !important;
+            border-color: rgba(0, 217, 255, 0.4) !important;
         }
         
         .btn-secondary {
-            background: #F8F9FA;
+            background: rgba(255, 255, 255, 0.05);
             color: var(--text-primary);
-            border: 2px solid rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             font-weight: 500;
         }
         
         .btn-secondary:hover {
-            background: var(--bg-secondary);
-            border-color: var(--primary-orange);
-            color: var(--primary-orange);
-            transform: translateY(-1px);
+            background: rgba(0, 217, 255, 0.1);
+            border-color: rgba(0, 217, 255, 0.3);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 217, 255, 0.2);
         }
         
-        /* Bootstrap Badge Classes for Grades */
+        /* Revolutionary Badge System - Neon Glow */
         .badge {
             display: inline-block;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-            font-weight: 600;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 700;
             line-height: 1;
-            border-radius: 0.5rem;
+            border-radius: 20px;
             transition: var(--transition-base);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
         
         .bg-purple { 
             background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%) !important; 
             color: white !important;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
         }
         .bg-success { 
             background: linear-gradient(135deg, #10B981 0%, #34D399 100%) !important; 
             color: white !important;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
         }
         .bg-primary { 
-            background: linear-gradient(135deg, var(--primary-orange) 0%, var(--primary-orange-dark) 100%) !important; 
+            background: var(--gradient-primary) !important; 
             color: white !important;
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.5);
         }
         .bg-info { 
             background: linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%) !important; 
             color: white !important;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
         }
         .bg-warning { 
             background: linear-gradient(135deg, #F59E0B 0%, #FBB040 100%) !important; 
@@ -851,33 +903,37 @@
         }
         
         .data-table th {
-            padding: 20px;
+            padding: 18px 20px;
             text-align: left;
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: var(--font-size-sm);
-            text-transform: none;
-            letter-spacing: var(--letter-spacing-base);
-            font-family: var(--font-primary);
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-family: 'Inter', var(--font-primary);
             white-space: nowrap;
+            background: rgba(0, 217, 255, 0.03);
         }
         
         .data-table td {
-            padding: 20px;
-            border-top: 1px solid var(--border-light);
-            font-size: var(--font-size-base);
-            font-family: var(--font-pretendard);
-            line-height: var(--line-height-base);
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 15px;
+            font-family: 'Inter', var(--font-pretendard);
+            line-height: var(--line-height-relaxed);
+            color: var(--text-secondary);
+            font-weight: 500;
         }
         
         .data-table tbody tr {
             transition: var(--transition-fast);
-            background: var(--glassmorphism-bg);
+            background: transparent;
         }
         
         .data-table tbody tr:hover {
-            background: var(--primary-orange-light);
-            transform: scale(1.01);
+            background: rgba(0, 217, 255, 0.05);
+            transform: translateX(2px);
+            box-shadow: inset 3px 0 0 var(--primary-color);
         }
         
         /* 모바일 반응형 테이블 */
@@ -896,10 +952,13 @@
             }
         }
         
-        /* ===== OK금융 프리미엄 파일 업로드 (Neumorphism) ===== */
+        /* ===== Revolutionary File Upload - Glass Design ===== */
         .upload-area {
-            border: 2px dashed #DDD;
-            border-radius: 16px;
+            border: 2px dashed rgba(0, 217, 255, 0.3);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 80px 60px;
             text-align: center;
             transition: var(--transition-smooth);
