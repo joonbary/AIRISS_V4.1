@@ -519,7 +519,7 @@ h1, h2, h3, h4, h5, h6 {
     left: 0;
     top: 0;
     height: 100vh;
-    width: 5px;
+    width: 3px;
     background: var(--bg-modal);
     border-right: 1px solid var(--border-light);
     transition: width var(--transition-smooth);
