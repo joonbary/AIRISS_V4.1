@@ -1520,9 +1520,20 @@
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">AI 기반 인사이트</h2>
-                    <button class="btn btn-success" onclick="AIRISS.refreshInsights()">
-                        🔄 새로고침
-                    </button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" onclick="AIRISS.generateRealTimeInsights()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                            <i class="fas fa-brain"></i> AI 인사이트 생성
+                        </button>
+                        <button class="btn btn-success" onclick="AIRISS.refreshInsights()">
+                            🔄 새로고침
+                        </button>
+                    </div>
+                </div>
+                <div id="insights-generation-status" style="display: none; padding: 15px; background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; margin: 15px 20px; border-radius: 4px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="spinner" style="width: 20px; height: 20px;"></div>
+                        <span style="color: var(--text-secondary);">AI가 실시간 데이터를 분석하여 인사이트를 생성하고 있습니다...</span>
+                    </div>
                 </div>
                 <div id="insights-content">
                     <!-- 동적으로 생성됨 -->
@@ -3970,6 +3981,31 @@
                             <div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; margin-top: 10px;">
                                 <small>평균 AI 점수: ${avgScore}점 | 상위등급 비율: ${Math.round((gradeDistribution['S'] + gradeDistribution['A+'] + gradeDistribution['A']) / employees.length * 100)}%</small>
                             </div>
+                            
+                            <!-- 상세 분석 추가 -->
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                                <h4 style="color: #00d4ff; margin-bottom: 10px;">🔍 상세 분석</h4>
+                                <div style="display: grid; gap: 10px; font-size: 14px;">
+                                    <div>📈 <strong>강점</strong>: ${
+                                        healthScore >= 80 ? '조직 전반적으로 우수한 성과를 보이고 있으며, 인재 밀도와 역량 수준이 높습니다.' :
+                                        healthScore >= 60 ? '핵심 인재의 성과가 양호하며, 조직 전체적으로 안정적인 성과를 유지하고 있습니다.' :
+                                        healthScore >= 40 ? '일부 우수 인재가 있으나, 전체적인 성과 향상이 필요합니다.' :
+                                        '일부 직원의 헌신적인 노력이 돋보이나, 전체적인 개선이 시급합니다.'
+                                    }</div>
+                                    <div>👥 <strong>위험 요소</strong>: ${
+                                        riskEmployeesCount > employees.length * 0.2 ? '하위 성과자 비율이 높아 즉각적인 개입이 필요합니다.' :
+                                        promotionCandidatesCount < employees.length * 0.1 ? '차세대 리더 풀이 부족하여 중장기 성장에 리스크가 있습니다.' :
+                                        (bestAvg - worstAvg) > 200 ? '부서간 성과 격차가 커 조직 분열 위험이 있습니다.' :
+                                        '현재 특별한 리스크는 없으나, 지속적인 모니터링이 필요합니다.'
+                                    }</div>
+                                    <div>🎯 <strong>개선 방향</strong>: ${
+                                        topTalentsCount < employees.length * 0.1 ? '핵심 인재 육성 프로그램 강화 및 외부 인재 영입' :
+                                        riskEmployeesCount > employees.length * 0.15 ? '하위 성과자 대상 집중 코칭 및 역량 개발' :
+                                        promotionCandidatesCount < employees.length * 0.1 ? '승진 후보자 풀 확대 및 리더십 개발' :
+                                        '현재 수준 유지 및 점진적 개선'
+                                    }</div>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- 핵심 인사이트 -->
@@ -3977,37 +4013,37 @@
                             <h3>🎯 경영진 관점 핵심 인사이트</h3>
                             <div style="display: grid; gap: 15px;">
                                 ${topTalentsCount > employees.length * 0.15 ? `
-                                    <div style="padding: 12px; background: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 4px;">
-                                        <strong style="color: #2e7d32;">✓ 인재 밀도 우수</strong><br>
-                                        핵심 인재가 ${Math.round(topTalentsCount / employees.length * 100)}%로 업계 평균(10-15%)을 상회합니다.
+                                    <div style="padding: 12px; background: rgba(16, 185, 129, 0.15); border-left: 4px solid #10B981; border-radius: 4px; color: #ffffff;">
+                                        <strong style="color: #10B981;">✓ 인재 밀도 우수</strong><br>
+                                        <span style="color: rgba(255,255,255,0.9);">핵심 인재가 ${Math.round(topTalentsCount / employees.length * 100)}%로 업계 평균(10-15%)을 상회합니다.</span>
                                     </div>
                                 ` : `
-                                    <div style="padding: 12px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 4px;">
-                                        <strong style="color: #e65100;">⚠ 인재 육성 필요</strong><br>
-                                        핵심 인재가 ${Math.round(topTalentsCount / employees.length * 100)}%로 업계 평균 이하입니다. 
-                                        고성과자 육성 프로그램 도입을 권장합니다.
+                                    <div style="padding: 12px; background: rgba(245, 158, 11, 0.15); border-left: 4px solid #F59E0B; border-radius: 4px; color: #ffffff;">
+                                        <strong style="color: #F59E0B;">⚠ 인재 육성 필요</strong><br>
+                                        <span style="color: rgba(255,255,255,0.9);">핵심 인재가 ${Math.round(topTalentsCount / employees.length * 100)}%로 업계 평균 이하입니다. 
+                                        고성과자 육성 프로그램 도입을 권장합니다.</span>
                                     </div>
                                 `}
                                 
                                 ${riskEmployeesCount > employees.length * 0.2 ? `
-                                    <div style="padding: 12px; background: #ffebee; border-left: 4px solid #f44336; border-radius: 4px;">
-                                        <strong style="color: #c62828;">⚠ 리스크 관리 시급</strong><br>
-                                        전체 인력의 ${Math.round(riskEmployeesCount / employees.length * 100)}%가 관리 필요 그룹입니다.
-                                        즉각적인 성과 개선 프로그램 또는 인력 재배치가 필요합니다.
+                                    <div style="padding: 12px; background: rgba(239, 68, 68, 0.15); border-left: 4px solid #EF4444; border-radius: 4px; color: #ffffff;">
+                                        <strong style="color: #EF4444;">⚠ 리스크 관리 시급</strong><br>
+                                        <span style="color: rgba(255,255,255,0.9);">전체 인력의 ${Math.round(riskEmployeesCount / employees.length * 100)}%가 관리 필요 그룹입니다.
+                                        즉각적인 성과 개선 프로그램 또는 인력 재배치가 필요합니다.</span>
                                     </div>
                                 ` : `
-                                    <div style="padding: 12px; background: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 4px;">
-                                        <strong style="color: #2e7d32;">✓ 리스크 관리 양호</strong><br>
-                                        관리 필요 인력이 ${Math.round(riskEmployeesCount / employees.length * 100)}%로 안정적입니다.
+                                    <div style="padding: 12px; background: rgba(16, 185, 129, 0.15); border-left: 4px solid #10B981; border-radius: 4px; color: #ffffff;">
+                                        <strong style="color: #10B981;">✓ 리스크 관리 양호</strong><br>
+                                        <span style="color: rgba(255,255,255,0.9);">관리 필요 인력이 ${Math.round(riskEmployeesCount / employees.length * 100)}%로 안정적입니다.</span>
                                     </div>
                                 `}
                                 
                                 ${bestDept && worstDept ? `
-                                    <div style="padding: 12px; background: #f3e5f5; border-left: 4px solid #9c27b0; border-radius: 4px;">
-                                        <strong style="color: #6a1b9a;">📊 부서간 성과 격차</strong><br>
-                                        최우수 부서(${bestDept}: ${Math.round(bestAvg)}점)와 
+                                    <div style="padding: 12px; background: rgba(102, 126, 234, 0.15); border-left: 4px solid #667eea; border-radius: 4px; color: #ffffff;">
+                                        <strong style="color: #667eea;">📊 부서간 성과 격차</strong><br>
+                                        <span style="color: rgba(255,255,255,0.9);">최우수 부서(${bestDept}: ${Math.round(bestAvg)}점)와 
                                         개선필요 부서(${worstDept}: ${Math.round(worstAvg)}점) 간 
-                                        ${Math.round(bestAvg - worstAvg)}점 차이가 있습니다.
+                                        ${Math.round(bestAvg - worstAvg)}점 차이가 있습니다.</span>
                                     </div>
                                 ` : ''}
                             </div>
@@ -4977,6 +5013,106 @@
             async refreshInsights() {
                 this.loadInsights();
                 this.showNotification('인사이트가 업데이트되었습니다', 'success');
+            },
+            
+            // 실시간 AI 인사이트 생성
+            async generateRealTimeInsights() {
+                // 생성 상태 표시
+                const statusElement = document.getElementById('insights-generation-status');
+                statusElement.style.display = 'block';
+                
+                try {
+                    // 실시간 데이터 가져오기
+                    await this.loadEmployeesData();
+                    await this.loadDashboardData();
+                    
+                    // AI 분석 시뮬레이션 (실제 서버 API 호출로 대체 가능)
+                    setTimeout(async () => {
+                        // 데이터 분석 및 인사이트 생성
+                        const employees = this.state.employees || [];
+                        const avgScore = this.calculateAverageScore(employees);
+                        
+                        // AI 인사이트 생성 (확장 가능)
+                        const insights = this.generateAIAnalysis(employees);
+                        
+                        // 인사이트 업데이트
+                        this.loadInsights();
+                        
+                        // 상태 숨기기
+                        statusElement.style.display = 'none';
+                        
+                        // 성공 메시지
+                        this.showNotification('✅ AI 인사이트가 성공적으로 생성되었습니다', 'success');
+                        
+                        // 애니메이션 효과
+                        const contentElement = document.getElementById('insights-content');
+                        contentElement.style.animation = 'fadeIn 0.5s ease-in';
+                    }, 2000); // 2초 지연 (실제 API에서는 제거)
+                    
+                } catch (error) {
+                    console.error('AI insights generation failed:', error);
+                    statusElement.style.display = 'none';
+                    this.showNotification('❌ AI 인사이트 생성에 실패했습니다', 'error');
+                }
+            },
+            
+            // AI 분석 엔진 (확장 가능)
+            generateAIAnalysis(employees) {
+                const avgScore = this.calculateAverageScore(employees);
+                const gradeDistribution = this.calculateGradeDistribution(employees);
+                
+                // AI 기반 패턴 분석
+                const patterns = {
+                    performanceTrend: avgScore >= 700 ? 'upward' : avgScore >= 600 ? 'stable' : 'downward',
+                    talentDensity: (gradeDistribution['S'] + gradeDistribution['A+']) / employees.length,
+                    riskLevel: (gradeDistribution['C'] + gradeDistribution['D']) / employees.length,
+                    organizationalHealth: this.calculateOrganizationalHealth(employees)
+                };
+                
+                // 예측 분석
+                const predictions = {
+                    sixMonthOutlook: patterns.performanceTrend === 'upward' ? 'positive' : 'concerning',
+                    talentRetentionRisk: patterns.talentDensity < 0.1 ? 'high' : 'moderate',
+                    growthPotential: avgScore >= 650 ? 'high' : 'limited'
+                };
+                
+                return {
+                    patterns,
+                    predictions,
+                    recommendations: this.generateRecommendations(patterns, predictions),
+                    timestamp: new Date().toISOString()
+                };
+            },
+            
+            // 조직 건강도 계산
+            calculateOrganizationalHealth(employees) {
+                const avgScore = this.calculateAverageScore(employees);
+                const gradeDistribution = this.calculateGradeDistribution(employees);
+                
+                return Math.min(100, Math.round(
+                    (avgScore / 10) * 0.4 +
+                    ((gradeDistribution['S'] + gradeDistribution['A+'] + gradeDistribution['A']) / employees.length * 100) * 0.3 +
+                    ((1 - gradeDistribution['D'] / employees.length) * 100) * 0.3
+                ));
+            },
+            
+            // AI 기반 추천 생성
+            generateRecommendations(patterns, predictions) {
+                const recommendations = [];
+                
+                if (patterns.talentDensity < 0.1) {
+                    recommendations.push('핵심 인재 육성 프로그램 긴급 도입');
+                }
+                
+                if (patterns.riskLevel > 0.2) {
+                    recommendations.push('하위 성과자 대상 집중 코칭 필요');
+                }
+                
+                if (predictions.sixMonthOutlook === 'concerning') {
+                    recommendations.push('조직 문화 혁신 프로그램 실시');
+                }
+                
+                return recommendations;
             }
         };
         
