@@ -1567,7 +1567,7 @@
                                     id="employee-search" 
                                     placeholder="직원 이름을 입력하세요 (예: 김철수, 4106020)" 
                                     style="width: 100%; padding: 12px 40px 12px 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px;"
-                                    oninput="AIRISS.searchEmployees(this.value)"
+                                    oninput="AIRISS.searchEmployeesForOpinion(this.value)"
                                     autocomplete="off"
                                 />
                                 <div style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);">
@@ -3682,8 +3682,14 @@
             selectedEmployee: null,
             allEmployees: [],
             
-            async searchEmployees(query) {
+            async searchEmployeesForOpinion(query) {
+                console.log('🔍 검색 함수 호출됨:', query);
                 const dropdown = document.getElementById('employee-dropdown');
+                
+                if (!dropdown) {
+                    console.error('❌ 드롭다운 요소를 찾을 수 없습니다');
+                    return;
+                }
                 
                 if (!query || query.trim().length < 1) {
                     dropdown.style.display = 'none';
@@ -3693,17 +3699,23 @@
                 try {
                     // 전체 직원 목록이 없으면 로드
                     if (this.allEmployees.length === 0) {
-                        const response = await this.api.request('GET', '/employees/list');
+                        console.log('🔄 직원 목록 로드 중...');
+                        const response = await this.api.request('GET', '/api/v1/employees/list');
                         this.allEmployees = response.employees || [];
+                        console.log('✅ 직원 목록 로드 완료:', this.allEmployees.length, '명');
                     }
                     
                     // 검색 필터링 (이름, UID, 부서)
                     const searchTerm = query.toLowerCase().trim();
+                    console.log('🔍 검색어:', searchTerm, '| 전체 직원 수:', this.allEmployees.length);
+                    
                     const filteredEmployees = this.allEmployees.filter(emp => 
                         emp.employee_name?.toLowerCase().includes(searchTerm) ||
                         emp.uid?.toLowerCase().includes(searchTerm) ||
                         emp.department?.toLowerCase().includes(searchTerm)
                     ).slice(0, 10); // 최대 10개만 표시
+                    
+                    console.log('✅ 검색 결과:', filteredEmployees.length, '명');
                     
                     if (filteredEmployees.length > 0) {
                         dropdown.innerHTML = filteredEmployees.map(emp => `
@@ -3735,10 +3747,11 @@
                         dropdown.style.display = 'block';
                     }
                 } catch (error) {
-                    console.error('Employee search failed:', error);
+                    console.error('❌ 직원 검색 실패:', error);
+                    console.error('Error details:', error.message);
                     dropdown.innerHTML = `
                         <div style="padding: 15px; text-align: center; color: var(--danger-color);">
-                            검색 중 오류가 발생했습니다
+                            검색 중 오류가 발생했습니다: ${error.message}
                         </div>
                     `;
                     dropdown.style.display = 'block';
