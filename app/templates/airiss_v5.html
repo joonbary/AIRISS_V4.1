@@ -1637,30 +1637,136 @@
         
         <!-- 리포트 탭 -->
         <div id="reports-tab" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">📊 AI 분석 리포트</h2>
+            <div class="card" style="background: linear-gradient(135deg, rgba(10, 15, 27, 0.95) 0%, rgba(26, 31, 46, 0.9) 100%); border: 1px solid rgba(0, 212, 255, 0.2);">
+                <div class="card-header" style="background: rgba(0, 212, 255, 0.1); border-bottom: 2px solid rgba(0, 212, 255, 0.3);">
+                    <h2 class="card-title" style="color: #00d4ff; text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);">
+                        📊 AI 분석 리포트
+                    </h2>
+                    <p style="color: rgba(255, 255, 255, 0.8); font-size: 14px; margin-top: 8px;">
+                        AI 기반 심층 분석 리포트 - 데이터 기반 의사결정을 위한 인사이트
+                    </p>
                 </div>
                 
                 <!-- 리포트 타입 선택 버튼 -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; padding: 20px; background: #f8f9fa; border-radius: 12px; margin-bottom: 20px;">
-                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('monthly')">
-                        📊 월간 종합
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 30px; background: rgba(255, 255, 255, 0.03); border-radius: 20px; margin: 20px;">
+                    <button class="report-btn" style="
+                        padding: 20px;
+                        background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 255, 0.1) 100%);
+                        border: 1px solid rgba(0, 212, 255, 0.3);
+                        border-radius: 15px;
+                        color: #ffffff;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.1);
+                    " 
+                    onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(0, 212, 255, 0.3)'; this.style.background='linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(0, 153, 255, 0.2) 100%)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 212, 255, 0.1)'; this.style.background='linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 255, 0.1) 100%)'"
+                    onclick="AIRISS.showReport('monthly')">
+                        <div style="font-size: 24px; margin-bottom: 8px;">📊</div>
+                        <div>월간 종합</div>
+                        <div style="font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 4px;">전체 현황 분석</div>
                     </button>
-                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('talent')">
-                        ⭐ 핵심 인재
+                    
+                    <button class="report-btn" style="
+                        padding: 20px;
+                        background: linear-gradient(135deg, rgba(123, 97, 255, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%);
+                        border: 1px solid rgba(123, 97, 255, 0.3);
+                        border-radius: 15px;
+                        color: #ffffff;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-shadow: 0 4px 15px rgba(123, 97, 255, 0.1);
+                    "
+                    onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(123, 97, 255, 0.3)'; this.style.background='linear-gradient(135deg, rgba(123, 97, 255, 0.2) 0%, rgba(102, 126, 234, 0.2) 100%)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(123, 97, 255, 0.1)'; this.style.background='linear-gradient(135deg, rgba(123, 97, 255, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%)'"
+                    onclick="AIRISS.showReport('talent')">
+                        <div style="font-size: 24px; margin-bottom: 8px;">⭐</div>
+                        <div>핵심 인재</div>
+                        <div style="font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 4px;">상위 성과자 분석</div>
                     </button>
-                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('risk')">
-                        ⚠️ 리스크 관리
+                    
+                    <button class="report-btn" style="
+                        padding: 20px;
+                        background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 193, 7, 0.1) 100%);
+                        border: 1px solid rgba(255, 152, 0, 0.3);
+                        border-radius: 15px;
+                        color: #ffffff;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-shadow: 0 4px 15px rgba(255, 152, 0, 0.1);
+                    "
+                    onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(255, 152, 0, 0.3)'; this.style.background='linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 193, 7, 0.2) 100%)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 152, 0, 0.1)'; this.style.background='linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 193, 7, 0.1) 100%)'"
+                    onclick="AIRISS.showReport('risk')">
+                        <div style="font-size: 24px; margin-bottom: 8px;">⚠️</div>
+                        <div>리스크 관리</div>
+                        <div style="font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 4px;">위험 요소 분석</div>
                     </button>
-                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('performance')">
-                        📈 성과 분석
+                    
+                    <button class="report-btn" style="
+                        padding: 20px;
+                        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(139, 195, 74, 0.1) 100%);
+                        border: 1px solid rgba(76, 175, 80, 0.3);
+                        border-radius: 15px;
+                        color: #ffffff;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.1);
+                    "
+                    onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(76, 175, 80, 0.3)'; this.style.background='linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(139, 195, 74, 0.2) 100%)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(76, 175, 80, 0.1)'; this.style.background='linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(139, 195, 74, 0.1) 100%)'"
+                    onclick="AIRISS.showReport('performance')">
+                        <div style="font-size: 24px; margin-bottom: 8px;">📈</div>
+                        <div>성과 분석</div>
+                        <div style="font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 4px;">성과 트렌드 분석</div>
                     </button>
-                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('department')">
-                        🏢 부서별 분석
+                    
+                    <button class="report-btn" style="
+                        padding: 20px;
+                        background: linear-gradient(135deg, rgba(233, 30, 99, 0.1) 0%, rgba(244, 67, 54, 0.1) 100%);
+                        border: 1px solid rgba(233, 30, 99, 0.3);
+                        border-radius: 15px;
+                        color: #ffffff;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-shadow: 0 4px 15px rgba(233, 30, 99, 0.1);
+                    "
+                    onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(233, 30, 99, 0.3)'; this.style.background='linear-gradient(135deg, rgba(233, 30, 99, 0.2) 0%, rgba(244, 67, 54, 0.2) 100%)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(233, 30, 99, 0.1)'; this.style.background='linear-gradient(135deg, rgba(233, 30, 99, 0.1) 0%, rgba(244, 67, 54, 0.1) 100%)'"
+                    onclick="AIRISS.showReport('department')">
+                        <div style="font-size: 24px; margin-bottom: 8px;">🏢</div>
+                        <div>부서별 분석</div>
+                        <div style="font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 4px;">조직별 성과 비교</div>
                     </button>
-                    <button class="btn btn-primary" style="padding: 12px; font-size: 13px;" onclick="AIRISS.showReport('executive')">
-                        💼 경영진 브리핑
+                    
+                    <button class="report-btn" style="
+                        padding: 20px;
+                        background: linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(103, 58, 183, 0.1) 100%);
+                        border: 1px solid rgba(156, 39, 176, 0.3);
+                        border-radius: 15px;
+                        color: #ffffff;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-shadow: 0 4px 15px rgba(156, 39, 176, 0.1);
+                    "
+                    onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(156, 39, 176, 0.3)'; this.style.background='linear-gradient(135deg, rgba(156, 39, 176, 0.2) 0%, rgba(103, 58, 183, 0.2) 100%)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(156, 39, 176, 0.1)'; this.style.background='linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(103, 58, 183, 0.1) 100%)'"
+                    onclick="AIRISS.showReport('executive')">
+                        <div style="font-size: 24px; margin-bottom: 8px;">💼</div>
+                        <div>경영진 브리핑</div>
+                        <div style="font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 4px;">Executive Summary</div>
                     </button>
                 </div>
                 
@@ -4591,64 +4697,64 @@
                 const deptAnalysis = this.analyzeDepartments(employees);
                 
                 return `
-                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
-                        <h1 style="color: #00d9ff; border-bottom: 3px solid #00d9ff; padding-bottom: 15px;">
+                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #ffffff;">
+                        <h1 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.5em; font-weight: 700; padding-bottom: 20px; margin-bottom: 30px; border-bottom: 2px solid rgba(0, 212, 255, 0.3); text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);">
                             ${month} HR 종합 분석 리포트
                         </h1>
                         
-                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                            <p style="margin: 0; color: #6c757d;">
-                                <strong>생성일시:</strong> ${new Date().toLocaleString('ko-KR')}<br>
-                                <strong>분석 대상:</strong> 전체 ${employees.length}명<br>
-                                <strong>작성 부서:</strong> OK홀딩스 인사부
+                        <div style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 255, 0.05) 100%); padding: 25px; border-radius: 15px; margin: 25px 0; border: 1px solid rgba(0, 212, 255, 0.2); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);">
+                            <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 1.05em; line-height: 1.8;">
+                                <strong style="color: #00d4ff;">생성일시:</strong> ${new Date().toLocaleString('ko-KR')}<br>
+                                <strong style="color: #00d4ff;">분석 대상:</strong> 전체 ${employees.length}명<br>
+                                <strong style="color: #00d4ff;">작성 부서:</strong> OK홀딩스 인사부
                             </p>
                         </div>
                         
-                        <h2 style="color: #00d9ff; margin-top: 30px;">📊 Executive Summary</h2>
-                        <div style="background: linear-gradient(135deg, #00d9ff 0%, #7b61ff 50%, #667eea 100%); color: #fff; padding: 25px; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,217,255,0.2);">
-                            <h3 style="margin-top: 0;">핵심 지표</h3>
-                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
-                                <div style="text-align: center;">
-                                    <div style="font-size: 32px; font-weight: bold;">${employees.length}</div>
-                                    <div style="font-size: 12px; opacity: 0.8; color: #333;">전체 직원</div>
+                        <h2 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2em; font-weight: 700; margin-top: 35px; margin-bottom: 25px; text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">📊 Executive Summary</h2>
+                        <div style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(123, 97, 255, 0.1) 50%, rgba(102, 126, 234, 0.1) 100%); padding: 30px; border-radius: 20px; margin: 25px 0; border: 1px solid rgba(0, 212, 255, 0.3); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0, 212, 255, 0.15);">
+                            <h3 style="color: #00d4ff; margin-top: 0; font-size: 1.5em; text-shadow: 0 0 15px rgba(0, 212, 255, 0.3);">핵심 지표</h3>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px;">
+                                <div style="text-align: center; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);">
+                                    <div style="background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.9)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; font-weight: 800; text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);">${employees.length}</div>
+                                    <div style="font-size: 13px; color: rgba(255, 255, 255, 0.7); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px;">전체 직원</div>
                                 </div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 32px; font-weight: bold;">${avgScore}</div>
-                                    <div style="font-size: 12px; opacity: 0.8; color: #333;">평균 AI 점수</div>
+                                <div style="text-align: center; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);">
+                                    <div style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; font-weight: 800; text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);">${avgScore}</div>
+                                    <div style="font-size: 13px; color: rgba(255, 255, 255, 0.7); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px;">평균 AI 점수</div>
                                 </div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 32px; font-weight: bold;">${gradeDistribution['S'] + gradeDistribution['A+']}</div>
-                                    <div style="font-size: 12px; opacity: 0.8; color: #333;">최우수 인재</div>
+                                <div style="text-align: center; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(76, 175, 80, 0.2); backdrop-filter: blur(10px);">
+                                    <div style="background: linear-gradient(135deg, #69f0ae, #4caf50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; font-weight: 800; text-shadow: 0 0 20px rgba(76, 175, 80, 0.5);">${gradeDistribution['S'] + gradeDistribution['A+']}</div>
+                                    <div style="font-size: 13px; color: rgba(255, 255, 255, 0.7); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px;">최우수 인재</div>
                                 </div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 32px; font-weight: bold;">${Object.keys(deptAnalysis).length}</div>
-                                    <div style="font-size: 12px; opacity: 0.8; color: #333;">분석 부서</div>
+                                <div style="text-align: center; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);">
+                                    <div style="background: linear-gradient(135deg, #ff6b6b, #feca57); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; font-weight: 800; text-shadow: 0 0 20px rgba(255, 193, 7, 0.5);">${Object.keys(deptAnalysis).length}</div>
+                                    <div style="font-size: 13px; color: rgba(255, 255, 255, 0.7); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px;">분석 부서</div>
                                 </div>
                             </div>
                         </div>
                         
-                        <h2 style="color: #00d9ff; margin-top: 30px;">1. 인력 현황 분석</h2>
-                        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                        <h2 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.8em; font-weight: 700; margin-top: 40px; margin-bottom: 25px; text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">1. 인력 현황 분석</h2>
+                        <table style="width: 100%; border-collapse: separate; border-spacing: 0; margin: 25px 0; border-radius: 15px; overflow: hidden; background: rgba(255, 255, 255, 0.02); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);">
                             <thead>
-                                <tr style="background: #f8f9fa;">
-                                    <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">구분</th>
-                                    <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">인원수</th>
-                                    <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">비율</th>
-                                    <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">비고</th>
+                                <tr style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(0, 153, 255, 0.1) 100%);">
+                                    <th style="padding: 15px; text-align: left; border-bottom: 2px solid rgba(0, 212, 255, 0.2); color: #00d4ff; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">구분</th>
+                                    <th style="padding: 15px; text-align: center; border-bottom: 2px solid rgba(0, 212, 255, 0.2); color: #00d4ff; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">인원수</th>
+                                    <th style="padding: 15px; text-align: center; border-bottom: 2px solid rgba(0, 212, 255, 0.2); color: #00d4ff; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">비율</th>
+                                    <th style="padding: 15px; text-align: left; border-bottom: 2px solid rgba(0, 212, 255, 0.2); color: #00d4ff; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">비고</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">전체 직원</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${employees.length}명</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">100%</td>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">분석 대상 전체</td>
+                                <tr style="background: rgba(255, 255, 255, 0.03); transition: all 0.3s ease;">
+                                    <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: rgba(255, 255, 255, 0.9); font-weight: 500;">전체 직원</td>
+                                    <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #ffffff; font-weight: 600; font-size: 1.1em;">${employees.length}명</td>
+                                    <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #00d4ff; font-weight: 600;">100%</td>
+                                    <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: rgba(255, 255, 255, 0.7);">분석 대상 전체</td>
                                 </tr>
-                                <tr>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">핵심 인재 (S/A+)</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${gradeDistribution['S'] + gradeDistribution['A+']}명</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${Math.round((gradeDistribution['S'] + gradeDistribution['A+']) / employees.length * 100)}%</td>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6; color: ${(gradeDistribution['S'] + gradeDistribution['A+']) / employees.length > 0.1 ? '#28a745' : '#dc3545'};">
+                                <tr style="background: rgba(255, 255, 255, 0.03); transition: all 0.3s ease;">
+                                    <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: rgba(255, 255, 255, 0.9); font-weight: 500;">핵심 인재 (S/A+)</td>
+                                    <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #69f0ae; font-weight: 600; font-size: 1.1em;">${gradeDistribution['S'] + gradeDistribution['A+']}명</td>
+                                    <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #69f0ae; font-weight: 600;">${Math.round((gradeDistribution['S'] + gradeDistribution['A+']) / employees.length * 100)}%</td>
+                                    <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: ${(gradeDistribution['S'] + gradeDistribution['A+']) / employees.length > 0.1 ? '#69f0ae' : '#ff5252'}; font-weight: 500;">
                                         ${(gradeDistribution['S'] + gradeDistribution['A+']) / employees.length > 0.1 ? '목표 달성 ✓' : '육성 필요'}
                                     </td>
                                 </tr>
@@ -4678,9 +4784,9 @@
                         <h2 style="color: #00d9ff; margin-top: 30px;">2. 부서별 성과 분석</h2>
                         ${this.generateDepartmentTable(deptAnalysis)}
                         
-                        <h2 style="color: #00d9ff; margin-top: 30px;">3. 월간 주요 이슈 및 Action Items</h2>
-                        <div style="background: #fff5f5; padding: 20px; border-left: 4px solid #dc3545; border-radius: 4px; margin: 20px 0;">
-                            <h4 style="color: #dc3545; margin-top: 0;">🚨 즉시 조치 필요 사항</h4>
+                        <h2 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.8em; font-weight: 700; margin-top: 40px; margin-bottom: 25px; text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">3. 월간 주요 이슈 및 Action Items</h2>
+                        <div style="background: linear-gradient(135deg, rgba(244, 67, 54, 0.15) 0%, rgba(244, 67, 54, 0.08) 100%); padding: 25px; border-left: 4px solid #ff5252; border-radius: 12px; margin: 25px 0; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(244, 67, 54, 0.1);">
+                            <h4 style="color: #ff5252; margin-top: 0; font-size: 1.3em; text-shadow: 0 0 10px rgba(244, 67, 54, 0.3);">🚨 즉시 조치 필요 사항</h4>
                             <ul style="margin: 10px 0;">
                                 ${gradeDistribution['D'] > 5 ? '<li>하위 성과자 ' + gradeDistribution['D'] + '명에 대한 개선 계획 수립</li>' : ''}
                                 ${(gradeDistribution['S'] + gradeDistribution['A+']) < employees.length * 0.1 ? '<li>핵심 인재 부족 - 육성 프로그램 시급</li>' : ''}
@@ -4689,8 +4795,8 @@
                             </ul>
                         </div>
                         
-                        <div style="background: #e8f5e9; padding: 20px; border-left: 4px solid #4caf50; border-radius: 4px; margin: 20px 0;">
-                            <h4 style="color: #2e7d32; margin-top: 0;">✅ 긍정적 성과</h4>
+                        <div style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.08) 100%); padding: 25px; border-left: 4px solid #69f0ae; border-radius: 12px; margin: 25px 0; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(76, 175, 80, 0.1);">
+                            <h4 style="color: #69f0ae; margin-top: 0; font-size: 1.3em; text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);">✅ 긍정적 성과</h4>
                             <ul style="margin: 10px 0;">
                                 ${avgScore >= 750 ? '<li>전사 평균 AI 점수 ' + avgScore + '점으로 우수</li>' : ''}
                                 ${(gradeDistribution['S'] + gradeDistribution['A+']) >= employees.length * 0.15 ? '<li>핵심 인재 비율 업계 평균 상회</li>' : ''}
@@ -4762,30 +4868,30 @@
                 const promotions = dashboardData.promotion_candidates?.employees || [];
                 
                 let talentCards = talents.map(emp => `
-                    <div style="background: linear-gradient(135deg, rgba(52, 61, 84, 0.95) 0%, rgba(41, 49, 69, 0.9) 100%); border: 1px solid rgba(88, 95, 112, 0.4); border-radius: 8px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,217,255,0.1);">
+                    <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 20px rgba(0, 212, 255, 0.15); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${emp.name}</h4>
-                                <p style="margin: 0; color: #6c757d; font-size: 14px;">${emp.department} / ${emp.position || '직책 미상'}</p>
+                                <h4 style="margin: 0 0 8px 0; color: #ffffff; font-size: 1.2em; font-weight: 600;">${emp.name}</h4>
+                                <p style="margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 0.95em;">${emp.department} / ${emp.position || '직책 미상'}</p>
                             </div>
                             <div style="text-align: right;">
-                                <div style="background: #00d9ff; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 18px;">
+                                <div style="background: linear-gradient(135deg, #00d4ff, #0099ff); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 1.3em; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3); text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);">
                                     ${Math.round(emp.ai_score || 0)}점
                                 </div>
-                                <div style="color: #28a745; font-weight: bold; margin-top: 5px;">${emp.grade}등급</div>
+                                <div style="color: #69f0ae; font-weight: 600; margin-top: 8px; font-size: 1.1em; text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);">${emp.grade}등급</div>
                             </div>
                         </div>
                     </div>
                 `).join('');
                 
                 let promotionCards = promotions.map(emp => `
-                    <div style="background: linear-gradient(135deg, rgba(52, 61, 84, 0.95) 0%, rgba(41, 49, 69, 0.9) 100%); border: 1px solid rgba(88, 95, 112, 0.4); border-radius: 8px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,217,255,0.1);">
+                    <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 20px rgba(76, 175, 80, 0.15); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${emp.name}</h4>
-                                <p style="margin: 0; color: #6c757d; font-size: 14px;">${emp.department} / ${emp.position}</p>
+                                <h4 style="margin: 0 0 8px 0; color: #ffffff; font-size: 1.2em; font-weight: 600;">${emp.name}</h4>
+                                <p style="margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 0.95em;">${emp.department} / ${emp.position}</p>
                             </div>
-                            <div style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold;">
+                            <div style="background: linear-gradient(135deg, #69f0ae, #4caf50); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);">
                                 ${emp.grade}등급
                             </div>
                         </div>
@@ -4793,19 +4899,19 @@
                 `).join('');
                 
                 return `
-                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
-                        <h2 style="color: #00d9ff; border-bottom: 2px solid #00d9ff; padding-bottom: 10px;">🌟 핵심 인재 분석 리포트</h2>
+                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #ffffff;">
+                        <h2 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.3em; font-weight: 700; border-bottom: 2px solid rgba(0, 212, 255, 0.3); padding-bottom: 20px; margin-bottom: 30px; text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);">🌟 핵심 인재 분석 리포트</h2>
                         
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                            <h3 style="color: #00d9ff; margin-bottom: 15px;">🏆 Top Talent (AI 점수 85점 이상)</h3>
-                            <p style="color: #6c757d; margin-bottom: 15px;">총 ${talents.length}명의 핵심 인재가 식별되었습니다.</p>
-                            ${talentCards || '<p style="color: #999;">현재 해당하는 인재가 없습니다.</p>'}
+                        <div style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 255, 0.05) 100%); padding: 30px; border-radius: 20px; margin: 25px 0; border: 1px solid rgba(0, 212, 255, 0.2); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0, 212, 255, 0.15);">
+                            <h3 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-size: 1.6em; font-weight: 700; text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">🏆 Top Talent (AI 점수 85점 이상)</h3>
+                            <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 20px; font-size: 1.05em;">총 ${talents.length}명의 핵심 인재가 식별되었습니다.</p>
+                            ${talentCards || '<p style="color: rgba(255, 255, 255, 0.5);">현재 해당하는 인재가 없습니다.</p>'}
                         </div>
                         
-                        <div style="background: #e7f5ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                            <h3 style="color: #00d9ff; margin-bottom: 15px;">🚀 승진 후보자</h3>
-                            <p style="color: #6c757d; margin-bottom: 15px;">승진 검토 대상 ${promotions.length}명</p>
-                            ${promotionCards || '<p style="color: #999;">현재 해당하는 인재가 없습니다.</p>'}
+                        <div style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%); padding: 30px; border-radius: 20px; margin: 25px 0; border: 1px solid rgba(76, 175, 80, 0.2); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(76, 175, 80, 0.15);">
+                            <h3 style="background: linear-gradient(135deg, #69f0ae, #4caf50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-size: 1.6em; font-weight: 700; text-shadow: 0 0 20px rgba(76, 175, 80, 0.3);">🚀 승진 후보자</h3>
+                            <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 20px; font-size: 1.05em;">승진 검토 대상 ${promotions.length}명</p>
+                            ${promotionCards || '<p style="color: rgba(255, 255, 255, 0.5);">현재 해당하는 인재가 없습니다.</p>'}
                         </div>
                         
                         <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
@@ -4829,20 +4935,20 @@
                 const mediumRisk = riskEmployees.filter(emp => emp.ai_score >= 60 && emp.ai_score < 70 && emp.risk_level !== 'high');
                 
                 let riskCards = riskEmployees.slice(0, 10).map(emp => `
-                    <div style="background: white; border: 2px solid #dc3545; border-radius: 8px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 4px rgba(220,53,69,0.2);">
+                    <div style="background: linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(244, 67, 54, 0.05) 100%); border: 2px solid rgba(244, 67, 54, 0.4); border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 20px rgba(244, 67, 54, 0.2); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <h4 style="margin: 0 0 5px 0; color: #dc3545;">${emp.name}</h4>
-                                <p style="margin: 0; color: #6c757d; font-size: 14px;">${emp.department || '부서 미상'}</p>
-                                <p style="margin: 5px 0 0 0; color: #856404; font-size: 13px;">
-                                    <strong>사유:</strong> ${emp.reason || '성과 개선 필요'}
+                                <h4 style="margin: 0 0 8px 0; color: #ff5252; font-size: 1.2em; font-weight: 600; text-shadow: 0 0 10px rgba(244, 67, 54, 0.3);">${emp.name}</h4>
+                                <p style="margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 0.95em;">${emp.department || '부서 미상'}</p>
+                                <p style="margin: 8px 0 0 0; color: #ffd54f; font-size: 0.9em;">
+                                    <strong style="color: #ffb74d;">사유:</strong> ${emp.reason || '성과 개선 필요'}
                                 </p>
                             </div>
                             <div style="text-align: right;">
-                                <div style="background: ${emp.ai_score < 60 ? '#dc3545' : '#ffc107'}; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold;">
+                                <div style="background: linear-gradient(135deg, ${emp.ai_score < 60 ? '#ff5252, #f44336' : '#ffd54f, #ffc107'}); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 1.2em; box-shadow: 0 4px 15px ${emp.ai_score < 60 ? 'rgba(244, 67, 54, 0.3)' : 'rgba(255, 193, 7, 0.3)'}; text-shadow: 0 0 10px ${emp.ai_score < 60 ? 'rgba(244, 67, 54, 0.5)' : 'rgba(255, 193, 7, 0.5)'};">
                                     ${Math.round(emp.ai_score || emp.risk_score || 0)}점
                                 </div>
-                                <div style="color: #dc3545; font-size: 12px; margin-top: 5px; font-weight: bold;">
+                                <div style="color: #ff5252; font-size: 0.9em; margin-top: 8px; font-weight: 600; text-shadow: 0 0 8px rgba(244, 67, 54, 0.4);">
                                     ${emp.risk_level === 'high' ? '고위험' : '주의요망'}
                                 </div>
                             </div>
@@ -4851,23 +4957,23 @@
                 `).join('');
                 
                 return `
-                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
-                        <h2 style="color: #dc3545; border-bottom: 2px solid #dc3545; padding-bottom: 10px;">⚠️ 리스크 관리 리포트</h2>
+                    <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #ffffff;">
+                        <h2 style="background: linear-gradient(135deg, #ff5252, #f44336); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.3em; font-weight: 700; border-bottom: 2px solid rgba(244, 67, 54, 0.3); padding-bottom: 20px; margin-bottom: 30px; text-shadow: 0 0 30px rgba(244, 67, 54, 0.3);">⚠️ 리스크 관리 리포트</h2>
                         
-                        <div style="background: #f8d7da; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                            <h3 style="color: #721c24; margin-bottom: 15px;">🚨 즉시 관리 필요 인력</h3>
-                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px;">
-                                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                                    <div style="font-size: 36px; font-weight: bold; color: #dc3545;">${highRisk.length}</div>
-                                    <div style="color: #6c757d; font-size: 14px;">고위험군</div>
+                        <div style="background: linear-gradient(135deg, rgba(244, 67, 54, 0.15) 0%, rgba(244, 67, 54, 0.08) 100%); padding: 30px; border-radius: 20px; margin: 25px 0; border: 1px solid rgba(244, 67, 54, 0.3); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(244, 67, 54, 0.15);">
+                            <h3 style="color: #ff5252; margin-bottom: 20px; font-size: 1.6em; font-weight: 700; text-shadow: 0 0 20px rgba(244, 67, 54, 0.4);">🚨 즉시 관리 필요 인력</h3>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+                                <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid rgba(244, 67, 54, 0.3); backdrop-filter: blur(10px);">
+                                    <div style="background: linear-gradient(135deg, #ff5252, #f44336); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 42px; font-weight: 800; text-shadow: 0 0 25px rgba(244, 67, 54, 0.5);">${highRisk.length}</div>
+                                    <div style="color: rgba(255, 255, 255, 0.7); font-size: 0.95em; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">고위험군</div>
                                 </div>
-                                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                                    <div style="font-size: 36px; font-weight: bold; color: #ffc107;">${mediumRisk.length}</div>
-                                    <div style="color: #6c757d; font-size: 14px;">주의요망군</div>
+                                <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid rgba(255, 193, 7, 0.3); backdrop-filter: blur(10px);">
+                                    <div style="background: linear-gradient(135deg, #ffd54f, #ffc107); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 42px; font-weight: 800; text-shadow: 0 0 25px rgba(255, 193, 7, 0.5);">${mediumRisk.length}</div>
+                                    <div style="color: rgba(255, 255, 255, 0.7); font-size: 0.95em; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">주의요망군</div>
                                 </div>
                             </div>
-                            <p style="color: #721c24; margin-bottom: 15px;">총 ${riskEmployees.length}명의 관리 필요 인력 (상위 10명 표시)</p>
-                            ${riskCards || '<p style="color: #999;">현재 리스크 인력이 없습니다.</p>'}
+                            <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 20px; font-size: 1.05em;">총 ${riskEmployees.length}명의 관리 필요 인력 (상위 10명 표시)</p>
+                            ${riskCards || '<p style="color: rgba(255, 255, 255, 0.5);">현재 리스크 인력이 없습니다.</p>'}
                         </div>
                         
                         <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
