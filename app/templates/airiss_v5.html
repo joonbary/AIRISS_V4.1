@@ -1546,12 +1546,86 @@
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">의견 분석</h2>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin-top: 8px;">
+                        특정 직원의 평가의견을 AI로 분석하여 강점, 개선점, 핵심역량을 도출합니다.
+                    </p>
                 </div>
-                <textarea id="opinion-text" placeholder="분석할 텍스트를 입력하세요..." 
-                          style="width: 100%; height: 200px; padding: 15px; border: 1px solid var(--border-color); 
-                                 border-radius: 12px; resize: vertical; font-size: 14px;"></textarea>
+                
+                <!-- 직원 선택 섹션 -->
+                <div style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 12px; border: 1px solid var(--border-color);">
+                    <h3 style="margin: 0 0 15px 0; font-size: 16px; color: var(--text-primary);">📋 분석 대상 직원 선택</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: end;">
+                        <!-- 직원 검색 및 선택 -->
+                        <div>
+                            <label for="employee-search" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary);">
+                                직원 검색 (이름 또는 UID)
+                            </label>
+                            <div style="position: relative;">
+                                <input 
+                                    type="text" 
+                                    id="employee-search" 
+                                    placeholder="직원 이름을 입력하세요 (예: 김철수, 4106020)" 
+                                    style="width: 100%; padding: 12px 40px 12px 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px;"
+                                    oninput="AIRISS.searchEmployees(this.value)"
+                                    autocomplete="off"
+                                />
+                                <div style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);">
+                                    🔍
+                                </div>
+                            </div>
+                            
+                            <!-- 검색 결과 드롭다운 -->
+                            <div id="employee-dropdown" style="
+                                position: absolute; 
+                                z-index: 1000; 
+                                width: calc(100% - 30px); 
+                                max-height: 200px; 
+                                overflow-y: auto; 
+                                background: white; 
+                                border: 1px solid var(--border-color); 
+                                border-radius: 8px; 
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+                                display: none; 
+                                margin-top: 5px;
+                            ">
+                                <!-- 동적으로 생성됨 -->
+                            </div>
+                        </div>
+                        
+                        <!-- 선택된 직원 정보 -->
+                        <div style="text-align: center; min-width: 120px;">
+                            <div id="selected-employee" style="
+                                padding: 12px; 
+                                background: white; 
+                                border: 2px solid var(--border-color); 
+                                border-radius: 8px; 
+                                font-size: 13px;
+                                color: var(--text-secondary);
+                            ">
+                                직원을 선택해주세요
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 의견 입력 섹션 -->
+                <div style="margin-bottom: 20px;">
+                    <label for="opinion-text" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary);">
+                        평가 의견 입력
+                    </label>
+                    <textarea 
+                        id="opinion-text" 
+                        placeholder="선택한 직원에 대한 평가의견을 입력하세요... (예: 업무 태도, 성과, 협업능력, 성장 가능성 등)" 
+                        style="width: 100%; height: 180px; padding: 15px; border: 1px solid var(--border-color); 
+                               border-radius: 12px; resize: vertical; font-size: 14px; line-height: 1.5;"></textarea>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">
+                        💡 구체적이고 상세한 의견일수록 더 정확한 AI 분석 결과를 얻을 수 있습니다. (최소 10자 이상)
+                    </div>
+                </div>
+                
                 <div style="margin-top: 20px;">
-                    <button class="btn btn-primary" onclick="AIRISS.analyzeOpinion()">
+                    <button class="btn btn-primary" onclick="AIRISS.analyzeOpinion()" id="analyze-opinion-btn">
                         🤖 AI 분석 시작
                     </button>
                 </div>
@@ -1776,6 +1850,18 @@
                         }
                     });
                 }
+                
+                // 직원 검색 드롭다운 외부 클릭 시 닫기
+                document.addEventListener('click', (e) => {
+                    const dropdown = document.getElementById('employee-dropdown');
+                    const searchInput = document.getElementById('employee-search');
+                    
+                    if (dropdown && searchInput && 
+                        !dropdown.contains(e.target) && 
+                        !searchInput.contains(e.target)) {
+                        dropdown.style.display = 'none';
+                    }
+                });
             },
             
             // 탭 전환
@@ -3592,17 +3678,119 @@
                 }
             },
             
-            // 의견 분석
+            // 직원 검색 기능
+            selectedEmployee: null,
+            allEmployees: [],
+            
+            async searchEmployees(query) {
+                const dropdown = document.getElementById('employee-dropdown');
+                
+                if (!query || query.trim().length < 1) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    // 전체 직원 목록이 없으면 로드
+                    if (this.allEmployees.length === 0) {
+                        const response = await this.api.request('GET', '/employees/list');
+                        this.allEmployees = response.employees || [];
+                    }
+                    
+                    // 검색 필터링 (이름, UID, 부서)
+                    const searchTerm = query.toLowerCase().trim();
+                    const filteredEmployees = this.allEmployees.filter(emp => 
+                        emp.employee_name?.toLowerCase().includes(searchTerm) ||
+                        emp.uid?.toLowerCase().includes(searchTerm) ||
+                        emp.department?.toLowerCase().includes(searchTerm)
+                    ).slice(0, 10); // 최대 10개만 표시
+                    
+                    if (filteredEmployees.length > 0) {
+                        dropdown.innerHTML = filteredEmployees.map(emp => `
+                            <div style="
+                                padding: 12px 15px; 
+                                border-bottom: 1px solid #eee; 
+                                cursor: pointer;
+                                transition: background-color 0.2s;
+                            " 
+                            onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                            onmouseout="this.style.backgroundColor='white'"
+                            onclick="AIRISS.selectEmployee('${emp.uid}', '${emp.employee_name?.replace(/'/g, "\\'")}', '${emp.department?.replace(/'/g, "\\'")}', '${emp.position?.replace(/'/g, "\\'")}')"
+                            >
+                                <div style="font-weight: 500; color: var(--text-primary);">
+                                    ${emp.employee_name || '이름 없음'}
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                                    UID: ${emp.uid} | ${emp.department || '부서 없음'} | ${emp.position || '직급 없음'}
+                                </div>
+                            </div>
+                        `).join('');
+                        dropdown.style.display = 'block';
+                    } else {
+                        dropdown.innerHTML = `
+                            <div style="padding: 15px; text-align: center; color: var(--text-secondary);">
+                                검색 결과가 없습니다
+                            </div>
+                        `;
+                        dropdown.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Employee search failed:', error);
+                    dropdown.innerHTML = `
+                        <div style="padding: 15px; text-align: center; color: var(--danger-color);">
+                            검색 중 오류가 발생했습니다
+                        </div>
+                    `;
+                    dropdown.style.display = 'block';
+                }
+            },
+            
+            selectEmployee(uid, name, department, position) {
+                this.selectedEmployee = {
+                    uid: uid,
+                    name: name,
+                    department: department,
+                    position: position
+                };
+                
+                // UI 업데이트
+                document.getElementById('employee-search').value = `${name} (${uid})`;
+                document.getElementById('selected-employee').innerHTML = `
+                    <div style="color: var(--success-color); font-weight: 500;">✅ 선택됨</div>
+                    <div style="font-size: 12px; margin-top: 5px; color: var(--text-primary);">
+                        <strong>${name}</strong><br>
+                        ${department} | ${position}
+                    </div>
+                `;
+                document.getElementById('selected-employee').style.borderColor = 'var(--success-color)';
+                document.getElementById('selected-employee').style.background = 'rgba(16, 185, 129, 0.1)';
+                
+                // 드롭다운 닫기
+                document.getElementById('employee-dropdown').style.display = 'none';
+                
+                console.log('선택된 직원:', this.selectedEmployee);
+            },
+            
+            // 의견 분석 (개선된 버전)
             async analyzeOpinion() {
+                // 직원 선택 검증
+                if (!this.selectedEmployee) {
+                    this.showNotification('분석할 직원을 먼저 선택해주세요', 'warning');
+                    document.getElementById('employee-search').focus();
+                    return;
+                }
+                
                 const text = document.getElementById('opinion-text').value;
                 if (!text || text.trim() === '') {
                     this.showNotification('분석할 텍스트를 입력해주세요', 'warning');
+                    document.getElementById('opinion-text').focus();
                     return;
                 }
                 
                 // 텍스트 길이 검증
                 if (text.trim().length < 10) {
                     this.showNotification('더 자세한 의견을 입력해주세요 (최소 10자 이상)', 'warning');
+                    document.getElementById('opinion-text').focus();
                     return;
                 }
                 
@@ -3627,7 +3815,7 @@
                     `;
                     
                     const requestBody = {
-                        uid: "temp_user_" + Date.now(),
+                        uid: this.selectedEmployee.uid,
                         opinions: {
                             "2024": text.trim()
                         }
@@ -3649,8 +3837,16 @@
                         <div class="card" style="animation: slideUp 0.5s ease-out;">
                             <div class="card-header">
                                 <h3>✅ AI 의견 분석 결과</h3>
-                                <span style="color: var(--text-secondary); font-size: 14px;">
-                                    분석 완료: ${new Date().toLocaleString('ko-KR')}
+                                <div style="margin-top: 10px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
+                                    <div style="font-weight: 500; color: var(--text-primary);">
+                                        👤 분석 대상: ${this.selectedEmployee.name} (${this.selectedEmployee.uid})
+                                    </div>
+                                    <div style="font-size: 13px; color: var(--text-secondary); margin-top: 3px;">
+                                        ${this.selectedEmployee.department} | ${this.selectedEmployee.position}
+                                    </div>
+                                </div>
+                                <span style="color: var(--text-secondary); font-size: 14px; margin-top: 10px; display: block;">
+                                    분석 완료: ${new Date().toLocaleString('ko-KR')} | UID: ${this.selectedEmployee.uid}
                                 </span>
                             </div>
                             
