@@ -22,7 +22,8 @@
       "Bash(true)",
       "Bash(grep:*)",
       "Bash(start \"\" \"D:\\AIRISS_project_clean\\app\\templates\\airiss_v5.html\")",
-      "Bash(start \"\" \"http://localhost:8000/airiss/\")"
+      "Bash(start \"\" \"http://localhost:8000/airiss/\")",
+      "Bash(taskkill:*)"
     ],
     "deny": []
   }
