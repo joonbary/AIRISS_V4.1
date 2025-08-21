@@ -865,7 +865,7 @@ body {
     left: 0;
     top: 0;
     height: 100vh;
-    width: 3px;
+    width: 2px;
     background: var(--bg-modal);
     border-right: 1px solid var(--border-light);
     transition: width var(--transition-smooth);
@@ -929,6 +929,7 @@ body {
     align-items: center;
     gap: var(--spacing-md);
     padding: var(--spacing-md) var(--spacing-lg);
+    padding-left: calc(var(--spacing-lg) + 20px);
     color: var(--text-secondary);
     text-decoration: none;
     transition: var(--transition);
@@ -990,7 +991,7 @@ body {
 
 .sidebar-brand {
     padding: var(--spacing-lg);
-    padding-left: calc(var(--spacing-lg) + 10px);
+    padding-left: calc(var(--spacing-lg) + 30px);
     text-align: center;
     border-bottom: 1px solid var(--border-light);
     margin-bottom: var(--spacing-md);
@@ -999,7 +1000,7 @@ body {
     transition: opacity var(--transition), visibility var(--transition);
     /* 완전한 숨김 처리 */
     transform: translateX(-100%);
-    margin-left: 5px;
+    margin-left: 15px;
 }
 
 .sidebar:hover .sidebar-brand {
@@ -1024,7 +1025,7 @@ body {
 
 /* Main Content Adjustment for Sidebar */
 .main-content {
-    margin-left: 3px;
+    margin-left: 2px;
     transition: margin-left var(--transition-smooth);
 }
 
