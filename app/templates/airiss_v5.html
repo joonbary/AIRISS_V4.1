@@ -3265,7 +3265,7 @@
                                         <h4 style="color: #28a745; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
                                             ⚡ 즉시 실행 (1-3개월)
                                         </h4>
-                                        <ul style="margin: 0; padding-left: 20px; color: rgba(255, 255, 255, 0.9); line-height: 1.6;">
+                                        <ul style="margin: 0; padding-left: 20px; color: #495057; line-height: 1.6;">
                                             ${data.low_competencies && data.low_competencies.length > 0 ? `
                                                 <li>${data.low_competencies[0][0]} 역량 집중 개발</li>
                                                 <li>멘토링 프로그램 참여</li>
@@ -3289,7 +3289,7 @@
                                         <h4 style="color: #007bff; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
                                             🎯 중기 목표 (6-12개월)
                                         </h4>
-                                        <ul style="margin: 0; padding-left: 20px; color: rgba(255, 255, 255, 0.9); line-height: 1.6;">
+                                        <ul style="margin: 0; padding-left: 20px; color: #495057; line-height: 1.6;">
                                             ${data.ai_score >= 70 ? `
                                                 <li>팀 프로젝트 리딩 경험</li>
                                                 <li>교차 부서 협업 확대</li>
@@ -3313,7 +3313,7 @@
                                         <h4 style="color: #e67e22; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
                                             🚀 장기 비전 (1-2년)
                                         </h4>
-                                        <ul style="margin: 0; padding-left: 20px; color: rgba(255, 255, 255, 0.9); line-height: 1.6;">
+                                        <ul style="margin: 0; padding-left: 20px; color: #495057; line-height: 1.6;">
                                             ${data.ai_score >= 80 ? `
                                                 <li>리더십 포지션 도전</li>
                                                 <li>전략 기획 참여</li>
@@ -4703,7 +4703,7 @@
                         </h1>
                         
                         <div style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 255, 0.05) 100%); padding: 25px; border-radius: 15px; margin: 25px 0; border: 1px solid rgba(0, 212, 255, 0.2); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);">
-                            <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 1.05em; line-height: 1.8;">
+                            <p style="margin: 0; color: #495057; font-size: 1.05em; line-height: 1.8;">
                                 <strong style="color: #00d4ff;">생성일시:</strong> ${new Date().toLocaleString('ko-KR')}<br>
                                 <strong style="color: #00d4ff;">분석 대상:</strong> 전체 ${employees.length}명<br>
                                 <strong style="color: #00d4ff;">작성 부서:</strong> OK홀딩스 인사부
@@ -4745,13 +4745,13 @@
                             </thead>
                             <tbody>
                                 <tr style="background: rgba(255, 255, 255, 0.03); transition: all 0.3s ease;">
-                                    <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: rgba(255, 255, 255, 0.9); font-weight: 500;">전체 직원</td>
+                                    <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #495057; font-weight: 500;">전체 직원</td>
                                     <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #ffffff; font-weight: 600; font-size: 1.1em;">${employees.length}명</td>
                                     <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #00d4ff; font-weight: 600;">100%</td>
                                     <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: rgba(255, 255, 255, 0.7);">분석 대상 전체</td>
                                 </tr>
                                 <tr style="background: rgba(255, 255, 255, 0.03); transition: all 0.3s ease;">
-                                    <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: rgba(255, 255, 255, 0.9); font-weight: 500;">핵심 인재 (S/A+)</td>
+                                    <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #495057; font-weight: 500;">핵심 인재 (S/A+)</td>
                                     <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #69f0ae; font-weight: 600; font-size: 1.1em;">${gradeDistribution['S'] + gradeDistribution['A+']}명</td>
                                     <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #69f0ae; font-weight: 600;">${Math.round((gradeDistribution['S'] + gradeDistribution['A+']) / employees.length * 100)}%</td>
                                     <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: ${(gradeDistribution['S'] + gradeDistribution['A+']) / employees.length > 0.1 ? '#69f0ae' : '#ff5252'}; font-weight: 500;">
@@ -4834,7 +4834,7 @@
                     rows += `
                         <tr style="background: rgba(255, 255, 255, 0.03); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(255, 255, 255, 0.08)'; this.style.transform='translateX(5px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.03)'; this.style.transform='translateX(0)';">
                             <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #ffffff; font-weight: 500;">${dept}</td>
-                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: rgba(255, 255, 255, 0.9); font-weight: 600; font-size: 1.1em;">${data.count}명</td>
+                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #495057; font-weight: 600; font-size: 1.1em;">${data.count}명</td>
                             <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #00d4ff; font-weight: 600; font-size: 1.1em; text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);">${avg}점</td>
                             <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #69f0ae; font-weight: 600; text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);">${topTalents}명</td>
                             <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: ${avg >= 750 ? '#69f0ae' : avg >= 650 ? '#ffd54f' : '#ff5252'}; font-weight: 600; text-shadow: 0 0 10px ${avg >= 750 ? 'rgba(76, 175, 80, 0.4)' : avg >= 650 ? 'rgba(255, 193, 7, 0.4)' : 'rgba(244, 67, 54, 0.4)'};">
@@ -5063,7 +5063,7 @@
                     <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #ffffff;">
                         <div style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(123, 97, 255, 0.1) 50%, rgba(102, 126, 234, 0.1) 100%); padding: 35px; border-radius: 20px; margin-bottom: 30px; border: 1px solid rgba(0, 212, 255, 0.3); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0, 212, 255, 0.15);">
                             <h1 style="background: linear-gradient(135deg, #00d4ff, #7b61ff, #667eea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; font-size: 2.5em; font-weight: 700; text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);">📈 조직 성과 분석 리포트</h1>
-                            <p style="margin: 15px 0 0 0; font-size: 1.1em; color: rgba(255, 255, 255, 0.9);"><strong style="color: #00d4ff;">작성 부서:</strong> OK홀딩스 인사부</p>
+                            <p style="margin: 15px 0 0 0; font-size: 1.1em; color: #495057;"><strong style="color: #00d4ff;">작성 부서:</strong> OK홀딩스 인사부</p>
                             <p style="margin: 8px 0 0 0; font-size: 1em; color: rgba(255, 255, 255, 0.8);">작성일: ${new Date().toLocaleDateString('ko-KR')}</p>
                         </div>
 
@@ -5098,7 +5098,7 @@
                                         return `
                                         <tr style="background: rgba(255, 255, 255, 0.03); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(255, 255, 255, 0.08)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.03)';">
                                             <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); font-weight: 600; color: #ffffff;">${grade}등급</td>
-                                            <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); text-align: center; color: rgba(255, 255, 255, 0.9); font-weight: 600;">${count}명</td>
+                                            <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); text-align: center; color: #495057; font-weight: 600;">${count}명</td>
                                             <td style="padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.1); text-align: center; color: #00d4ff; font-weight: 600; text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);">${percentage}%</td>
                                         </tr>
                                         `;
