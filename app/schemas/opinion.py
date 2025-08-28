@@ -14,6 +14,12 @@ class OpinionUploadRequest(BaseModel):
         ..., 
         description="연도별 평가의견 (예: {'2023': '...', '2022': null})"
     )
+    temperature: Optional[int] = Field(
+        default=3,
+        ge=1,
+        le=5,
+        description="AI 분석 관점 (1:매우긍정적, 2:긍정적, 3:중립적, 4:부정적, 5:매우부정적)"
+    )
     
     @validator('opinions')
     def validate_years(cls, v):

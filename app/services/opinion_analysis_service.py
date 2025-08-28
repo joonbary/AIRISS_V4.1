@@ -80,11 +80,12 @@ class OpinionAnalysisService:
             merged_text = merge_yearly_opinions(cleaned_opinions)
             years_analyzed = list(cleaned_opinions.keys())
             
-            # 3. LLM 분석 실행
+            # 3. LLM 분석 실행 (temperature 파라미터 전달)
             llm_result = await self.opinion_processor.analyze_text(
                 text=merged_text,
                 uid=request.uid,
-                years=years_analyzed
+                years=years_analyzed,
+                temperature=getattr(request, 'temperature', 3)  # 기본값 3 (중립)
             )
             
             # 4. 텍스트 점수 계산

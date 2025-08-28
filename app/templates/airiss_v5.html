@@ -1624,6 +1624,50 @@
                     </div>
                 </div>
                 
+                <!-- AI 분석 온도 조절 섹션 -->
+                <div style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #2c3e50;">🌡️ AI 분석 관점 설정</h3>
+                    <p style="margin: 0 0 15px 0; font-size: 13px; color: #6c757d;">
+                        평가의견을 분석할 때 AI의 관점을 조절합니다. 칭찬 중심부터 개선 중심까지 선택할 수 있습니다.
+                    </p>
+                    
+                    <div style="position: relative; padding: 10px 0;">
+                        <!-- 슬라이더 -->
+                        <input type="range" 
+                               id="temperature-slider" 
+                               min="1" 
+                               max="5" 
+                               value="3" 
+                               step="1"
+                               style="width: 100%; height: 6px; background: linear-gradient(to right, #28a745 0%, #ffc107 50%, #dc3545 100%); border-radius: 3px; outline: none; -webkit-appearance: none;"
+                               oninput="AIRISS.updateTemperatureDisplay(this.value)">
+                        
+                        <!-- 레이블 표시 -->
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px;">
+                            <span style="color: #28a745; font-weight: 600;">매우 긍정적</span>
+                            <span style="color: #17a2b8;">긍정적</span>
+                            <span style="color: #6c757d; font-weight: 600;">중립적</span>
+                            <span style="color: #fd7e14;">부정적</span>
+                            <span style="color: #dc3545; font-weight: 600;">매우 부정적</span>
+                        </div>
+                        
+                        <!-- 현재 선택값 표시 -->
+                        <div id="temperature-display" style="
+                            margin-top: 15px; 
+                            padding: 12px; 
+                            background: white; 
+                            border: 2px solid #6c757d; 
+                            border-radius: 8px; 
+                            text-align: center;
+                        ">
+                            <div style="font-size: 14px; color: #2c3e50; font-weight: 600;">현재 설정: <span id="temp-value" style="color: #6c757d;">중립적 분석</span></div>
+                            <div style="font-size: 12px; color: #6c757d; margin-top: 5px;" id="temp-description">
+                                균형 잡힌 시각으로 장단점을 공정하게 분석합니다
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div style="margin-top: 20px;">
                     <button class="btn btn-primary" onclick="AIRISS.analyzeOpinion()" id="analyze-opinion-btn">
                         🤖 AI 분석 시작
@@ -3890,6 +3934,52 @@
                 console.log('선택된 직원:', this.selectedEmployee);
             },
             
+            // 온도 디스플레이 업데이트
+            updateTemperatureDisplay(value) {
+                const tempValue = document.getElementById('temp-value');
+                const tempDescription = document.getElementById('temp-description');
+                const tempDisplay = document.getElementById('temperature-display');
+                
+                const temperatureSettings = {
+                    '1': {
+                        label: '매우 긍정적 분석',
+                        description: '강점과 장점을 중심으로 칭찬과 인정의 관점에서 분석합니다',
+                        color: '#28a745',
+                        borderColor: '#28a745'
+                    },
+                    '2': {
+                        label: '긍정적 분석',
+                        description: '긍정적인 측면을 주로 보면서 발전 가능성을 강조합니다',
+                        color: '#17a2b8',
+                        borderColor: '#17a2b8'
+                    },
+                    '3': {
+                        label: '중립적 분석',
+                        description: '균형 잡힌 시각으로 장단점을 공정하게 분석합니다',
+                        color: '#6c757d',
+                        borderColor: '#6c757d'
+                    },
+                    '4': {
+                        label: '부정적 분석',
+                        description: '개선이 필요한 부분을 중심으로 발전 과제를 도출합니다',
+                        color: '#fd7e14',
+                        borderColor: '#fd7e14'
+                    },
+                    '5': {
+                        label: '매우 부정적 분석',
+                        description: '문제점과 리스크를 집중적으로 파악하여 개선 방안을 제시합니다',
+                        color: '#dc3545',
+                        borderColor: '#dc3545'
+                    }
+                };
+                
+                const setting = temperatureSettings[value];
+                tempValue.textContent = setting.label;
+                tempValue.style.color = setting.color;
+                tempDescription.textContent = setting.description;
+                tempDisplay.style.borderColor = setting.borderColor;
+            },
+            
             // 의견 분석 (개선된 버전)
             async analyzeOpinion() {
                 // 직원 선택 검증
@@ -3933,11 +4023,15 @@
                         </div>
                     `;
                     
+                    // 온도 값 가져오기
+                    const temperatureValue = document.getElementById('temperature-slider').value;
+                    
                     const requestBody = {
                         uid: this.selectedEmployee.uid,
                         opinions: {
                             "2024": text.trim()
-                        }
+                        },
+                        temperature: parseInt(temperatureValue) // 1-5의 온도 값 추가
                     };
                     
                     console.log('🚀 의견 분석 요청:', requestBody);

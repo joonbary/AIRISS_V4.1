@@ -40,13 +40,22 @@ logger = logging.getLogger(__name__)
 class OpinionProcessor:
     """평가의견 LLM 프로세서"""
     
+    # 온도별 분석 관점 설정
+    TEMPERATURE_CONTEXTS = {
+        1: "매우 긍정적인 관점에서 강점과 장점, 발전 가능성을 최대한 찾아내어",
+        2: "긍정적인 관점에서 좋은 점을 중심으로 건설적인 피드백을 제공하며",
+        3: "중립적이고 균형 잡힌 관점에서 객관적으로",
+        4: "비판적인 관점에서 개선이 필요한 부분을 중점적으로 파악하여",
+        5: "매우 비판적인 관점에서 문제점과 리스크를 집중적으로 분석하여"
+    }
+    
     # 프롬프트 템플릿
     SUMMARY_PROMPT = """
     다음은 직원 {uid}의 {years}년도 평가의견입니다:
     
     {text}
     
-    위 평가의견을 종합하여 다음 작업을 수행해주세요:
+    {context_instruction} 위 평가의견을 종합하여 다음 작업을 수행해주세요:
     
     1. 전체 평가의견을 1-2문장으로 요약
     2. 주요 강점 3-5개를 키워드로 추출
@@ -118,7 +127,8 @@ class OpinionProcessor:
         self, 
         text: str, 
         uid: str,
-        years: List[str]
+        years: List[str],
+        temperature: int = 3
     ) -> Dict[str, Any]:
         """
         평가의견 텍스트 분석
@@ -138,12 +148,16 @@ class OpinionProcessor:
             return self._get_mock_analysis(text, uid, years)
         
         try:
+            # 온도에 따른 분석 관점 설정
+            context_instruction = self.TEMPERATURE_CONTEXTS.get(temperature, self.TEMPERATURE_CONTEXTS[3])
+            
             # 1. 요약 및 키워드 추출
             summary_result = await self._call_llm(
                 self.SUMMARY_PROMPT.format(
                     uid=uid,
                     years=", ".join(years),
-                    text=text
+                    text=text,
+                    context_instruction=context_instruction
                 )
             )
             
