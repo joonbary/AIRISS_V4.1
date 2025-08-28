@@ -4403,11 +4403,18 @@
             
             // 등급 분포 계산
             calculateGradeDistribution(employees) {
-                const distribution = { 'S': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'D': 0 };
+                const distribution = { 'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0 };
                 employees.forEach(emp => {
-                    const grade = emp.grade || emp.OK등급 || emp.ai_grade || 'C';
-                    if (distribution.hasOwnProperty(grade)) {
+                    let grade = emp.grade || emp.OK등급 || emp.ai_grade || 'C';
+                    // A+, B+ 같은 등급을 A, B로 변환
+                    if (grade && (grade.includes('+') || grade.includes('-'))) {
+                        grade = grade[0];
+                    }
+                    // S, A, B, C, D만 허용
+                    if (['S', 'A', 'B', 'C', 'D'].includes(grade)) {
                         distribution[grade]++;
+                    } else {
+                        distribution['C']++; // 기본값
                     }
                 });
                 return distribution;
@@ -4865,7 +4872,7 @@
             
             calculateGradeDistribution(employees) {
                 const distribution = {
-                    'S': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'D': 0
+                    'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0
                 };
                 
                 if (!employees || employees.length === 0) return distribution;
@@ -4875,12 +4882,18 @@
                     const grade = emp.grade || emp.final_grade || emp.ai_grade || 'C';
                     
                     // 대문자로 변환 (소문자로 저장된 경우 대비)
-                    const normalizedGrade = grade.toUpperCase();
+                    let normalizedGrade = grade.toString().toUpperCase();
                     
-                    if (distribution.hasOwnProperty(normalizedGrade)) {
+                    // A+, B+ 같은 등급을 A, B로 변환
+                    if (normalizedGrade.includes('+') || normalizedGrade.includes('-')) {
+                        normalizedGrade = normalizedGrade[0];
+                    }
+                    
+                    // S, A, B, C, D만 허용
+                    if (['S', 'A', 'B', 'C', 'D'].includes(normalizedGrade)) {
                         distribution[normalizedGrade]++;
                     } else {
-                        // 등급이 없으면 C로 분류
+                        // 등급이 없거나 인식할 수 없으면 C로 분류
                         distribution['C']++;
                     }
                 });
@@ -4967,8 +4980,13 @@
                             gradeDistribution[grade.grade] = grade.count;
                         }
                     });
+                } else if (dashboardData && dashboardData.employees && dashboardData.employees.length > 0) {
+                    // dashboardData에 employees가 있으면 그것으로 계산
+                    console.log('  - grade_distribution 없음, dashboardData.employees에서 계산');
+                    const calculated = this.calculateGradeDistribution(dashboardData.employees);
+                    Object.assign(gradeDistribution, calculated);
                 } else if (employees && employees.length > 0) {
-                    // 폴백: 직원 데이터에서 계산
+                    // 폴백: 외부 직원 데이터에서 계산
                     console.log('  - grade_distribution 없음, 직원 데이터에서 계산');
                     const calculated = this.calculateGradeDistribution(employees);
                     Object.assign(gradeDistribution, calculated);
