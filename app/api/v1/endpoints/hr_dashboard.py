@@ -230,6 +230,16 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                     'percentage': round(grade_distribution[grade] / len(employees) * 100, 1)
                 })
         
+        # 프론트엔드에서 등급 분포 계산을 위해 직원 데이터 포함 (필수 필드만)
+        employees_for_frontend = []
+        for emp in employees[:1000]:  # 최대 1000명만
+            employees_for_frontend.append({
+                'uid': emp.get('uid'),
+                'ai_score': emp.get('ai_score', 70),
+                'grade': emp.get('grade', 'C'),
+                'employee_name': emp.get('name', '익명')
+            })
+        
         return {
             'total_employees': len(employees),
             'promotion_candidates': {
@@ -255,7 +265,8 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 '인사부': {'count': 20, 'avg_score': 76.8},
                 '재무부': {'count': 20, 'avg_score': 79.2},
                 '마케팅부': {'count': 20, 'avg_score': 77.4}
-            }
+            },
+            'employees': employees_for_frontend  # 프론트엔드용 직원 데이터
         }
     except Exception as e:
         logger.error(f"HR Dashboard stats error: {e}")
