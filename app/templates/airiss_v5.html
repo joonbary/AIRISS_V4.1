@@ -4962,9 +4962,14 @@
             analyzeDepartments(employees) {
                 const deptData = {};
                 
-                if (!employees || employees.length === 0) return deptData;
+                if (!employees || employees.length === 0) {
+                    console.log('🏢 analyzeDepartments: 직원 데이터가 없습니다');
+                    return deptData;
+                }
                 
-                employees.forEach(emp => {
+                console.log('🏢 analyzeDepartments: 분석 시작 - 직원 수:', employees.length);
+                
+                employees.forEach((emp, idx) => {
                     const dept = emp.department || '부서 미상';
                     
                     if (!deptData[dept]) {
@@ -4979,20 +4984,137 @@
                     }
                     
                     deptData[dept].count++;
-                    deptData[dept].totalScore += (emp.ai_score || emp.overall_score || 0);
+                    const score = emp.ai_score || emp.overall_score || 0;
+                    deptData[dept].totalScore += score;
                     
-                    const grade = emp.grade || emp.final_grade || 'C';
+                    const grade = emp.grade || emp.final_grade || emp.ai_grade || 'C';
                     if (deptData[dept].grades.hasOwnProperty(grade)) {
                         deptData[dept].grades[grade]++;
+                    } else {
+                        deptData[dept].grades['C']++; // 기본값
+                    }
+                    
+                    // 처음 5개 직원만 디버깅 로그
+                    if (idx < 5) {
+                        console.log(`  직원 ${idx}: dept=${dept}, score=${score}, grade=${grade}`);
                     }
                 });
                 
                 // 평균 점수 계산
                 Object.keys(deptData).forEach(dept => {
-                    deptData[dept].avgScore = Math.round(deptData[dept].totalScore / deptData[dept].count);
+                    if (deptData[dept].count > 0) {
+                        deptData[dept].avgScore = Math.round(deptData[dept].totalScore / deptData[dept].count);
+                    }
                 });
                 
+                console.log('🏢 analyzeDepartments: 결과:', deptData);
                 return deptData;
+            },
+            
+            // 부서별 성과 현황 섹션 생성
+            generateDepartmentPerformanceSection(deptAnalysis) {
+                console.log('🏢 generateDepartmentPerformanceSection 호출:', deptAnalysis);
+                
+                if (!deptAnalysis || Object.keys(deptAnalysis).length === 0) {
+                    console.log('🏢 부서 데이터가 없어 기본 메시지 표시');
+                    return `
+                        <div style="background: rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 15px; margin: 25px 0; border: 1px solid rgba(255, 255, 255, 0.1);">
+                            <div style="text-align: center; color: rgba(255, 255, 255, 0.7); padding: 40px;">
+                                <h3 style="color: #00d4ff; margin-bottom: 15px;">부서별 성과 현황</h3>
+                                <p>부서별 데이터를 로드 중입니다...</p>
+                                <p style="font-size: 14px; opacity: 0.8;">데이터가 표시되지 않으면 새로고침 후 다시 시도해 주세요.</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                let rows = '';
+                
+                // 평균 점수 기준으로 정렬
+                const sortedDepts = Object.entries(deptAnalysis).sort((a, b) => {
+                    const avgA = a[1].avgScore || a[1].avg_score || 0;
+                    const avgB = b[1].avgScore || b[1].avg_score || 0;
+                    return avgB - avgA;
+                });
+                
+                sortedDepts.forEach(([dept, data], index) => {
+                    // 다양한 데이터 구조 처리
+                    const count = data.count || 0;
+                    const avgScore = data.avgScore || data.avg_score || 0;
+                    
+                    // 핵심 인재 수 계산
+                    let topTalents = 0;
+                    if (data.grades) {
+                        topTalents = (data.grades['S'] || 0) + (data.grades['A+'] || 0) + (data.grades['A'] || 0);
+                    }
+                    
+                    // 성과 등급 계산
+                    const performance = avgScore >= 800 ? { grade: '우수', color: '#69f0ae' } :
+                                      avgScore >= 700 ? { grade: '양호', color: '#ffd54f' } :
+                                      avgScore >= 600 ? { grade: '보통', color: '#ff9800' } :
+                                      { grade: '개선필요', color: '#ff5252' };
+                    
+                    // 순위 표시
+                    const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                    
+                    rows += `
+                        <tr style="background: rgba(255, 255, 255, ${index % 2 === 0 ? '0.03' : '0.05'}); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(0, 212, 255, 0.08)'" onmouseout="this.style.background='rgba(255, 255, 255, ${index % 2 === 0 ? '0.03' : '0.05'})'">
+                            <td style="padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 500;">
+                                ${rankIcon} ${dept}
+                            </td>
+                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 600; font-size: 1.1em;">
+                                ${count}명
+                            </td>
+                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #00d4ff; font-weight: 700; font-size: 1.1em; text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);">
+                                ${avgScore}점
+                            </td>
+                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 600; text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);">
+                                ${topTalents}명
+                            </td>
+                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: ${performance.color}; font-weight: 600; text-shadow: 0 0 10px ${performance.color}66;">
+                                ${performance.grade}
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                if (rows === '') {
+                    rows = `
+                        <tr>
+                            <td colspan="5" style="padding: 30px; text-align: center; color: rgba(255, 255, 255, 0.7); font-style: italic;">
+                                부서별 성과 데이터를 준비 중입니다...
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                return `
+                    <div style="background: rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 15px; margin: 25px 0; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);">
+                        <table style="width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; background: rgba(255, 255, 255, 0.02);">
+                            <thead>
+                                <tr style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 153, 255, 0.15));">
+                                    <th style="padding: 16px; text-align: left; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">부서명</th>
+                                    <th style="padding: 16px; text-align: center; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">인원</th>
+                                    <th style="padding: 16px; text-align: center; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">평균점수</th>
+                                    <th style="padding: 16px; text-align: center; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">핵심인재</th>
+                                    <th style="padding: 16px; text-align: center; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">평가</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+                        
+                        <div style="margin-top: 20px; padding: 20px; background: rgba(255, 255, 255, 0.03); border-radius: 10px; border-left: 4px solid #00d4ff;">
+                            <h4 style="color: #00d4ff; margin-top: 0; margin-bottom: 15px; font-size: 16px;">📊 부서별 분석 요약</h4>
+                            <ul style="color: rgba(255, 255, 255, 0.8); line-height: 1.8; margin: 0; padding-left: 20px;">
+                                <li>부서별 성과 편차를 지속적으로 모니터링하여 균형 잡힌 성과 관리 추진</li>
+                                <li>상위 성과 부서의 모범 사례를 전사에 확산하여 조직 역량 향상</li>
+                                <li>하위 성과 부서의 집중 관리 및 개선 프로그램 운영</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
             },
             
             // 월간 리포트 생성
@@ -5058,9 +5180,21 @@
                     gradeDistribution['D'] = 0;
                 }
                 
-                // 부서 분석
-                const deptAnalysis = dashboardData.department_stats || {};
+                // 부서 분석 - dashboardData.department_stats 사용하거나 직원 데이터에서 계산
+                let deptAnalysis = {};
+                if (dashboardData.department_stats && Object.keys(dashboardData.department_stats).length > 0) {
+                    deptAnalysis = dashboardData.department_stats;
+                } else if (employees && employees.length > 0) {
+                    deptAnalysis = this.analyzeDepartments(employees);
+                } else if (dashboardData.employees && dashboardData.employees.length > 0) {
+                    deptAnalysis = this.analyzeDepartments(dashboardData.employees);
+                }
+                
                 const totalDepts = Object.keys(deptAnalysis).length || 5;
+                
+                console.log('🏢 부서 분석 데이터:', deptAnalysis);
+                console.log('  - 부서 수:', totalDepts);
+                console.log('  - dashboardData.department_stats:', dashboardData.department_stats);
                 
                 // 최우수 인재 (Top Talents)
                 const topTalents = dashboardData.top_talents ? dashboardData.top_talents.count : 
@@ -5112,61 +5246,109 @@
                         </div>
                         
                         <h2 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px; font-weight: 700; margin-top: 40px; margin-bottom: 25px; text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">1. 인력 현황 분석</h2>
-                        <table style="width: 100%; border-collapse: separate; border-spacing: 0; margin: 25px 0; border-radius: 15px; overflow: hidden; background: rgba(255, 255, 255, 0.05); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);">
-                            <thead>
-                                <tr style="background: rgba(0, 212, 255, 0.15);">
-                                    <th style="padding: 18px; text-align: left; border-bottom: 2px solid rgba(0, 212, 255, 0.3); color: #00d4ff; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 14px;">구분</th>
-                                    <th style="padding: 18px; text-align: center; border-bottom: 2px solid rgba(0, 212, 255, 0.3); color: #00d4ff; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 14px;">인원수</th>
-                                    <th style="padding: 18px; text-align: center; border-bottom: 2px solid rgba(0, 212, 255, 0.3); color: #00d4ff; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 14px;">비율</th>
-                                    <th style="padding: 18px; text-align: left; border-bottom: 2px solid rgba(0, 212, 255, 0.3); color: #00d4ff; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 14px;">비고</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr style="background: rgba(255, 255, 255, 0.05); transition: all 0.3s ease;">
-                                    <td style="padding: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9); font-weight: 500; font-size: 15px;">전체 직원</td>
-                                    <td style="padding: 18px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 700; font-size: 18px;">${totalEmployees}명</td>
-                                    <td style="padding: 18px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #00d4ff; font-weight: 600; font-size: 16px;">100%</td>
-                                    <td style="padding: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.7); font-size: 14px;">분석 대상 전체</td>
-                                </tr>
-                                <tr style="background: rgba(255, 255, 255, 0.05); transition: all 0.3s ease;">
-                                    <td style="padding: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9); font-weight: 500; font-size: 15px;">핵심 인재 (S)</td>
-                                    <td style="padding: 18px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 700; font-size: 18px;">${(gradeDistribution['S'] || 0)}명</td>
-                                    <td style="padding: 18px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 600; font-size: 16px;">${totalEmployees > 0 ? Math.round((gradeDistribution['S'] || 0) / totalEmployees * 100) : 0}%</td>
-                                    <td style="padding: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: ${totalEmployees > 0 && (gradeDistribution['S'] || 0) / totalEmployees > 0.02 ? '#69f0ae' : '#ff5252'}; font-weight: 500; font-size: 14px;">
-                                        ${totalEmployees > 0 && (gradeDistribution['S'] || 0) / totalEmployees > 0.02 ? '우수' : '육성 필요'}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">우수 인재 (A)</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${(gradeDistribution['A'] || 0)}명</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${totalEmployees > 0 ? Math.round((gradeDistribution['A'] || 0) / totalEmployees * 100) : 0}%</td>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">핵심 관리 대상</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">일반 성과자 (B)</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${(gradeDistribution['B'] || 0)}명</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${totalEmployees > 0 ? Math.round((gradeDistribution['B'] || 0) / totalEmployees * 100) : 0}%</td>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">승진 후보군</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">기초 수준 (C)</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${(gradeDistribution['C'] || 0)}명</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${totalEmployees > 0 ? Math.round((gradeDistribution['C'] || 0) / totalEmployees * 100) : 0}%</td>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">역량 개발 대상</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">관리 필요 (D)</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${gradeDistribution['D'] || 0}명</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${totalEmployees > 0 ? Math.round((gradeDistribution['D'] || 0) / totalEmployees * 100) : 0}%</td>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6; color: ${totalEmployees > 0 && (gradeDistribution['D'] || 0) / totalEmployees < 0.05 ? '#28a745' : '#dc3545'};">
-                                        ${totalEmployees > 0 && (gradeDistribution['D'] || 0) / totalEmployees < 0.05 ? '양호' : '집중 관리 필요'}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
                         
-                        <h2 style="color: #00d9ff; margin-top: 30px;">2. 부서별 성과 분석</h2>
-                        ${this.generateDepartmentTable(deptAnalysis)}
+                        <div style="display: flex; gap: 40px; align-items: flex-start; margin: 25px 0;">
+                            <!-- 테이블 -->
+                            <div style="flex: 0 0 55%;">
+                                <table style="width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 15px; overflow: hidden; background: rgba(255, 255, 255, 0.05); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);">
+                                    <thead>
+                                        <tr style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 153, 255, 0.15));">
+                                            <th style="padding: 16px; text-align: left; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">구분</th>
+                                            <th style="padding: 16px; text-align: center; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">인원수</th>
+                                            <th style="padding: 16px; text-align: center; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">비율</th>
+                                            <th style="padding: 16px; text-align: left; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">비고</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr style="background: rgba(255, 255, 255, 0.03);">
+                                            <td style="padding: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9); font-weight: 600;">전체 직원</td>
+                                            <td style="padding: 14px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 700;">${totalEmployees}명</td>
+                                            <td style="padding: 14px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #00d4ff; font-weight: 600;">100%</td>
+                                            <td style="padding: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.7); font-size: 13px;">분석 대상 전체</td>
+                                        </tr>
+                                        <tr style="background: rgba(255, 215, 0, 0.08);">
+                                            <td style="padding: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #FFD700; font-weight: 600;">핵심 인재 (S)</td>
+                                            <td style="padding: 14px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #FFD700; font-weight: 700;">${(gradeDistribution['S'] || 0)}명</td>
+                                            <td style="padding: 14px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #FFD700; font-weight: 600;">${totalEmployees > 0 ? Math.round((gradeDistribution['S'] || 0) / totalEmployees * 100) : 0}%</td>
+                                            <td style="padding: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.7); font-size: 13px;">최상위 성과자</td>
+                                        </tr>
+                                        <tr style="background: rgba(76, 175, 80, 0.08);">
+                                            <td style="padding: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 600;">우수 인재 (A)</td>
+                                            <td style="padding: 14px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 700;">${(gradeDistribution['A'] || 0)}명</td>
+                                            <td style="padding: 14px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 600;">${totalEmployees > 0 ? Math.round((gradeDistribution['A'] || 0) / totalEmployees * 100) : 0}%</td>
+                                            <td style="padding: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.7); font-size: 13px;">핵심 관리 대상</td>
+                                        </tr>
+                                        <tr style="background: rgba(33, 150, 243, 0.08);">
+                                            <td style="padding: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #2196F3; font-weight: 600;">일반 성과자 (B)</td>
+                                            <td style="padding: 14px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #2196F3; font-weight: 700;">${(gradeDistribution['B'] || 0)}명</td>
+                                            <td style="padding: 14px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #2196F3; font-weight: 600;">${totalEmployees > 0 ? Math.round((gradeDistribution['B'] || 0) / totalEmployees * 100) : 0}%</td>
+                                            <td style="padding: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.7); font-size: 13px;">승진 후보군</td>
+                                        </tr>
+                                        <tr style="background: rgba(255, 152, 0, 0.08);">
+                                            <td style="padding: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #FF9800; font-weight: 600;">기초 수준 (C)</td>
+                                            <td style="padding: 14px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #FF9800; font-weight: 700;">${(gradeDistribution['C'] || 0)}명</td>
+                                            <td style="padding: 14px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #FF9800; font-weight: 600;">${totalEmployees > 0 ? Math.round((gradeDistribution['C'] || 0) / totalEmployees * 100) : 0}%</td>
+                                            <td style="padding: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.7); font-size: 13px;">역량 개발 대상</td>
+                                        </tr>
+                                        <tr style="background: rgba(244, 67, 54, 0.08);">
+                                            <td style="padding: 14px; color: #ff5252; font-weight: 600;">관리 필요 (D)</td>
+                                            <td style="padding: 14px; text-align: center; color: #ff5252; font-weight: 700;">${gradeDistribution['D'] || 0}명</td>
+                                            <td style="padding: 14px; text-align: center; color: #ff5252; font-weight: 600;">${totalEmployees > 0 ? Math.round((gradeDistribution['D'] || 0) / totalEmployees * 100) : 0}%</td>
+                                            <td style="padding: 14px; color: rgba(255, 255, 255, 0.7); font-size: 13px;">집중 관리 필요</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- 막대그래프 -->
+                            <div style="flex: 1; background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 25px; box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);">
+                                <h4 style="color: #00d4ff; margin-top: 0; margin-bottom: 20px; font-size: 16px;">등급별 분포도</h4>
+                                <div style="position: relative; height: 280px;">
+                                    ${['S', 'A', 'B', 'C', 'D'].map((grade, idx) => {
+                                        const count = gradeDistribution[grade] || 0;
+                                        const percent = totalEmployees > 0 ? (count / totalEmployees * 100) : 0;
+                                        const maxPercent = Math.max(...Object.values(gradeDistribution).map(v => (v || 0) / totalEmployees * 100));
+                                        const barWidth = maxPercent > 0 ? (percent / maxPercent * 100) : 0;
+                                        const colors = {
+                                            'S': '#FFD700',
+                                            'A': '#69f0ae', 
+                                            'B': '#2196F3',
+                                            'C': '#FF9800',
+                                            'D': '#ff5252'
+                                        };
+                                        
+                                        return `
+                                            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                                <div style="width: 30px; font-weight: 700; color: ${colors[grade]};">${grade}</div>
+                                                <div style="flex: 1; position: relative; height: 35px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; overflow: hidden; margin: 0 15px;">
+                                                    <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${barWidth}%; background: linear-gradient(90deg, ${colors[grade]}, ${colors[grade]}dd); border-radius: 8px; transition: width 0.5s ease; box-shadow: 0 2px 10px ${colors[grade]}66;">
+                                                        <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: white; font-weight: 600; font-size: 13px; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
+                                                            ${count}명
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div style="width: 50px; text-align: right; color: ${colors[grade]}; font-weight: 600;">
+                                                    ${percent.toFixed(1)}%
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                        <span style="color: rgba(255, 255, 255, 0.7); font-size: 13px;">상위 등급(S+A)</span>
+                                        <span style="color: #00d4ff; font-weight: 600;">${(gradeDistribution['S'] || 0) + (gradeDistribution['A'] || 0)}명 (${totalEmployees > 0 ? Math.round(((gradeDistribution['S'] || 0) + (gradeDistribution['A'] || 0)) / totalEmployees * 100) : 0}%)</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: rgba(255, 255, 255, 0.7); font-size: 13px;">관리 필요(D)</span>
+                                        <span style="color: ${(gradeDistribution['D'] || 0) > totalEmployees * 0.1 ? '#ff5252' : '#69f0ae'}; font-weight: 600;">${gradeDistribution['D'] || 0}명 (${totalEmployees > 0 ? Math.round((gradeDistribution['D'] || 0) / totalEmployees * 100) : 0}%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h2 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px; font-weight: 700; margin-top: 40px; margin-bottom: 25px; text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">2. 부서별 성과 분석</h2>
+                        ${this.generateDepartmentPerformanceSection(deptAnalysis)}
                         
                         <h2 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.8em; font-weight: 700; margin-top: 40px; margin-bottom: 25px; text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">3. 월간 주요 이슈 및 Action Items</h2>
                         <div style="background: linear-gradient(135deg, rgba(244, 67, 54, 0.15) 0%, rgba(244, 67, 54, 0.08) 100%); padding: 25px; border-left: 4px solid #ff5252; border-radius: 12px; margin: 25px 0; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(244, 67, 54, 0.1);">

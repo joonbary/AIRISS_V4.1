@@ -27,6 +27,45 @@ import base64
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+def calculate_department_stats(employees):
+    """실제 직원 데이터를 기반으로 부서별 통계 계산"""
+    department_stats = {}
+    
+    if not employees:
+        return department_stats
+    
+    # 부서별 데이터 집계
+    for emp in employees:
+        dept = emp.get('department', '부서 미상')
+        
+        if dept not in department_stats:
+            department_stats[dept] = {
+                'count': 0,
+                'total_score': 0,
+                'avg_score': 0,
+                'grades': {'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0}
+            }
+        
+        department_stats[dept]['count'] += 1
+        
+        # 점수 집계
+        score = emp.get('performance_score', 0) or emp.get('ai_score', 0) or 0
+        department_stats[dept]['total_score'] += score
+        
+        # 등급 집계
+        grade = emp.get('grade', 'C')
+        if grade in department_stats[dept]['grades']:
+            department_stats[dept]['grades'][grade] += 1
+        else:
+            department_stats[dept]['grades']['C'] += 1
+    
+    # 평균 점수 계산
+    for dept_name, dept_data in department_stats.items():
+        if dept_data['count'] > 0:
+            dept_data['avg_score'] = round(dept_data['total_score'] / dept_data['count'], 1)
+    
+    return department_stats
+
 def calculate_promotion_candidates(employees):
     """승진 후보자 예측 로직"""
     candidates = []
@@ -259,13 +298,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 'medium_risk_count': len([e for e in risk_employees if e['risk_level'] == 'medium'])
             },
             'grade_distribution': sorted_grades,
-            'department_stats': {
-                '영업부': {'count': 20, 'avg_score': 78.5},
-                '기술부': {'count': 20, 'avg_score': 82.3},
-                '인사부': {'count': 20, 'avg_score': 76.8},
-                '재무부': {'count': 20, 'avg_score': 79.2},
-                '마케팅부': {'count': 20, 'avg_score': 77.4}
-            },
+            'department_stats': calculate_department_stats(employees),
             'employees': employees_for_frontend  # 프론트엔드용 직원 데이터
         }
     except Exception as e:
