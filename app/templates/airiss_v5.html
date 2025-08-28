@@ -5161,66 +5161,6 @@
                                 <li>하위 성과 부서의 집중 관리 및 개선 프로그램 운영</li>
                             </ul>
                         </div>
-                        
-                        <script>
-                            // 부서별 페이지네이션 관리
-                            if (!window.AIRISSApp) window.AIRISSApp = {};
-                            
-                            window.AIRISSApp.changeDeptPage = function(tableId, action) {
-                                const table = document.getElementById(tableId);
-                                if (!table) return;
-                                
-                                const allDepts = JSON.parse(table.dataset.allDepartments);
-                                const itemsPerPage = parseInt(table.dataset.itemsPerPage);
-                                let currentPage = parseInt(table.dataset.currentPage);
-                                const totalPages = Math.ceil(allDepts.length / itemsPerPage);
-                                const paginationId = table.dataset.paginationId;
-                                
-                                // 페이지 변경
-                                if (action === 'prev' && currentPage > 1) {
-                                    currentPage--;
-                                } else if (action === 'next' && currentPage < totalPages) {
-                                    currentPage++;
-                                } else if (typeof action === 'number') {
-                                    currentPage = Math.max(1, Math.min(totalPages, action));
-                                }
-                                
-                                // 테이블 업데이트
-                                const startIdx = (currentPage - 1) * itemsPerPage;
-                                const endIdx = startIdx + itemsPerPage;
-                                const pageDepts = allDepts.slice(startIdx, endIdx);
-                                
-                                let rows = '';
-                                pageDepts.forEach(([dept, data], index) => {
-                                    const globalIndex = startIdx + index;
-                                    const count = data.count || 0;
-                                    const avgScore = data.avgScore || data.avg_score || 0;
-                                    let topTalents = 0;
-                                    if (data.grades) {
-                                        topTalents = (data.grades['S'] || 0) + (data.grades['A+'] || 0) + (data.grades['A'] || 0);
-                                    }
-                                    const performance = avgScore >= 800 ? { grade: '우수', color: '#69f0ae' } :
-                                                      avgScore >= 700 ? { grade: '양호', color: '#ffd54f' } :
-                                                      avgScore >= 600 ? { grade: '보통', color: '#ff9800' } :
-                                                      { grade: '개선필요', color: '#ff5252' };
-                                    const rankIcon = globalIndex === 0 ? '🥇' : globalIndex === 1 ? '🥈' : globalIndex === 2 ? '🥉' : '';
-                                    
-                                    const bgColor = index % 2 === 0 ? '0.03' : '0.05';
-                                    rows += '<tr style="background: rgba(255, 255, 255, ' + bgColor + ');">';
-                                    rows += '<td style="padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 500; text-align: center;">' + (globalIndex + 1) + '</td>';
-                                    rows += '<td style="padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 500;">' + rankIcon + ' ' + dept + '</td>';
-                                    rows += '<td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 600;">' + count + '명</td>';
-                                    rows += '<td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #00d4ff; font-weight: 700;">' + avgScore + '점</td>';
-                                    rows += '<td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 600;">' + topTalents + '명</td>';
-                                    rows += '<td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: ' + performance.color + '; font-weight: 600;">' + performance.grade + '</td>';
-                                    rows += '</tr>';
-                                });
-                                
-                                table.querySelector('tbody').innerHTML = rows;
-                                table.dataset.currentPage = currentPage;
-                                document.getElementById(paginationId).textContent = currentPage + ' / ' + totalPages;
-                            };
-                        </script>
                     </div>
                 `;
             },
@@ -6305,6 +6245,64 @@
                 console.error('상세 오류:', error.stack);
             }
         });
+        
+        // 부서별 성과 페이지네이션 함수
+        if (!window.AIRISSApp) window.AIRISSApp = {};
+        
+        window.AIRISSApp.changeDeptPage = function(tableId, action) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            
+            const allDepts = JSON.parse(table.dataset.allDepartments);
+            const itemsPerPage = parseInt(table.dataset.itemsPerPage);
+            let currentPage = parseInt(table.dataset.currentPage);
+            const totalPages = Math.ceil(allDepts.length / itemsPerPage);
+            const paginationId = table.dataset.paginationId;
+            
+            // 페이지 변경
+            if (action === 'prev' && currentPage > 1) {
+                currentPage--;
+            } else if (action === 'next' && currentPage < totalPages) {
+                currentPage++;
+            } else if (typeof action === 'number') {
+                currentPage = Math.max(1, Math.min(totalPages, action));
+            }
+            
+            // 테이블 업데이트
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const pageDepts = allDepts.slice(startIdx, endIdx);
+            
+            let rows = '';
+            pageDepts.forEach(([dept, data], index) => {
+                const globalIndex = startIdx + index;
+                const count = data.count || 0;
+                const avgScore = data.avgScore || data.avg_score || 0;
+                let topTalents = 0;
+                if (data.grades) {
+                    topTalents = (data.grades['S'] || 0) + (data.grades['A+'] || 0) + (data.grades['A'] || 0);
+                }
+                const performance = avgScore >= 800 ? { grade: '우수', color: '#69f0ae' } :
+                                  avgScore >= 700 ? { grade: '양호', color: '#ffd54f' } :
+                                  avgScore >= 600 ? { grade: '보통', color: '#ff9800' } :
+                                  { grade: '개선필요', color: '#ff5252' };
+                const rankIcon = globalIndex === 0 ? '🥇' : globalIndex === 1 ? '🥈' : globalIndex === 2 ? '🥉' : '';
+                
+                const bgColor = index % 2 === 0 ? '0.03' : '0.05';
+                rows += '<tr style="background: rgba(255, 255, 255, ' + bgColor + ');">';
+                rows += '<td style="padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 500; text-align: center;">' + (globalIndex + 1) + '</td>';
+                rows += '<td style="padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 500;">' + rankIcon + ' ' + dept + '</td>';
+                rows += '<td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 600;">' + count + '명</td>';
+                rows += '<td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #00d4ff; font-weight: 700;">' + avgScore + '점</td>';
+                rows += '<td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 600;">' + topTalents + '명</td>';
+                rows += '<td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: ' + performance.color + '; font-weight: 600;">' + performance.grade + '</td>';
+                rows += '</tr>';
+            });
+            
+            table.querySelector('tbody').innerHTML = rows;
+            table.dataset.currentPage = currentPage;
+            document.getElementById(paginationId).textContent = currentPage + ' / ' + totalPages;
+        };
     </script>
     
     <!-- Include AIRISS Main JavaScript -->
