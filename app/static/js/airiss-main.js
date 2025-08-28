@@ -165,8 +165,24 @@ function connectWebSocket() {
     
     // 동적으로 호스트와 포트 가져오기
     const wsHost = window.location.hostname || 'localhost';
-    const wsPort = window.location.port || '8002';
-    ws = new WebSocket(`ws://${wsHost}:${wsPort}/ws/${clientId}?channels=analysis,alerts`);
+    // Railway에서는 동일한 포트 사용, 로컬에서는 8002 포트
+    const isProduction = window.location.hostname.includes('railway.app');
+    const wsPort = isProduction ? (window.location.port || '') : '8002';
+    // HTTPS 페이지에서는 wss:// 프로토콜 사용
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    
+    // WebSocket URL 구성
+    const wsUrl = isProduction 
+        ? `${wsProtocol}//${wsHost}/ws/${clientId}?channels=analysis,alerts`
+        : `${wsProtocol}//${wsHost}:${wsPort}/ws/${clientId}?channels=analysis,alerts`;
+    
+    try {
+        ws = new WebSocket(wsUrl);
+    } catch (error) {
+        addDebugLog(`WebSocket 연결 실패: ${error.message}`, 'error');
+        // WebSocket 실패해도 앱은 계속 동작
+        return;
+    }
     
     ws.onopen = () => {
         addDebugLog('WebSocket 연결 성공', 'success');
@@ -185,7 +201,7 @@ function connectWebSocket() {
     };
     
     ws.onerror = (error) => {
-        addDebugLog(`WebSocket 오류: ${error}`, 'error');
+        addDebugLog(`WebSocket 오류 발생 (WebSocket 기능이 비활성화됨)`, 'warning');
     };
 }
 
