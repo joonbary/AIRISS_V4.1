@@ -40,22 +40,49 @@ logger = logging.getLogger(__name__)
 class OpinionProcessor:
     """평가의견 LLM 프로세서"""
     
-    # 온도별 분석 관점 설정
+    # 온도별 분석 관점 설정 (더 강력한 지시문)
     TEMPERATURE_CONTEXTS = {
-        1: "매우 긍정적인 관점에서 강점과 장점, 발전 가능성을 최대한 찾아내어",
-        2: "긍정적인 관점에서 좋은 점을 중심으로 건설적인 피드백을 제공하며",
-        3: "중립적이고 균형 잡힌 관점에서 객관적으로",
-        4: "비판적인 관점에서 개선이 필요한 부분을 중점적으로 파악하여",
-        5: "매우 비판적인 관점에서 문제점과 리스크를 집중적으로 분석하여"
+        1: """[분석 관점: 매우 긍정적]
+반드시 다음 관점을 유지하세요:
+- 모든 행동과 결과를 최대한 긍정적으로 해석
+- 강점과 잠재력을 적극적으로 발굴하고 강조
+- 약점은 최소화하거나 성장 기회로 재해석
+- 감성 점수를 높게(0.5~1.0) 평가""",
+        2: """[분석 관점: 긍정적]
+다음 관점으로 분석하세요:
+- 긍정적 측면을 우선적으로 부각
+- 개선점은 부드럽고 건설적으로 표현
+- 발전 가능성과 성장 잠재력 강조
+- 감성 점수를 긍정적으로(0.2~0.8) 평가""",
+        3: """[분석 관점: 중립적]
+균형잡힌 관점으로 분석하세요:
+- 장점과 단점을 공정하게 평가
+- 객관적 사실에 기반한 분석
+- 감정적 표현 자제하고 사실 중심
+- 감성 점수를 중립적으로(-0.3~0.3) 평가""",
+        4: """[분석 관점: 부정적]
+비판적 관점으로 분석하세요:
+- 개선이 필요한 영역을 중점적으로 파악
+- 문제점과 위험 요소를 명확히 지적
+- 강점보다 약점에 더 많은 비중
+- 감성 점수를 부정적으로(-0.8~-0.2) 평가""",
+        5: """[분석 관점: 매우 부정적]
+엄격한 비판적 관점으로 분석하세요:
+- 모든 문제점과 리스크를 철저히 지적
+- 부족한 점과 실패 요인을 집중 분석
+- 강점은 최소한으로만 언급
+- 감성 점수를 매우 낮게(-1.0~-0.5) 평가"""
     }
     
     # 프롬프트 템플릿
     SUMMARY_PROMPT = """
+    {context_instruction}
+    
     다음은 직원 {uid}의 {years}년도 평가의견입니다:
     
     {text}
     
-    {context_instruction} 위 평가의견을 종합하여 다음 작업을 수행해주세요:
+    위 평가의견을 분석할 때 반드시 지정된 관점을 유지하면서 다음 작업을 수행해주세요:
     
     1. 전체 평가의견을 1-2문장으로 요약
     2. 주요 강점 3-5개를 키워드로 추출
@@ -74,6 +101,8 @@ class OpinionProcessor:
     """
     
     DIMENSION_MAPPING_PROMPT = """
+    {context_instruction}
+    
     다음 평가의견을 8대 역량별로 점수화해주세요 (0-100점):
     
     평가의견: {text}
@@ -88,7 +117,7 @@ class OpinionProcessor:
     - execution: 실행력 (추진력, 완수능력, 결과지향)
     - growth: 성장 (학습능력, 자기개발, 적응력)
     
-    평가의견에서 언급되지 않은 역량은 50점(중간)으로 설정하세요.
+    {scoring_guide}
     
     JSON 형식으로 응답:
     {{
@@ -151,6 +180,16 @@ class OpinionProcessor:
             # 온도에 따른 분석 관점 설정
             context_instruction = self.TEMPERATURE_CONTEXTS.get(temperature, self.TEMPERATURE_CONTEXTS[3])
             
+            # 온도별 점수 가이드 설정
+            scoring_guides = {
+                1: "평가의견에서 언급된 역량은 80-100점, 언급되지 않은 역량은 70-80점으로 높게 평가하세요.",
+                2: "평가의견에서 긍정적으로 언급된 역량은 70-90점, 언급되지 않은 역량은 60-70점으로 평가하세요.",
+                3: "평가의견에서 언급되지 않은 역량은 50점(중간)으로 설정하세요.",
+                4: "평가의견에서 부정적으로 언급된 역량은 20-40점, 언급되지 않은 역량은 30-40점으로 낮게 평가하세요.",
+                5: "평가의견에서 언급된 역량은 10-30점, 언급되지 않은 역량은 20-30점으로 매우 낮게 평가하세요."
+            }
+            scoring_guide = scoring_guides.get(temperature, scoring_guides[3])
+            
             # 1. 요약 및 키워드 추출
             summary_result = await self._call_llm(
                 self.SUMMARY_PROMPT.format(
@@ -161,9 +200,13 @@ class OpinionProcessor:
                 )
             )
             
-            # 2. 역량 매핑
+            # 2. 역량 매핑 (온도 컨텍스트 포함)
             dimension_result = await self._call_llm(
-                self.DIMENSION_MAPPING_PROMPT.format(text=text)
+                self.DIMENSION_MAPPING_PROMPT.format(
+                    text=text,
+                    context_instruction=context_instruction,
+                    scoring_guide=scoring_guide
+                )
             )
             
             # 결과 병합
