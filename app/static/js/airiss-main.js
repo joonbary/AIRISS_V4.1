@@ -79,16 +79,27 @@ function toggleDebugInfo() {
 
 // 🎯 온보딩 시스템
 function showOnboarding() {
-    document.getElementById('onboardingOverlay').style.display = 'flex';
+    const overlay = document.getElementById('onboardingOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+    } else {
+        addDebugLog('온보딩 오버레이 없음 - 스킵', 'info');
+    }
 }
 
 function skipTour() {
-    document.getElementById('onboardingOverlay').style.display = 'none';
+    const overlay = document.getElementById('onboardingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
     addDebugLog('사용자가 온보딩 투어를 건너뛰었습니다', 'info');
 }
 
 function startTour() {
-    document.getElementById('onboardingOverlay').style.display = 'none';
+    const overlay = document.getElementById('onboardingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
     tourStep = 0;
     nextTourStep();
 }
@@ -1485,13 +1496,15 @@ document.addEventListener('DOMContentLoaded', function() {
         loadRecentJobs();
     }
     
-    // 온보딩 체크 (첫 방문자용)
-    const hasVisited = localStorage.getItem('airiss_visited');
-    if (!hasVisited) {
-        setTimeout(() => {
-            showOnboarding();
-            localStorage.setItem('airiss_visited', 'true');
-        }, 2000);
+    // 온보딩 체크 (첫 방문자용 - 요소가 있을 경우만)
+    if (document.getElementById('onboardingOverlay')) {
+        const hasVisited = localStorage.getItem('airiss_visited');
+        if (!hasVisited) {
+            setTimeout(() => {
+                showOnboarding();
+                localStorage.setItem('airiss_visited', 'true');
+            }, 2000);
+        }
     }
     
     addDebugLog('초기화 완료 - AIRISS v4.1 Enhanced 시스템 준비됨', 'success');
