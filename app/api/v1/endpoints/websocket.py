@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.websocket("/connect")
+@router.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     """WebSocket 연결 엔드포인트"""
     # 채널 리스트 설정 (기본적으로 분석 채널 구독)

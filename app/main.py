@@ -354,6 +354,13 @@ async def startup_event():
         logger.error(f"Failed to initialize database: {e}")
         # Continue anyway - don't crash the app
 
+# Favicon endpoint - prevent 404 errors
+@app.get("/favicon.ico")
+async def favicon():
+    """Return empty favicon to prevent 404 errors"""
+    from fastapi.responses import Response
+    return Response(status_code=204)  # No Content
+
 # Health check endpoint
 @app.get("/health")
 @app.get("/api/v1/health")
@@ -361,11 +368,8 @@ async def health_check():
     """Health check endpoint"""
     import subprocess
     
-    # Git 커밋 정보 가져오기
-    try:
-        git_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()[:8]
-    except:
-        git_hash = "unknown"
+    # Git 커밋 정보 가져오기 (Railway에서는 git이 없을 수 있음)
+    git_hash = "railway-prod"  # Railway 환경에서는 고정값 사용
     
     # DB 연결 상태 확인
     db_status = "connected"
@@ -1613,6 +1617,13 @@ try:
     logger.info("WebSocket router registered")
 except ImportError as e:
     logger.error(f"Failed to import websocket router: {e}")
+
+try:
+    from app.api.v1.endpoints.jobs import router as jobs_router
+    app.include_router(jobs_router, prefix="/analysis", tags=["Jobs"])
+    logger.info("Jobs router registered")
+except ImportError as e:
+    logger.error(f"Failed to import jobs router: {e}")
 
 try:
     from app.api.v1.endpoints.health import router as health_router
