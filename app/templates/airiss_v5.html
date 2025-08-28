@@ -4915,28 +4915,47 @@
                     else if (score >= 60) scoreDistribution['60-69']++;
                     else scoreDistribution['0-59']++;
                     
-                    // 다양한 필드명 처리
-                    const grade = emp.grade || emp.final_grade || emp.ai_grade || 'C';
+                    // 다양한 필드명 처리 (HR Dashboard API 기준 우선)
+                    let grade = emp.grade || emp.final_grade || emp.ai_grade || 'C';
                     
-                    // 대문자로 변환 (소문자로 저장된 경우 대비)
-                    let normalizedGrade = grade.toString().toUpperCase();
+                    // null/undefined 체크
+                    if (!grade || grade === 'null' || grade === 'undefined') {
+                        grade = 'C';
+                    }
+                    
+                    // 대문자로 변환
+                    let normalizedGrade = grade.toString().toUpperCase().trim();
                     
                     // A+, B+ 같은 등급을 A, B로 변환
                     if (normalizedGrade.includes('+') || normalizedGrade.includes('-')) {
                         normalizedGrade = normalizedGrade[0];
                     }
                     
-                    // 첫 10개 데이터만 디버깅 로그
-                    if (index < 10) {
-                        console.log(`직원 ${index}: score=${score}, grade=${grade} → normalized=${normalizedGrade}`);
+                    // 첫 5개 데이터만 디버깅 로그
+                    if (index < 5) {
+                        console.log(`  직원 ${index}: 원본 grade='${emp.grade}', 변환 grade='${normalizedGrade}', score=${score}`);
                     }
                     
-                    // S, A, B, C, D만 허용
+                    // S, A, B, C, D만 허용 (엄격한 검증)
                     if (['S', 'A', 'B', 'C', 'D'].includes(normalizedGrade)) {
                         distribution[normalizedGrade]++;
                     } else {
-                        // 등급이 없거나 인식할 수 없으면 C로 분류
-                        distribution['C']++;
+                        // 잘못된 등급이면 점수 기준으로 재분류
+                        if (score >= 90) {
+                            distribution['S']++;
+                        } else if (score >= 80) {
+                            distribution['A']++;
+                        } else if (score >= 70) {
+                            distribution['B']++;
+                        } else if (score >= 60) {
+                            distribution['C']++;
+                        } else {
+                            distribution['D']++;
+                        }
+                        
+                        if (index < 5) {
+                            console.log(`    ⚠️ 유효하지 않은 등급 '${normalizedGrade}' → 점수 기준으로 재분류`);
+                        }
                     }
                 });
                 
@@ -5024,7 +5043,14 @@
                     return avgB - avgA;
                 });
                 
-                sortedDepts.forEach(([dept, data], index) => {
+                const totalDepartments = sortedDepts.length;
+                const itemsPerPage = 10;
+                const totalPages = Math.ceil(totalDepartments / itemsPerPage);
+                
+                // 첫 페이지만 표시하고 나머지는 페이지네이션으로
+                const firstPageDepts = sortedDepts.slice(0, itemsPerPage);
+                
+                firstPageDepts.forEach(([dept, data], index) => {
                     // 다양한 데이터 구조 처리
                     const count = data.count || 0;
                     const avgScore = data.avgScore || data.avg_score || 0;
@@ -5046,6 +5072,9 @@
                     
                     rows += `
                         <tr style="background: rgba(255, 255, 255, ${index % 2 === 0 ? '0.03' : '0.05'}); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(0, 212, 255, 0.08)'" onmouseout="this.style.background='rgba(255, 255, 255, ${index % 2 === 0 ? '0.03' : '0.05'})'">
+                            <td style="padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 500; text-align: center;">
+                                ${index + 1}
+                            </td>
                             <td style="padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 500;">
                                 ${rankIcon} ${dept}
                             </td>
@@ -5075,11 +5104,41 @@
                     `;
                 }
                 
+                // 페이지네이션 컨트롤 생성
+                const paginationId = 'dept-pagination-' + Date.now();
+                const tableId = 'dept-table-' + Date.now();
+                
+                let paginationControls = '';
+                if (totalPages > 1) {
+                    paginationControls = `
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="color: rgba(255, 255, 255, 0.8); font-size: 14px;">
+                                총 ${totalDepartments}개 부서 중 1-${Math.min(itemsPerPage, totalDepartments)}개 표시
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="window.AIRISSApp.changeDeptPage('${tableId}', 1)" style="padding: 8px 12px; background: rgba(0, 212, 255, 0.2); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 6px; color: #00d4ff; cursor: pointer; font-size: 12px;" title="첫 페이지">‹‹</button>
+                                <button onclick="window.AIRISSApp.changeDeptPage('${tableId}', 'prev')" style="padding: 8px 12px; background: rgba(0, 212, 255, 0.2); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 6px; color: #00d4ff; cursor: pointer; font-size: 12px;" title="이전 페이지">‹</button>
+                                <span id="${paginationId}" style="padding: 8px 16px; color: #ffffff; font-weight: 600;">1 / ${totalPages}</span>
+                                <button onclick="window.AIRISSApp.changeDeptPage('${tableId}', 'next')" style="padding: 8px 12px; background: rgba(0, 212, 255, 0.2); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 6px; color: #00d4ff; cursor: pointer; font-size: 12px;" title="다음 페이지">›</button>
+                                <button onclick="window.AIRISSApp.changeDeptPage('${tableId}', ${totalPages})" style="padding: 8px 12px; background: rgba(0, 212, 255, 0.2); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 6px; color: #00d4ff; cursor: pointer; font-size: 12px;" title="마지막 페이지">››</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
                 return `
                     <div style="background: rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 15px; margin: 25px 0; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);">
-                        <table style="width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; background: rgba(255, 255, 255, 0.02);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 style="color: #00d4ff; margin: 0; font-size: 18px;">부서별 성과 현황</h3>
+                            <div style="color: rgba(255, 255, 255, 0.7); font-size: 14px;">
+                                총 ${totalDepartments}개 부서 
+                            </div>
+                        </div>
+                        
+                        <table id="${tableId}" style="width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; background: rgba(255, 255, 255, 0.02);" data-all-departments='${JSON.stringify(sortedDepts)}' data-items-per-page="${itemsPerPage}" data-current-page="1" data-pagination-id="${paginationId}">
                             <thead>
                                 <tr style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 153, 255, 0.15));">
+                                    <th style="padding: 16px; text-align: left; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">순위</th>
                                     <th style="padding: 16px; text-align: left; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">부서명</th>
                                     <th style="padding: 16px; text-align: center; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">인원</th>
                                     <th style="padding: 16px; text-align: center; color: #00d4ff; font-weight: 600; font-size: 14px; border-bottom: 2px solid rgba(0, 212, 255, 0.3);">평균점수</th>
@@ -5092,6 +5151,8 @@
                             </tbody>
                         </table>
                         
+                        ${paginationControls}
+                        
                         <div style="margin-top: 20px; padding: 20px; background: rgba(255, 255, 255, 0.03); border-radius: 10px; border-left: 4px solid #00d4ff;">
                             <h4 style="color: #00d4ff; margin-top: 0; margin-bottom: 15px; font-size: 16px;">📊 부서별 분석 요약</h4>
                             <ul style="color: rgba(255, 255, 255, 0.8); line-height: 1.8; margin: 0; padding-left: 20px;">
@@ -5100,6 +5161,71 @@
                                 <li>하위 성과 부서의 집중 관리 및 개선 프로그램 운영</li>
                             </ul>
                         </div>
+                        
+                        <script>
+                            // 부서별 페이지네이션 관리
+                            if (!window.AIRISSApp) window.AIRISSApp = {};
+                            
+                            window.AIRISSApp.changeDeptPage = function(tableId, action) {
+                                const table = document.getElementById(tableId);
+                                if (!table) return;
+                                
+                                const allDepts = JSON.parse(table.dataset.allDepartments);
+                                const itemsPerPage = parseInt(table.dataset.itemsPerPage);
+                                let currentPage = parseInt(table.dataset.currentPage);
+                                const totalPages = Math.ceil(allDepts.length / itemsPerPage);
+                                const paginationId = table.dataset.paginationId;
+                                
+                                // 페이지 변경
+                                if (action === 'prev' && currentPage > 1) {
+                                    currentPage--;
+                                } else if (action === 'next' && currentPage < totalPages) {
+                                    currentPage++;
+                                } else if (typeof action === 'number') {
+                                    currentPage = Math.max(1, Math.min(totalPages, action));
+                                }
+                                
+                                // 테이블 업데이트
+                                const startIdx = (currentPage - 1) * itemsPerPage;
+                                const endIdx = startIdx + itemsPerPage;
+                                const pageDepts = allDepts.slice(startIdx, endIdx);
+                                
+                                let rows = '';
+                                pageDepts.forEach(([dept, data], index) => {
+                                    const globalIndex = startIdx + index;
+                                    const count = data.count || 0;
+                                    const avgScore = data.avgScore || data.avg_score || 0;
+                                    let topTalents = 0;
+                                    if (data.grades) {
+                                        topTalents = (data.grades['S'] || 0) + (data.grades['A+'] || 0) + (data.grades['A'] || 0);
+                                    }
+                                    const performance = avgScore >= 800 ? { grade: '우수', color: '#69f0ae' } :
+                                                      avgScore >= 700 ? { grade: '양호', color: '#ffd54f' } :
+                                                      avgScore >= 600 ? { grade: '보통', color: '#ff9800' } :
+                                                      { grade: '개선필요', color: '#ff5252' };
+                                    const rankIcon = globalIndex === 0 ? '🥇' : globalIndex === 1 ? '🥈' : globalIndex === 2 ? '🥉' : '';
+                                    
+                                    rows += \`
+                                        <tr style="background: rgba(255, 255, 255, \${index % 2 === 0 ? '0.03' : '0.05'});">
+                                            <td style="padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 500; text-align: center;">
+                                                \${globalIndex + 1}
+                                            </td>
+                                            <td style="padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 500;">
+                                                \${rankIcon} \${dept}
+                                            </td>
+                                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-weight: 600;">\${count}명</td>
+                                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #00d4ff; font-weight: 700;">\${avgScore}점</td>
+                                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 600;">\${topTalents}명</td>
+                                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: \${performance.color}; font-weight: 600;">\${performance.grade}</td>
+                                        </tr>
+                                    \`;
+                                });
+                                
+                                table.querySelector('tbody').innerHTML = rows;
+                                table.dataset.currentPage = currentPage;
+                                document.getElementById(paginationId).textContent = \`\${currentPage} / \${totalPages}\`;
+                            };
+                        </script>
                     </div>
                 `;
             },
@@ -5131,8 +5257,8 @@
                     avgScore = 75; // 기본값
                 }
                 
-                // 등급 분포 (HR 대시보드 데이터 사용)
-                const gradeDistribution = {
+                // 등급 분포 (HR 대시보드 API 데이터 최우선 사용)
+                let gradeDistribution = {
                     'S': 0,
                     'A': 0,
                     'B': 0,
@@ -5140,32 +5266,52 @@
                     'D': 0
                 };
                 
+                let gradeDataSource = '';
+                
+                // 1순위: HR Dashboard API의 grade_distribution (가장 정확함)
                 if (dashboardData && dashboardData.grade_distribution && Array.isArray(dashboardData.grade_distribution)) {
-                    console.log('  - grade_distribution 배열 파싱 중:', dashboardData.grade_distribution);
+                    console.log('  - grade_distribution API 배열 사용:', dashboardData.grade_distribution);
                     dashboardData.grade_distribution.forEach(grade => {
                         if (grade && grade.grade && grade.count !== undefined) {
                             gradeDistribution[grade.grade] = grade.count;
                         }
                     });
-                } else if (dashboardData && dashboardData.employees && dashboardData.employees.length > 0) {
-                    // dashboardData에 employees가 있으면 그것으로 계산
-                    console.log('  - grade_distribution 없음, dashboardData.employees에서 계산');
-                    const calculated = this.calculateGradeDistribution(dashboardData.employees);
-                    Object.assign(gradeDistribution, calculated);
-                } else if (employees && employees.length > 0) {
-                    // 폴백: 외부 직원 데이터에서 계산
-                    console.log('  - grade_distribution 없음, 직원 데이터에서 계산');
-                    const calculated = this.calculateGradeDistribution(employees);
-                    Object.assign(gradeDistribution, calculated);
-                } else {
-                    // 실제 데이터가 없을 경우 모두 0으로 초기화
-                    console.log('  - 등급 분포 데이터를 가져올 수 없음');
-                    gradeDistribution['S'] = 0;
-                    gradeDistribution['A'] = 0;
-                    gradeDistribution['B'] = 0;
-                    gradeDistribution['C'] = 0;
-                    gradeDistribution['D'] = 0;
+                    gradeDataSource = 'API grade_distribution (정확한 데이터)';
                 }
+                
+                // 등급 분포 검증 - 너무 이상하면 재계산
+                const totalFromDist = Object.values(gradeDistribution).reduce((sum, count) => sum + count, 0);
+                const isDistributionValid = totalFromDist > 0 && totalFromDist <= totalEmployees * 1.2;
+                
+                if (!isDistributionValid) {
+                    console.log('  - API grade_distribution이 유효하지 않음, 재계산 필요');
+                    console.log(`    총 인원: ${totalEmployees}, 분포 합계: ${totalFromDist}`);
+                    
+                    // 2순위: HR Dashboard API의 employees에서 직접 계산
+                    if (dashboardData && dashboardData.employees && dashboardData.employees.length > 0) {
+                        console.log('  - dashboardData.employees에서 등급 분포 재계산');
+                        gradeDistribution = this.calculateGradeDistribution(dashboardData.employees);
+                        gradeDataSource = 'dashboardData.employees에서 재계산';
+                    }
+                    // 3순위: 외부 employees 데이터
+                    else if (employees && employees.length > 0) {
+                        console.log('  - 외부 직원 데이터에서 등급 분포 계산');
+                        gradeDistribution = this.calculateGradeDistribution(employees);
+                        gradeDataSource = '외부 employees 데이터에서 계산';
+                    }
+                    else {
+                        console.log('  - 등급 분포 계산 불가 - 데이터 없음');
+                        gradeDataSource = '데이터 없음';
+                    }
+                }
+                
+                // 최종 검증 및 로깅
+                const finalTotal = Object.values(gradeDistribution).reduce((sum, count) => sum + count, 0);
+                console.log(`  - 등급 분포 데이터 소스: ${gradeDataSource}`);
+                console.log(`  - 등급 분포 총합: ${finalTotal}명 (전체: ${totalEmployees}명)`);
+                console.log('  - S:', gradeDistribution['S'], 'A:', gradeDistribution['A'], 
+                           'B:', gradeDistribution['B'], 'C:', gradeDistribution['C'], 
+                           'D:', gradeDistribution['D']);
                 
                 // 부서 분석 - HR Dashboard API의 department_stats 우선 사용 (가장 정확한 데이터)
                 let deptAnalysis = {};
