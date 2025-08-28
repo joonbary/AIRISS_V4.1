@@ -784,8 +784,8 @@ async def get_employees_list(db: Session = Depends(get_db)):
                 FROM employee_results er
                 INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
                 WHERE er.employee_metadata->>'name' IS NOT NULL
-                ORDER BY er.overall_score DESC
-                LIMIT 1000
+                ORDER BY er.uid
+                LIMIT 2000
             """)).fetchall()
             logger.info(f"Found {len(results)} records from employee_results")
         except Exception as e1:
