@@ -5078,9 +5078,9 @@
                                 <tr>
                                     <td style="padding: 12px; border: 1px solid #dee2e6;">관리 필요 (D)</td>
                                     <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${gradeDistribution['D'] || 0}명</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${actualEmployees.length > 0 ? Math.round((gradeDistribution['D'] || 0) / actualEmployees.length * 100) : 0}%</td>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6; color: ${actualEmployees.length > 0 && (gradeDistribution['D'] || 0) / actualEmployees.length < 0.05 ? '#28a745' : '#dc3545'};">
-                                        ${actualEmployees.length > 0 && (gradeDistribution['D'] || 0) / actualEmployees.length < 0.05 ? '양호' : '집중 관리 필요'}
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${totalEmployees > 0 ? Math.round((gradeDistribution['D'] || 0) / totalEmployees * 100) : 0}%</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6; color: ${totalEmployees > 0 && (gradeDistribution['D'] || 0) / totalEmployees < 0.05 ? '#28a745' : '#dc3545'};">
+                                        ${totalEmployees > 0 && (gradeDistribution['D'] || 0) / totalEmployees < 0.05 ? '양호' : '집중 관리 필요'}
                                     </td>
                                 </tr>
                             </tbody>
@@ -5094,7 +5094,7 @@
                             <h4 style="color: #ff5252; margin-top: 0; font-size: 1.3em; text-shadow: 0 0 10px rgba(244, 67, 54, 0.3);">🚨 즉시 조치 필요 사항</h4>
                             <ul style="margin: 10px 0;">
                                 ${(gradeDistribution['D'] || 0) > 5 ? '<li>하위 성과자 ' + (gradeDistribution['D'] || 0) + '명에 대한 개선 계획 수립</li>' : ''}
-                                ${actualEmployees.length > 0 && ((gradeDistribution['S'] || 0) + (gradeDistribution['A+'] || 0)) < actualEmployees.length * 0.1 ? '<li>핵심 인재 부족 - 육성 프로그램 시급</li>' : ''}
+                                ${totalEmployees > 0 && topTalents < totalEmployees * 0.1 ? '<li>핵심 인재 부족 - 육성 프로그램 시급</li>' : ''}
                                 ${avgScore < 700 ? '<li>전사 평균 성과 개선 프로그램 필요</li>' : ''}
                                 <li>부서간 성과 격차 해소 방안 마련</li>
                             </ul>
@@ -5104,7 +5104,7 @@
                             <h4 style="color: #69f0ae; margin-top: 0; font-size: 1.3em; text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);">✅ 긍정적 성과</h4>
                             <ul style="margin: 10px 0;">
                                 ${avgScore >= 750 ? '<li>전사 평균 AI 점수 ' + avgScore + '점으로 우수</li>' : ''}
-                                ${actualEmployees.length > 0 && ((gradeDistribution['S'] || 0) + (gradeDistribution['A+'] || 0)) >= actualEmployees.length * 0.15 ? '<li>핵심 인재 비율 업계 평균 상회</li>' : ''}
+                                ${totalEmployees > 0 && topTalents >= totalEmployees * 0.15 ? '<li>핵심 인재 비율 업계 평균 상회</li>' : ''}
                                 ${(gradeDistribution['D'] || 0) < 3 ? '<li>하위 성과자 최소화 달성</li>' : ''}
                                 <li>AI 기반 인재 분석 시스템 정착</li>
                             </ul>
