@@ -276,7 +276,10 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 'uid': emp.get('uid'),
                 'ai_score': emp.get('ai_score', 70),
                 'grade': emp.get('grade', 'C'),
-                'employee_name': emp.get('name', '익명')
+                'employee_name': emp.get('name', '익명'),
+                'department': emp.get('department', '부서 미상'),  # 부서 정보 추가
+                'position': emp.get('position', '직책 미상'),  # 직책 정보 추가
+                'overall_score': emp.get('performance_score', 0) or emp.get('ai_score', 70)  # 전체 점수 추가
             })
         
         return {

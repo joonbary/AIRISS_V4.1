@@ -5180,21 +5180,36 @@
                     gradeDistribution['D'] = 0;
                 }
                 
-                // 부서 분석 - dashboardData.department_stats 사용하거나 직원 데이터에서 계산
+                // 부서 분석 - HR Dashboard API의 department_stats 우선 사용 (가장 정확한 데이터)
                 let deptAnalysis = {};
+                let dataSource = '';
+                
                 if (dashboardData.department_stats && Object.keys(dashboardData.department_stats).length > 0) {
                     deptAnalysis = dashboardData.department_stats;
+                    dataSource = 'API department_stats (권장)';
                 } else if (employees && employees.length > 0) {
+                    console.log('⚠️ API department_stats가 없어 직원 데이터에서 계산');
                     deptAnalysis = this.analyzeDepartments(employees);
+                    dataSource = 'employees 데이터에서 계산';
                 } else if (dashboardData.employees && dashboardData.employees.length > 0) {
+                    console.log('⚠️ API department_stats가 없어 dashboardData.employees에서 계산');
                     deptAnalysis = this.analyzeDepartments(dashboardData.employees);
+                    dataSource = 'dashboardData.employees에서 계산';
+                } else {
+                    console.log('❌ 부서 분석용 데이터가 없습니다');
+                    dataSource = '데이터 없음';
                 }
                 
                 const totalDepts = Object.keys(deptAnalysis).length || 5;
                 
-                console.log('🏢 부서 분석 데이터:', deptAnalysis);
+                console.log('🏢 부서 분석 데이터 로드 완료');
+                console.log('  - 데이터 소스:', dataSource);
                 console.log('  - 부서 수:', totalDepts);
-                console.log('  - dashboardData.department_stats:', dashboardData.department_stats);
+                console.log('  - 상위 5개 부서:', Object.keys(deptAnalysis).slice(0, 5));
+                
+                if (totalDepts === 0) {
+                    console.log('❌ 부서 데이터가 비어있습니다. API 응답을 확인하세요.');
+                }
                 
                 // 최우수 인재 (Top Talents)
                 const topTalents = dashboardData.top_talents ? dashboardData.top_talents.count : 
