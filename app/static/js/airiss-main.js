@@ -186,7 +186,9 @@ function connectWebSocket() {
     
     ws.onopen = () => {
         addDebugLog('WebSocket 연결 성공', 'success');
-        updateConnectionCount();
+        if (document.getElementById('connectionCount')) {
+            updateConnectionCount();
+        }
     };
     
     ws.onmessage = (event) => {
@@ -267,11 +269,17 @@ function updateConnectionCount() {
     .then(response => response.json())
     .then(data => {
         const count = data.components?.connection_count || '0';
-        document.getElementById('connectionCount').textContent = count;
+        const connCountEl = document.getElementById('connectionCount');
+        if (connCountEl) {
+            connCountEl.textContent = count;
+        }
         addDebugLog(`연결 수 업데이트: ${count}`, 'info');
     })
     .catch(error => {
-        document.getElementById('connectionCount').textContent = '?';
+        const connCountEl = document.getElementById('connectionCount');
+        if (connCountEl) {
+            connCountEl.textContent = '?';
+        }
         addDebugLog(`연결 수 업데이트 실패: ${error.message}`, 'error');
     });
 }
@@ -1055,13 +1063,20 @@ function loadRecentJobs() {
     })
     .catch(error => {
         addDebugLog(`작업 목록 조회 오류: ${error.message}`, 'error');
-        document.getElementById('recentJobs').innerHTML = 
-            '<p style="color: var(--danger-color); text-align: center;"><i class="fas fa-exclamation-triangle"></i> 작업 목록을 불러올 수 없습니다.</p>';
+        const recentJobsEl = document.getElementById('recentJobs');
+        if (recentJobsEl) {
+            recentJobsEl.innerHTML = 
+                '<p style="color: var(--danger-color); text-align: center;"><i class="fas fa-exclamation-triangle"></i> 작업 목록을 불러올 수 없습니다.</p>';
+        }
     });
 }
 
 function displayJobs(jobs) {
     const container = document.getElementById('recentJobs');
+    if (!container) {
+        addDebugLog('recentJobs 컨테이너를 찾을 수 없음 - 스킵', 'warning');
+        return;
+    }
     
     if (jobs.length === 0) {
         container.innerHTML = `
@@ -1144,7 +1159,9 @@ async function pollAnalysisStatus(jobId) {
                 addDebugLog('분석 완료!', 'success');
                 showNotification('✅ 분석이 완료되었습니다!', 'success');
                 resetAnalysisButton();
-                loadRecentJobs();
+                if (document.getElementById('recentJobs')) {
+                    loadRecentJobs();
+                }
                 
                 // 결과 표시
                 if (status.average_score) {
@@ -1454,16 +1471,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // WebSocket 연결
     connectWebSocket();
     
-    // 연결 상태 업데이트
-    updateConnectionCount();
-    
-    // 최근 작업 로드
-    loadRecentJobs();
-    
-    // 정기 업데이트 (30초마다)
-    setInterval(() => {
+    // 연결 상태 업데이트 (요소가 있을 경우만)
+    if (document.getElementById('connectionCount')) {
         updateConnectionCount();
-    }, 30000);
+        // 정기 업데이트 (30초마다)
+        setInterval(() => {
+            updateConnectionCount();
+        }, 30000);
+    }
+    
+    // 최근 작업 로드 (요소가 있을 경우만)
+    if (document.getElementById('recentJobs')) {
+        loadRecentJobs();
+    }
     
     // 온보딩 체크 (첫 방문자용)
     const hasVisited = localStorage.getItem('airiss_visited');
