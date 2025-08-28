@@ -4728,49 +4728,30 @@
                         console.log('📊 HR 대시보드 데이터 로드 중...');
                         // API 엔드포인트 수정: Django URL 패턴에 맞게
                         const response = await this.api.request('GET', '/hr-dashboard/stats');
-                        if (response) {
+                        if (response && response.total_employees) {
                             dashboardData = response;
                             console.log('✅ HR 대시보드 데이터 로드 성공:', dashboardData);
+                        } else {
+                            throw new Error('Invalid or empty response');
                         }
                     } catch (error) {
-                        console.error('❌ HR 대시보드 데이터 로드 실패, 모의 데이터 사용:', error);
-                        // 모의 데이터로 폴백 (실제 직원 수 1800+ 반영)
-                        dashboardData = {
-                            total_employees: 1845,
-                            promotion_candidates: {
-                                count: 186,
-                                candidates: []
-                            },
-                            top_talents: {
-                                count: 152,
-                                employees: []
-                            },
-                            risk_employees: {
-                                count: 89,
-                                employees: []
-                            },
-                            grade_distribution: [
-                                { grade: 'S', count: 45, percentage: 2.4 },
-                                { grade: 'A', count: 280, percentage: 15.2 },
-                                { grade: 'B', count: 695, percentage: 37.7 },
-                                { grade: 'C', count: 625, percentage: 33.9 },
-                                { grade: 'D', count: 200, percentage: 10.8 }
-                            ],
-                            department_stats: {
-                                '영업부': { count: 385, avg_score: 78.5 },
-                                '기술부': { count: 420, avg_score: 82.3 },
-                                '인사부': { count: 290, avg_score: 76.8 },
-                                '재무부': { count: 350, avg_score: 79.2 },
-                                '마케팅부': { count: 400, avg_score: 77.4 }
-                            }
-                        };
+                        console.error('❌ HR 대시보드 데이터 로드 실패:', error);
                         
-                        // 기존 state 데이터도 확인
-                        if (!this.state.employees || this.state.employees.length === 0) {
-                            await this.loadEmployeesData();
-                            await this.loadDashboardData();
-                        }
-                        employees = this.state.employees || [];
+                        // 실제 데이터를 가져올 수 없을 때는 에러 메시지 표시
+                        reportContent.innerHTML = `
+                            <div style="text-align: center; padding: 100px 20px;">
+                                <h3 style="color: #ff5252; margin-bottom: 20px;">데이터 로드 실패</h3>
+                                <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 30px;">
+                                    서버에서 데이터를 가져올 수 없습니다.<br>
+                                    잠시 후 다시 시도해주세요.
+                                </p>
+                                <button onclick="location.reload()" style="padding: 10px 20px; background: #00d4ff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                    새로고침
+                                </button>
+                            </div>
+                        `;
+                        reportActions.style.display = 'none';
+                        return;
                     }
                     
                     console.log(`📊 리포트 생성 - 타입: ${type}, 전체 직원 수: ${dashboardData.total_employees || employees.length}`);
@@ -4971,17 +4952,29 @@
                 }
                 
                 // 등급 분포 (HR 대시보드 데이터 사용)
-                const gradeDistribution = {};
-                if (dashboardData.grade_distribution && Array.isArray(dashboardData.grade_distribution)) {
+                const gradeDistribution = {
+                    'S': 0,
+                    'A': 0,
+                    'B': 0,
+                    'C': 0,
+                    'D': 0
+                };
+                
+                if (dashboardData && dashboardData.grade_distribution && Array.isArray(dashboardData.grade_distribution)) {
+                    console.log('  - grade_distribution 배열 파싱 중:', dashboardData.grade_distribution);
                     dashboardData.grade_distribution.forEach(grade => {
-                        gradeDistribution[grade.grade] = grade.count;
+                        if (grade && grade.grade && grade.count !== undefined) {
+                            gradeDistribution[grade.grade] = grade.count;
+                        }
                     });
                 } else if (employees && employees.length > 0) {
                     // 폴백: 직원 데이터에서 계산
+                    console.log('  - grade_distribution 없음, 직원 데이터에서 계산');
                     const calculated = this.calculateGradeDistribution(employees);
                     Object.assign(gradeDistribution, calculated);
                 } else {
-                    // 기본값
+                    // 실제 데이터가 없을 경우 모두 0으로 초기화
+                    console.log('  - 등급 분포 데이터를 가져올 수 없음');
                     gradeDistribution['S'] = 0;
                     gradeDistribution['A'] = 0;
                     gradeDistribution['B'] = 0;
