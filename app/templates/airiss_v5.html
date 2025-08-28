@@ -4955,7 +4955,7 @@
                 console.log('🔍 월간 리포트 생성 시작');
                 console.log('  - dashboardData:', dashboardData);
                 console.log('  - total_employees:', totalEmployees);
-                console.log('  - grade_distribution:', dashboardData.grade_distribution);
+                console.log('  - dashboardData.grade_distribution:', dashboardData.grade_distribution);
                 
                 // 평균 점수 계산 (부서별 평균에서 전체 평균 계산)
                 let avgScore = 0;
@@ -4998,7 +4998,11 @@
                                   ((gradeDistribution['S'] || 0) + (gradeDistribution['A'] || 0));
                 
                 console.log('  - 평균 점수:', avgScore);
-                console.log('  - 등급 분포:', gradeDistribution);
+                console.log('  - 등급 분포 객체:', gradeDistribution);
+                console.log('  - S등급:', gradeDistribution['S'], 'A등급:', gradeDistribution['A'], 
+                            'B등급:', gradeDistribution['B'], 'C등급:', gradeDistribution['C'], 
+                            'D등급:', gradeDistribution['D']);
+                console.log('  - topTalents:', topTalents);
                 console.log('  - 부서 수:', totalDepts);
                 
                 return `
@@ -5028,8 +5032,8 @@
                                     <div style="font-size: 14px; color: rgba(255, 255, 255, 0.8); text-transform: uppercase; letter-spacing: 1px; font-weight: 500;">평균 AI 점수</div>
                                 </div>
                                 <div style="text-align: center; padding: 25px; background: rgba(255, 255, 255, 0.08); border-radius: 15px; border: 1px solid rgba(76, 175, 80, 0.3); backdrop-filter: blur(10px); transition: all 0.3s ease;">
-                                    <div style="background: linear-gradient(135deg, #69f0ae, #4caf50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 42px; font-weight: 800; text-shadow: 0 0 20px rgba(76, 175, 80, 0.5); margin-bottom: 10px;">${topTalents}</div>
-                                    <div style="font-size: 14px; color: rgba(255, 255, 255, 0.8); text-transform: uppercase; letter-spacing: 1px; font-weight: 500;">최우수 인재</div>
+                                    <div style="background: linear-gradient(135deg, #69f0ae, #4caf50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 42px; font-weight: 800; text-shadow: 0 0 20px rgba(76, 175, 80, 0.5); margin-bottom: 10px;">${(gradeDistribution['S'] || 0) + (gradeDistribution['A'] || 0)}</div>
+                                    <div style="font-size: 14px; color: rgba(255, 255, 255, 0.8); text-transform: uppercase; letter-spacing: 1px; font-weight: 500;">최우수 인재 (S+A)</div>
                                 </div>
                                 <div style="text-align: center; padding: 25px; background: rgba(255, 255, 255, 0.08); border-radius: 15px; border: 1px solid rgba(255, 193, 7, 0.3); backdrop-filter: blur(10px); transition: all 0.3s ease;">
                                     <div style="background: linear-gradient(135deg, #ff6b6b, #feca57); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 42px; font-weight: 800; text-shadow: 0 0 20px rgba(255, 193, 7, 0.5); margin-bottom: 10px;">${totalDepts}</div>
@@ -5056,21 +5060,27 @@
                                     <td style="padding: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.7); font-size: 14px;">분석 대상 전체</td>
                                 </tr>
                                 <tr style="background: rgba(255, 255, 255, 0.05); transition: all 0.3s ease;">
-                                    <td style="padding: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9); font-weight: 500; font-size: 15px;">핵심 인재 (S/A+)</td>
-                                    <td style="padding: 18px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 700; font-size: 18px;">${topTalents}명</td>
-                                    <td style="padding: 18px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 600; font-size: 16px;">${totalEmployees > 0 ? Math.round(topTalents / totalEmployees * 100) : 0}%</td>
-                                    <td style="padding: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: ${totalEmployees > 0 && topTalents / totalEmployees > 0.1 ? '#69f0ae' : '#ff5252'}; font-weight: 500; font-size: 14px;">
-                                        ${totalEmployees > 0 && topTalents / totalEmployees > 0.1 ? '목표 달성 ✓' : '육성 필요'}
+                                    <td style="padding: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9); font-weight: 500; font-size: 15px;">핵심 인재 (S)</td>
+                                    <td style="padding: 18px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 700; font-size: 18px;">${(gradeDistribution['S'] || 0)}명</td>
+                                    <td style="padding: 18px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #69f0ae; font-weight: 600; font-size: 16px;">${totalEmployees > 0 ? Math.round((gradeDistribution['S'] || 0) / totalEmployees * 100) : 0}%</td>
+                                    <td style="padding: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: ${totalEmployees > 0 && (gradeDistribution['S'] || 0) / totalEmployees > 0.02 ? '#69f0ae' : '#ff5252'}; font-weight: 500; font-size: 14px;">
+                                        ${totalEmployees > 0 && (gradeDistribution['S'] || 0) / totalEmployees > 0.02 ? '우수' : '육성 필요'}
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">우수 인재 (A/B+)</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${(gradeDistribution['A'] || 0) + (gradeDistribution['B'] || 0)}명</td>
-                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${totalEmployees > 0 ? Math.round(((gradeDistribution['A'] || 0) + (gradeDistribution['B'] || 0)) / totalEmployees * 100) : 0}%</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">우수 인재 (A)</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${(gradeDistribution['A'] || 0)}명</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${totalEmployees > 0 ? Math.round((gradeDistribution['A'] || 0) / totalEmployees * 100) : 0}%</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">핵심 관리 대상</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">일반 성과자 (B)</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${(gradeDistribution['B'] || 0)}명</td>
+                                    <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${totalEmployees > 0 ? Math.round((gradeDistribution['B'] || 0) / totalEmployees * 100) : 0}%</td>
                                     <td style="padding: 12px; border: 1px solid #dee2e6;">승진 후보군</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6;">일반 성과자 (B/C)</td>
+                                    <td style="padding: 12px; border: 1px solid #dee2e6;">기초 수준 (C)</td>
                                     <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${(gradeDistribution['C'] || 0)}명</td>
                                     <td style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">${totalEmployees > 0 ? Math.round((gradeDistribution['C'] || 0) / totalEmployees * 100) : 0}%</td>
                                     <td style="padding: 12px; border: 1px solid #dee2e6;">역량 개발 대상</td>
