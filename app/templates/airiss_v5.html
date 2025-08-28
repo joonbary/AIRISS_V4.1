@@ -4738,6 +4738,28 @@
                         if (response && response.total_employees) {
                             dashboardData = response;
                             console.log('✅ HR 대시보드 데이터 로드 성공:', dashboardData);
+                            
+                            // employees 배열이 없거나 상위 점수만 포함할 경우
+                            // /employees/list에서 직접 가져오기
+                            if (!dashboardData.employees || dashboardData.employees.length === 0 ||
+                                (dashboardData.employees[0] && dashboardData.employees[0].ai_score > 90)) {
+                                console.log('🔄 전체 직원 데이터 로드 중...');
+                                try {
+                                    const empResponse = await this.api.request('GET', '/employees/list');
+                                    if (empResponse && empResponse.employees) {
+                                        // 필수 필드만 추출하여 dashboardData.employees에 할당
+                                        dashboardData.employees = empResponse.employees.slice(0, 1000).map(emp => ({
+                                            uid: emp.uid,
+                                            ai_score: emp.ai_score,
+                                            grade: emp.ai_grade,
+                                            employee_name: emp.employee_name
+                                        }));
+                                        console.log('✅ 전체 직원 데이터 로드 성공:', dashboardData.employees.length);
+                                    }
+                                } catch (empError) {
+                                    console.error('⚠️ 직원 데이터 로드 실패:', empError);
+                                }
+                            }
                         } else {
                             throw new Error('Invalid or empty response');
                         }
