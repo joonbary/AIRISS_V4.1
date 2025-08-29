@@ -5594,7 +5594,21 @@
                 const talents = dashboardData.top_talents?.employees || [];
                 const promotions = dashboardData.promotion_candidates?.candidates || [];
                 
-                let talentCards = talents.map(emp => `
+                console.log('🎆 핵심 인재 리포트 데이터:', { 
+                    talentsCount: talents.length, 
+                    promotionsCount: promotions.length,
+                    talents: talents.slice(0, 3)
+                });
+                
+                // 페이지네이션 추가: 최대 5명씩 표시
+                const talentPerPage = 5;
+                const currentTalentPage = this.talentCurrentPage || 1;
+                const startIndex = (currentTalentPage - 1) * talentPerPage;
+                const endIndex = startIndex + talentPerPage;
+                const paginatedTalents = talents.slice(startIndex, endIndex);
+                const totalTalentPages = Math.ceil(talents.length / talentPerPage);
+                
+                let talentCards = paginatedTalents.map(emp => `
                     <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 20px rgba(0, 212, 255, 0.15); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div style="flex: 1;">
@@ -5607,19 +5621,57 @@
                                             ${emp.reasons.map(reason => `<li style="margin: 3px 0;">${reason}</li>`).join('')}
                                         </ul>
                                     </div>
-                                ` : ''}
+                                ` : `
+                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                                        <p style="color: rgba(255, 255, 255, 0.9); font-size: 0.9em; margin: 0 0 5px 0; font-weight: 500;">선별 사유:</p>
+                                        <ul style="margin: 0; padding-left: 20px; color: rgba(255, 255, 255, 0.8); font-size: 0.85em;">
+                                            <li style="margin: 3px 0;">S급 최우수 등급 달성</li>
+                                            <li style="margin: 3px 0;">우수한 성과 및 역량 보유</li>
+                                        </ul>
+                                    </div>
+                                `}
                             </div>
                             <div style="text-align: right; min-width: 120px;">
                                 <div style="background: linear-gradient(135deg, #00d4ff, #0099ff); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 1.3em; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3); text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);">
                                     ${Math.round(emp.score || emp.ai_score || emp.overall_score || 0)}점
                                 </div>
-                                <div style="color: #69f0ae; font-weight: 600; margin-top: 8px; font-size: 1.1em; text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);">${emp.grade || 'N/A'}등급</div>
+                                <div style="color: #69f0ae; font-weight: 600; margin-top: 8px; font-size: 1.1em; text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);">${emp.grade || 'S'}등급</div>
                             </div>
                         </div>
                     </div>
                 `).join('');
                 
-                let promotionCards = promotions.map(emp => `
+                // 핵심 인재 페이지네이션 컨트롤
+                let talentPagination = '';
+                if (totalTalentPages > 1) {
+                    talentPagination = `
+                        <div style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 10px;">
+                            <button onclick="app.changeTalentPage(${currentTalentPage - 1})" 
+                                ${currentTalentPage <= 1 ? 'disabled' : ''}
+                                style="padding: 8px 16px; background: ${currentTalentPage <= 1 ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #00d4ff, #0099ff)'}; color: white; border: none; border-radius: 8px; cursor: ${currentTalentPage <= 1 ? 'not-allowed' : 'pointer'}; font-size: 14px;">
+                                ← 이전
+                            </button>
+                            <span style="color: rgba(255, 255, 255, 0.9); font-weight: 500; margin: 0 15px;">
+                                ${currentTalentPage} / ${totalTalentPages} 페이지 (${talents.length}명 중 ${startIndex + 1}-${Math.min(endIndex, talents.length)}명)
+                            </span>
+                            <button onclick="app.changeTalentPage(${currentTalentPage + 1})" 
+                                ${currentTalentPage >= totalTalentPages ? 'disabled' : ''}
+                                style="padding: 8px 16px; background: ${currentTalentPage >= totalTalentPages ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #00d4ff, #0099ff)'}; color: white; border: none; border-radius: 8px; cursor: ${currentTalentPage >= totalTalentPages ? 'not-allowed' : 'pointer'}; font-size: 14px;">
+                                다음 →
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                // 승진 후보자 페이지네이션
+                const promotionPerPage = 3;
+                const currentPromotionPage = this.promotionCurrentPage || 1;
+                const promotionStartIndex = (currentPromotionPage - 1) * promotionPerPage;
+                const promotionEndIndex = promotionStartIndex + promotionPerPage;
+                const paginatedPromotions = promotions.slice(promotionStartIndex, promotionEndIndex);
+                const totalPromotionPages = Math.ceil(promotions.length / promotionPerPage);
+                
+                let promotionCards = paginatedPromotions.map(emp => `
                     <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 20px rgba(76, 175, 80, 0.15); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div style="flex: 1;">
@@ -5651,15 +5703,33 @@
                         <h2 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.3em; font-weight: 700; border-bottom: 2px solid rgba(0, 212, 255, 0.3); padding-bottom: 20px; margin-bottom: 30px; text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);">🌟 핵심 인재 분석 리포트</h2>
                         
                         <div style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 255, 0.05) 100%); padding: 30px; border-radius: 20px; margin: 25px 0; border: 1px solid rgba(0, 212, 255, 0.2); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0, 212, 255, 0.15);">
-                            <h3 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-size: 1.6em; font-weight: 700; text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">🏆 Top Talent (AI 점수 85점 이상)</h3>
-                            <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 20px; font-size: 1.05em;">총 ${talents.length}명의 핵심 인재가 식별되었습니다.</p>
+                            <h3 style="background: linear-gradient(135deg, #00d4ff, #0099ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-size: 1.6em; font-weight: 700; text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">🏆 Top Talent (S등급 핵심인재)</h3>
+                            <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 20px; font-size: 1.05em;">총 ${talents.length}명의 S급 핵심인재가 식별되었습니다.</p>
                             ${talentCards || '<p style="color: rgba(255, 255, 255, 0.5);">현재 해당하는 인재가 없습니다.</p>'}
+                            ${talentPagination}
                         </div>
                         
                         <div style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%); padding: 30px; border-radius: 20px; margin: 25px 0; border: 1px solid rgba(76, 175, 80, 0.2); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(76, 175, 80, 0.15);">
                             <h3 style="background: linear-gradient(135deg, #69f0ae, #4caf50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-size: 1.6em; font-weight: 700; text-shadow: 0 0 20px rgba(76, 175, 80, 0.3);">🚀 승진 후보자</h3>
                             <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 20px; font-size: 1.05em;">승진 검토 대상 ${promotions.length}명</p>
                             ${promotionCards || '<p style="color: rgba(255, 255, 255, 0.5);">현재 해당하는 인재가 없습니다.</p>'}
+                            ${promotions.length > promotionPerPage ? `
+                                <div style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 10px;">
+                                    <button onclick="app.changePromotionPage(${currentPromotionPage - 1})" 
+                                        ${currentPromotionPage <= 1 ? 'disabled' : ''}
+                                        style="padding: 8px 16px; background: ${currentPromotionPage <= 1 ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #69f0ae, #4caf50)'}; color: white; border: none; border-radius: 8px; cursor: ${currentPromotionPage <= 1 ? 'not-allowed' : 'pointer'}; font-size: 14px;">
+                                        ← 이전
+                                    </button>
+                                    <span style="color: rgba(255, 255, 255, 0.9); font-weight: 500; margin: 0 15px;">
+                                        ${currentPromotionPage} / ${totalPromotionPages} 페이지 (${promotions.length}명 중 ${promotionStartIndex + 1}-${Math.min(promotionEndIndex, promotions.length)}명)
+                                    </span>
+                                    <button onclick="app.changePromotionPage(${currentPromotionPage + 1})" 
+                                        ${currentPromotionPage >= totalPromotionPages ? 'disabled' : ''}
+                                        style="padding: 8px 16px; background: ${currentPromotionPage >= totalPromotionPages ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #69f0ae, #4caf50)'}; color: white; border: none; border-radius: 8px; cursor: ${currentPromotionPage >= totalPromotionPages ? 'not-allowed' : 'pointer'}; font-size: 14px;">
+                                        다음 →
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                         
                         <div style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 152, 0, 0.1) 100%); padding: 25px; border-radius: 15px; margin: 25px 0; border: 1px solid rgba(255, 193, 7, 0.3); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(255, 193, 7, 0.15);">
@@ -5672,6 +5742,20 @@
                         </div>
                     </div>
                 `;
+            },
+            
+            // 핵심 인재 페이지 변경
+            changeTalentPage(page) {
+                if (page < 1) return;
+                this.talentCurrentPage = page;
+                this.generateReportPreview('talent');
+            },
+            
+            // 승진 후보자 페이지 변경
+            changePromotionPage(page) {
+                if (page < 1) return;
+                this.promotionCurrentPage = page;
+                this.generateReportPreview('talent');
             },
             
             // 리스크 리폼트 생성
