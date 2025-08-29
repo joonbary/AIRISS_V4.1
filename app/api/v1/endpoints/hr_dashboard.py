@@ -67,7 +67,7 @@ def calculate_department_stats(employees):
     return department_stats
 
 def calculate_promotion_candidates(employees):
-    """승진 후보자 예측 로직"""
+    """승진 후보자 예측 로직 - S등급만 대상"""
     candidates = []
     logger.info(f"calculate_promotion_candidates: Processing {len(employees)} employees")
     
@@ -76,13 +76,16 @@ def calculate_promotion_candidates(employees):
         logger.info(f"Employee {idx}: grade={emp.get('grade')}, tenure={emp.get('tenure_years')}, competency={emp.get('competency_score')}, performance={emp.get('performance_score')}, leadership={emp.get('leadership_score')}")
     
     for emp in employees:
+        # S등급만 승진후보자로 고려
+        if emp.get('grade', '') != 'S':
+            continue
+            
         promotion_score = 0
         reasons = []
         
-        # 평가 등급이 우수한 경우
-        if emp.get('grade', '') in ['S', 'A']:
-            promotion_score += 40
-            reasons.append(f"우수 평가등급 ({emp.get('grade')})")
+        # S등급 자동 포함
+        promotion_score += 50
+        reasons.append(f"최우수 평가등급 (S등급)")
         
         # 근속연수가 3년 이상인 경우
         tenure = emp.get('tenure_years', 0)
@@ -132,8 +135,8 @@ def calculate_promotion_candidates(employees):
             promotion_score += 10
             reasons.append(f"우수한 혁신성과 창의력 ({innovation}점)")
         
-        # 승진 후보자 기준 더 완화 (최소 30점으로 조정)
-        if promotion_score >= 30:
+        # S등급은 모두 승진후보자에 포함
+        if promotion_score >= 50:  # S등급 기본 50점 이상
             candidates.append({
                 'uid': emp.get('uid'),
                 'name': emp.get('name'),
@@ -173,8 +176,8 @@ def identify_top_talent(employees):
         if idx < 3:
             logger.info(f"Employee {idx}: grade={grade}, performance={performance}, name={emp.get('name', 'N/A')}")
         
-        # S, A 등급을 핵심인재로 포함 (페이지네이션 테스트를 위해)
-        if grade in ['S', 'A']:
+        # S 등급만 핵심인재로 포함 (선별성 향상)
+        if grade == 'S':
             talent_score = 100
             # 다양한 선정 사유 추가
             reasons.append(f"최우수 등급 ({grade}등급)")
@@ -256,8 +259,8 @@ def identify_top_talent(employees):
         if not reasons and talent_score > 0:
             reasons.append(f"종합 평가 우수")
         
-        # S, A 등급 포함 (페이지네이션 테스트를 위해)
-        if grade in ['S', 'A']:
+        # S 등급만 포함 (선별성 향상)
+        if grade == 'S':
             top_talents.append({
                 'uid': emp.get('uid'),
                 'name': emp.get('name'),
