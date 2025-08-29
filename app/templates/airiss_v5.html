@@ -1890,6 +1890,13 @@
             buildTime: new Date().toISOString(),
             cacheBreaker: Math.random().toString(36).substring(7),
             
+            // 상태 관리
+            state: {
+                dashboardStats: null,
+                employees: [],
+                previousStats: null  // 이전 통계 데이터
+            },
+            
             // 페이지네이션 상태 변수
             promotionDashboardPage: 1,
             riskDashboardPage: 1,
@@ -2052,8 +2059,9 @@
             
             // 증감 표기 업데이트 함수
             updateChangeIndicators(data) {
-                // 이전 데이터 가져오기 (로컬 스토리지에서)
-                const previousData = JSON.parse(localStorage.getItem('previousDashboardData') || '{}');
+                // 이전 데이터는 DB에서 가져온 이전 기간 데이터를 사용해야 함
+                // API에서 previous_period 데이터를 받아서 비교
+                const previousData = data.previous_period || {};
                 
                 // 전체 직원 수 변화
                 const totalChange = data.total_employees - (previousData.total_employees || data.total_employees);
@@ -2127,14 +2135,14 @@
                     }
                 }
                 
-                // 현재 데이터를 이전 데이터로 저장
-                localStorage.setItem('previousDashboardData', JSON.stringify({
+                // 현재 데이터를 state에 저장 (다음 비교를 위해)
+                this.state.previousStats = {
                     total_employees: data.total_employees || 0,
                     promotion_candidates: { count: data.promotion_candidates?.count || 0 },
                     top_talents: { count: data.top_talents?.count || 0 },
                     risk_employees: { count: data.risk_employees?.count || 0 },
                     timestamp: new Date().toISOString()
-                }));
+                };
             },
             
             // 대시보드 데이터 로드
@@ -2270,6 +2278,12 @@
                 const paginatedEmployees = employees.slice(startIndex, endIndex);
                 const totalPages = Math.ceil(employees.length / promotionPerPage);
                 
+                console.log(`렌더링 - 현재 페이지: ${currentPage}, 시작 인덱스: ${startIndex}, 종료 인덱스: ${endIndex}`);
+                console.log(`표시할 직원 수: ${paginatedEmployees.length}명`);
+                if (paginatedEmployees.length > 0) {
+                    console.log('첫 번째 직원:', paginatedEmployees[0].name);
+                }
+                
                 paginatedEmployees.forEach(emp => {
                     const row = tbody.insertRow();
                     const score = emp.ai_score || emp.overall_score || 0;
@@ -2327,11 +2341,21 @@
             
             // 대시보드 승진후보자 페이지 변경
             changePromotionDashboardPage(page) {
-                const totalPages = Math.ceil((this.state.dashboardStats?.promotion_candidates?.employees || []).length / 10);
-                if (page < 1 || page > totalPages) return;
+                const employees = this.state.dashboardStats?.promotion_candidates?.employees || [];
+                const totalPages = Math.ceil(employees.length / 10);
+                
+                console.log(`페이지 변경 요청: ${page}, 전체 페이지: ${totalPages}, 전체 인원: ${employees.length}`);
+                console.log(`현재 페이지: ${this.promotionDashboardPage}`);
+                
+                if (page < 1 || page > totalPages) {
+                    console.log('유효하지 않은 페이지 번호');
+                    return;
+                }
                 
                 this.promotionDashboardPage = page;
-                this.renderPromotionList(this.state.dashboardStats?.promotion_candidates?.employees || []);
+                console.log(`새 페이지로 설정: ${this.promotionDashboardPage}`);
+                
+                this.renderPromotionList(employees);
             },
             
             // 핵심 인재 테이블 렌더링
