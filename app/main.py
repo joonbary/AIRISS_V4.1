@@ -606,8 +606,8 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                     er.grade
                 FROM employee_results er
                 INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
-                ORDER BY er.overall_score DESC
-                LIMIT 1000
+                ORDER BY er.uid
+                LIMIT 2000
             """)
             
             emp_results = db.execute(employees_query).fetchall()

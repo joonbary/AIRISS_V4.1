@@ -4403,20 +4403,38 @@
             
             // 등급 분포 계산
             calculateGradeDistribution(employees) {
-                const distribution = { 'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0 };
-                employees.forEach(emp => {
-                    let grade = emp.grade || emp.OK등급 || emp.ai_grade || 'C';
-                    // A+, B+ 같은 등급을 A, B로 변환
-                    if (grade && (grade.includes('+') || grade.includes('-'))) {
-                        grade = grade[0];
+                // 두 번째 버전의 함수로 통일 (더 상세한 로직)
+                const distribution = {
+                    'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0
+                };
+                
+                if (!employees || employees.length === 0) return distribution;
+                
+                employees.forEach((emp, index) => {
+                    // 다양한 필드명 처리
+                    let grade = emp.grade || emp.final_grade || emp.ai_grade || emp.OK등급 || 'C';
+                    
+                    // null/undefined 체크
+                    if (!grade || grade === 'null' || grade === 'undefined') {
+                        grade = 'C';
                     }
+                    
+                    // 대문자로 변환
+                    let normalizedGrade = grade.toString().toUpperCase().trim();
+                    
+                    // A+, B+ 같은 등급을 A, B로 변환
+                    if (normalizedGrade.includes('+') || normalizedGrade.includes('-')) {
+                        normalizedGrade = normalizedGrade[0];
+                    }
+                    
                     // S, A, B, C, D만 허용
-                    if (['S', 'A', 'B', 'C', 'D'].includes(grade)) {
-                        distribution[grade]++;
+                    if (['S', 'A', 'B', 'C', 'D'].includes(normalizedGrade)) {
+                        distribution[normalizedGrade]++;
                     } else {
                         distribution['C']++; // 기본값
                     }
                 });
+                
                 return distribution;
             },
             
@@ -5314,13 +5332,25 @@
                     console.log('⚠️ topTalents using default ratio (28%):', topTalents);
                 }
                 
+                console.log('📊 월간종합 분석 데이터 요약:');
+                console.log('  - 전체 직원:', totalEmployees);
                 console.log('  - 평균 점수:', avgScore);
                 console.log('  - 등급 분포 객체:', gradeDistribution);
                 console.log('  - S등급:', gradeDistribution['S'], 'A등급:', gradeDistribution['A'], 
                             'B등급:', gradeDistribution['B'], 'C등급:', gradeDistribution['C'], 
                             'D등급:', gradeDistribution['D']);
-                console.log('  - topTalents:', topTalents);
+                console.log('  - 최우수 인재 (카드):', topTalents);
+                console.log('  - 최우수 인재 (테이블 계산):', (gradeDistribution['S'] || 0) + (gradeDistribution['A'] || 0));
                 console.log('  - 부서 수:', totalDepts);
+                
+                // 데이터 불일치 경고
+                const tableTopTalents = (gradeDistribution['S'] || 0) + (gradeDistribution['A'] || 0);
+                if (topTalents !== tableTopTalents) {
+                    console.warn('⚠️ 데이터 불일치 발견!');
+                    console.warn('  - 카드 최우수 인재:', topTalents);
+                    console.warn('  - 테이블 최우수 인재:', tableTopTalents);
+                    console.warn('  - 차이:', Math.abs(topTalents - tableTopTalents));
+                }
                 
                 return `
                     <div style="font-family: 'Inter', 'Noto Sans KR', sans-serif; line-height: 1.8; color: #ffffff;">
