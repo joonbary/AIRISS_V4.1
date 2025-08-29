@@ -69,6 +69,11 @@ def calculate_department_stats(employees):
 def calculate_promotion_candidates(employees):
     """승진 후보자 예측 로직"""
     candidates = []
+    logger.info(f"calculate_promotion_candidates: Processing {len(employees)} employees")
+    
+    # 디버깅을 위해 처음 3명의 데이터 확인
+    for idx, emp in enumerate(employees[:3]):
+        logger.info(f"Employee {idx}: grade={emp.get('grade')}, tenure={emp.get('tenure_years')}, competency={emp.get('competency_score')}, performance={emp.get('performance_score')}, leadership={emp.get('leadership_score')}")
     
     for emp in employees:
         promotion_score = 0
@@ -127,8 +132,8 @@ def calculate_promotion_candidates(employees):
             promotion_score += 10
             reasons.append(f"우수한 혁신성과 창의력 ({innovation}점)")
         
-        # 승진 후보자 기준을 더 엄격하게 적용 (최소 80점)
-        if promotion_score >= 80:
+        # 승진 후보자 기준 완화 (최소 50점)
+        if promotion_score >= 50:
             candidates.append({
                 'uid': emp.get('uid'),
                 'name': emp.get('name'),
@@ -139,8 +144,15 @@ def calculate_promotion_candidates(employees):
                 'grade': emp.get('grade', 'C')
             })
     
-    # 점수순 정렬하고 최대 5명으로 제한
-    result = sorted(candidates, key=lambda x: x['score'], reverse=True)[:5]
+    # 점수순 정렬하고 최대 10명으로 제한
+    result = sorted(candidates, key=lambda x: x['score'], reverse=True)[:10]
+    
+    # 디버깅 로그: 점수 분포 확인
+    if len(candidates) > 0:
+        scores = [c['score'] for c in candidates]
+        logger.info(f"Promotion scores distribution - Min: {min(scores)}, Max: {max(scores)}, Avg: {sum(scores)/len(scores):.1f}")
+        logger.info(f"Top 3 candidates: {[(c['name'], c['score']) for c in result[:3]]}")
+    
     logger.info(f"calculate_promotion_candidates: Found {len(candidates)} total candidates, returning top {len(result)}")
     return result
 
@@ -416,7 +428,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
             },
             'risk_employees': {
                 'count': len(risk_employees),
-                'employees': risk_employees[:10],  # 상위 10명만 표시
+                'employees': risk_employees[:50],  # 최대 50명까지 반환 (페이지네이션용)
                 'high_risk_count': len([e for e in risk_employees if e['risk_level'] == 'high']),
                 'medium_risk_count': len([e for e in risk_employees if e['risk_level'] == 'medium'])
             },
