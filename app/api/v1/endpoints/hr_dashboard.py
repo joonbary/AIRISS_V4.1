@@ -246,17 +246,27 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
         # 승진 후보자 계산
         promotion_candidates = calculate_promotion_candidates(employees)
         
-        # Top Talent 식별
-        top_talents = identify_top_talent(employees)
+        # Top Talent 식별 (상세 정보용)
+        top_talents_detail = identify_top_talent(employees)
         
         # 관리 필요 인력 식별
         risk_employees = identify_risk_employees(employees)
         
         # 등급 분포 계산
         grade_distribution = {}
+        s_grade_count = 0
+        a_grade_count = 0
         for emp in employees:
             grade = emp.get('grade', 'N/A')
             grade_distribution[grade] = grade_distribution.get(grade, 0) + 1
+            # S와 A 등급 카운트
+            if grade == 'S':
+                s_grade_count += 1
+            elif grade == 'A':
+                a_grade_count += 1
+        
+        # 실제 최우수 인재 수 (S+A 등급 전체)
+        top_talents_count = s_grade_count + a_grade_count
         
         # 등급 순서대로 정렬 (S > A > B > C > D)
         grade_order = ['S', 'A', 'B', 'C', 'D']
@@ -290,9 +300,11 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                 'has_candidates': len(promotion_candidates) > 0
             },
             'top_talents': {
-                'count': len(top_talents),
-                'employees': top_talents,
-                'has_talents': len(top_talents) > 0
+                'count': top_talents_count,  # S+A 등급 전체 수
+                'employees': top_talents_detail,  # 상위 10명의 상세 정보
+                'has_talents': top_talents_count > 0,
+                's_grade_count': s_grade_count,
+                'a_grade_count': a_grade_count
             },
             'risk_employees': {
                 'count': len(risk_employees),

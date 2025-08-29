@@ -5304,6 +5304,10 @@
                 if (dashboardData.top_talents && dashboardData.top_talents.count) {
                     topTalents = dashboardData.top_talents.count;
                     console.log('✅ topTalents from API top_talents:', topTalents);
+                    if (dashboardData.top_talents.s_grade_count !== undefined) {
+                        console.log('  - S등급:', dashboardData.top_talents.s_grade_count);
+                        console.log('  - A등급:', dashboardData.top_talents.a_grade_count);
+                    }
                 }
                 // 우선순위 2: grade_distribution에서 계산
                 else if (dashboardData.grade_distribution && Array.isArray(dashboardData.grade_distribution)) {
