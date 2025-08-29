@@ -279,52 +279,131 @@ def identify_top_talent(employees):
     return result
 
 def identify_risk_employees(employees):
-    """관리 필요 인력 식별 로직"""
+    """관리 필요 인력 식별 로직 - 다양한 평가 지표 활용"""
     risk_employees = []
     
     for emp in employees:
         risk_score = 0
         reasons = []
         
-        # 성과 부진
+        # 1. 성과 평가
         performance = emp.get('performance_score', 0)
-        if performance < 60:
+        if performance < 50:
             risk_score += 40
-            reasons.append(f"성과 부진 ({performance}점)")
-        elif performance < 70:
-            risk_score += 25
-            reasons.append(f"성과 개선 필요 ({performance}점)")
-        
-        # 근태 문제
-        attendance = emp.get('attendance_score', 100)
-        if attendance < 90:
-            risk_score += 20
-            reasons.append(f"근태 관리 필요 ({attendance}%)")
-        
-        # 이직 위험도
-        turnover_risk = emp.get('turnover_risk', 0)
-        if turnover_risk > 70:
+            reasons.append(f"심각한 성과 부진 ({performance}점 - 하위 10%)")
+        elif performance < 60:
             risk_score += 30
-            reasons.append(f"높은 이직 위험도 ({turnover_risk}%)")
-        elif turnover_risk > 50:
+            reasons.append(f"성과 저조 ({performance}점 - 개선 시급)")
+        elif performance < 70:
+            risk_score += 20
+            reasons.append(f"성과 미흡 ({performance}점 - 관리 필요)")
+        
+        # 2. 근태 및 조직 몰입도
+        attendance = emp.get('attendance_score', 100)
+        if attendance < 85:
+            risk_score += 25
+            reasons.append(f"잦은 결근/지각 ({attendance}% - 근태불량)")
+        elif attendance < 90:
             risk_score += 15
-            reasons.append(f"이직 위험 관찰 필요 ({turnover_risk}%)")
+            reasons.append(f"근태 개선 필요 ({attendance}%)")
+        elif attendance < 95:
+            risk_score += 5
+            reasons.append(f"근태 관찰 필요 ({attendance}%)")
         
-        # 역량 부족
-        competency = emp.get('competency_score', 0)
-        if competency < 60:
+        # 3. 이직 위험도 (더 세분화)
+        turnover_risk = emp.get('turnover_risk', 0)
+        if turnover_risk > 80:
+            risk_score += 35
+            reasons.append(f"매우 높은 이직 위험 ({turnover_risk}% - 즉시 면담 필요)")
+        elif turnover_risk > 70:
+            risk_score += 25
+            reasons.append(f"높은 이직 가능성 ({turnover_risk}% - 경력개발 상담)")
+        elif turnover_risk > 60:
+            risk_score += 15
+            reasons.append(f"이직 징후 포착 ({turnover_risk}% - 동기부여 필요)")
+        elif turnover_risk > 50:
             risk_score += 10
-            reasons.append(f"역량 개발 필요 ({competency}점)")
+            reasons.append(f"이직 관심도 상승 ({turnover_risk}%)")
         
+        # 4. 역량 평가
+        competency = emp.get('competency_score', 0)
+        if competency < 50:
+            risk_score += 20
+            reasons.append(f"역량 부족 심각 ({competency}점 - 교육훈련 시급)")
+        elif competency < 60:
+            risk_score += 15
+            reasons.append(f"역량 개발 필요 ({competency}점 - 멘토링 권장)")
+        elif competency < 70:
+            risk_score += 8
+            reasons.append(f"역량 향상 권고 ({competency}점)")
+        
+        # 5. 팀워크 및 협업 (새로운 지표)
+        teamwork = emp.get('teamwork_score', 0)
+        if teamwork < 60:
+            risk_score += 15
+            reasons.append(f"팀워크 문제 ({teamwork}점 - 팀빌딩 필요)")
+        elif teamwork < 70:
+            risk_score += 8
+            reasons.append(f"협업 능력 개선 필요 ({teamwork}점)")
+        
+        # 6. 리더십 평가 (관리자의 경우)
+        position = emp.get('position', '')
+        if any(keyword in position for keyword in ['팀장', '매니저', '부장', '이사', '실장']):
+            leadership = emp.get('leadership_score', 0)
+            if leadership < 60:
+                risk_score += 20
+                reasons.append(f"리더십 역량 부족 ({leadership}점 - 리더십 교육 필요)")
+            elif leadership < 70:
+                risk_score += 10
+                reasons.append(f"리더십 개선 필요 ({leadership}점)")
+        
+        # 7. 혁신성 및 적응력
+        innovation = emp.get('innovation_score', 0)
+        adaptability = emp.get('adaptability_score', 0)
+        if innovation < 50 or adaptability < 50:
+            risk_score += 10
+            reasons.append(f"변화 적응력 부족 (혁신: {innovation}점, 적응: {adaptability}점)")
+        
+        # 8. 근속연수 대비 성장 정체
+        tenure = emp.get('tenure_years', 0)
+        if tenure > 5 and performance < 75:
+            risk_score += 10
+            reasons.append(f"장기 근속자 성장 정체 ({tenure}년 근속)")
+        elif tenure < 1 and performance < 70:
+            risk_score += 8
+            reasons.append(f"신입 적응 어려움 ({tenure}년차)")
+        
+        # 9. 교육 참여도
+        training_participation = emp.get('training_participation', 100)
+        if training_participation < 50:
+            risk_score += 5
+            reasons.append(f"낮은 교육 참여도 ({training_participation}% - 자기개발 의지 부족)")
+        
+        # 사유가 없는 경우 기본 사유 추가
+        if risk_score >= 40 and not reasons:
+            reasons.append("종합 평가 결과 관리 필요")
+        
+        # 위험도 수준 세분화
         if risk_score >= 40:
+            if risk_score >= 80:
+                risk_level = 'critical'  # 심각
+            elif risk_score >= 70:
+                risk_level = 'high'      # 높음
+            elif risk_score >= 55:
+                risk_level = 'medium'    # 중간
+            else:
+                risk_level = 'low'       # 낮음
+                
             risk_employees.append({
                 'uid': emp.get('uid'),
                 'name': emp.get('name'),
                 'risk_score': risk_score,
-                'reasons': reasons,
+                'reasons': reasons[:3],  # 상위 3개 주요 사유만
                 'department': emp.get('department'),
                 'position': emp.get('position'),
-                'risk_level': 'high' if risk_score >= 70 else 'medium'
+                'risk_level': risk_level,
+                'performance_score': performance,
+                'tenure_years': tenure
             })
     
     return sorted(risk_employees, key=lambda x: x['risk_score'], reverse=True)
