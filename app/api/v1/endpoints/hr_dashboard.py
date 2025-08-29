@@ -438,7 +438,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
             },
             'risk_employees': {
                 'count': len(risk_employees),
-                'employees': risk_employees[:50],  # 최대 50명까지 반환 (페이지네이션용)
+                'employees': risk_employees,  # 전체 반환 (프론트엔드에서 페이지네이션)
                 'high_risk_count': len([e for e in risk_employees if e['risk_level'] == 'high']),
                 'medium_risk_count': len([e for e in risk_employees if e['risk_level'] == 'medium'])
             },
