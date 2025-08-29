@@ -6271,29 +6271,29 @@
                                             const turnoverRisk = Math.round((highRiskCount / totalRiskCount) * 35 + 15);
                                             const teamworkRisk = Math.round((mediumRiskCount / totalRiskCount) * 25 + 10);
                                             
-                                            return \`
+                                            return `
                                                 <div style="display: flex; align-items: center; margin-bottom: 8px;">
                                                     <div style="width: 60px; font-size: 12px;">성과 부진</div>
                                                     <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 8px; position: relative;">
-                                                        <div style="height: 100%; background: linear-gradient(90deg, #ff6b6b, #ff5252); border-radius: 3px; width: \${performanceRisk}%;"></div>
+                                                        <div style="height: 100%; background: linear-gradient(90deg, #ff6b6b, #ff5252); border-radius: 3px; width: ${performanceRisk}%;"></div>
                                                     </div>
-                                                    <div style="font-size: 12px; min-width: 35px;">\${performanceRisk}%</div>
+                                                    <div style="font-size: 12px; min-width: 35px;">${performanceRisk}%</div>
                                                 </div>
                                                 <div style="display: flex; align-items: center; margin-bottom: 8px;">
                                                     <div style="width: 60px; font-size: 12px;">이직 위험</div>
                                                     <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 8px; position: relative;">
-                                                        <div style="height: 100%; background: linear-gradient(90deg, #ffa726, #ff9800); border-radius: 3px; width: \${turnoverRisk}%;"></div>
+                                                        <div style="height: 100%; background: linear-gradient(90deg, #ffa726, #ff9800); border-radius: 3px; width: ${turnoverRisk}%;"></div>
                                                     </div>
-                                                    <div style="font-size: 12px; min-width: 35px;">\${turnoverRisk}%</div>
+                                                    <div style="font-size: 12px; min-width: 35px;">${turnoverRisk}%</div>
                                                 </div>
                                                 <div style="display: flex; align-items: center;">
                                                     <div style="width: 60px; font-size: 12px;">팀워크</div>
                                                     <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 8px; position: relative;">
-                                                        <div style="height: 100%; background: linear-gradient(90deg, #66bb6a, #4caf50); border-radius: 3px; width: \${teamworkRisk}%;"></div>
+                                                        <div style="height: 100%; background: linear-gradient(90deg, #66bb6a, #4caf50); border-radius: 3px; width: ${teamworkRisk}%;"></div>
                                                     </div>
-                                                    <div style="font-size: 12px; min-width: 35px;">\${teamworkRisk}%</div>
+                                                    <div style="font-size: 12px; min-width: 35px;">${teamworkRisk}%</div>
                                                 </div>
-                                            \`;
+                                            `;
                                         })()}
                                     </div>
                                 </div>
