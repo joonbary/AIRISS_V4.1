@@ -5144,7 +5144,7 @@
             },
             
             // 리포트 생성
-            async generateReport(type) {
+            async generateReport(type, shouldDownload = true) {
                 try {
                     this.showNotification(`${type} 리포트 생성 중...`, 'info');
                     
@@ -5177,14 +5177,25 @@
                             break;
                             
                         case 'custom':
-                            reportData.title = '맞춤형 HR 분석 리포트';
+                            reportData.title = '맮춤형 HR 분석 리포트';
                             reportData.content = this.generateCustomReport(dashboardData, employees);
                             break;
                     }
                     
-                    // HTML 리포트 생성
-                    this.downloadReport(reportData);
-                    this.showNotification('리포트가 생성되었습니다', 'success');
+                    // 리포트 화면 업데이트
+                    this.currentReport = reportData;
+                    const reportContent = document.getElementById('report-content');
+                    if (reportContent) {
+                        reportContent.innerHTML = reportData.content;
+                    }
+                    
+                    // 다운로드가 필요한 경우에만 HTML 파일 생성
+                    if (shouldDownload) {
+                        this.downloadReport(reportData);
+                        this.showNotification('리포트가 생성되었습니다', 'success');
+                    } else {
+                        this.showNotification('리포트가 업데이트되었습니다', 'success');
+                    }
                     
                 } catch (error) {
                     console.error('Report generation failed:', error);
@@ -6063,28 +6074,28 @@
             changeTalentReportPage(page) {
                 if (page < 1) return;
                 this.talentReportPage = page;
-                this.generateReport('talent');
+                this.generateReport('talent', false);  // 다운로드 없이 화면만 업데이트
             },
             
             // 리포트 승진 후보자 페이지 변경
             changePromotionReportPage(page) {
                 if (page < 1) return;
                 this.promotionReportPage = page;
-                this.generateReport('talent');
+                this.generateReport('talent', false);  // 다운로드 없이 화면만 업데이트
             },
             
             // 리포트 리스크 페이지 변경
             changeRiskReportPage(page) {
                 if (page < 1) return;
                 this.riskReportPage = page;
-                this.generateReport('risk');
+                this.generateReport('risk', false);  // 다운로드 없이 화면만 업데이트
             },
             
             // 관리필요인력 페이지 변경
             changeRiskPage(page) {
                 if (page < 1) return;
                 this.riskCurrentPage = page;
-                this.generateReport('risk');
+                this.generateReport('risk', false);  // 다운로드 없이 화면만 업데이트
             },
             
             // 리스크 리폼트 생성
