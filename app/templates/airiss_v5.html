@@ -5590,33 +5590,30 @@
             
             // 인재 리포트 생성
             generateTalentReport(dashboardData, employees) {
-                // 실제 직원 데이터 사용
-                const actualEmployees = employees && employees.length > 0 ? employees : this.state.employees || [];
-                
-                // 상위 성과자 필터링 (AI 점수 85점 이상 또는 S/A+ 등급)
-                const talents = actualEmployees.filter(emp => 
-                    (emp.ai_score >= 85 || emp.overall_score >= 85) || 
-                    (emp.grade === 'S' || emp.grade === 'A+' || emp.final_grade === 'S' || emp.final_grade === 'A+')
-                ).slice(0, 20);
-                
-                // 승진 후보자 필터링 (A 등급 또는 AI 점수 75-84)
-                const promotions = actualEmployees.filter(emp => 
-                    ((emp.ai_score >= 75 && emp.ai_score < 85) || (emp.overall_score >= 75 && emp.overall_score < 85)) || 
-                    (emp.grade === 'A' || emp.final_grade === 'A')
-                ).slice(0, 15);
+                // API에서 받은 데이터 우선 사용
+                const talents = dashboardData.top_talents?.employees || [];
+                const promotions = dashboardData.promotion_candidates?.candidates || [];
                 
                 let talentCards = talents.map(emp => `
                     <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 20px rgba(0, 212, 255, 0.15); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
+                            <div style="flex: 1;">
                                 <h4 style="margin: 0 0 8px 0; color: #ffffff; font-size: 1.2em; font-weight: 600;">${emp.name || emp.uid || '직원'}</h4>
-                                <p style="margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 0.95em;">${emp.department || '부서 미상'} / ${emp.position || '직책 미상'}</p>
+                                <p style="margin: 0 0 10px 0; color: rgba(255, 255, 255, 0.7); font-size: 0.95em;">${emp.department || '부서 미상'} / ${emp.position || '직책 미상'}</p>
+                                ${emp.reasons && emp.reasons.length > 0 ? `
+                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                                        <p style="color: rgba(255, 255, 255, 0.9); font-size: 0.9em; margin: 0 0 5px 0; font-weight: 500;">선별 사유:</p>
+                                        <ul style="margin: 0; padding-left: 20px; color: rgba(255, 255, 255, 0.8); font-size: 0.85em;">
+                                            ${emp.reasons.map(reason => `<li style="margin: 3px 0;">${reason}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
                             </div>
-                            <div style="text-align: right;">
+                            <div style="text-align: right; min-width: 120px;">
                                 <div style="background: linear-gradient(135deg, #00d4ff, #0099ff); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 1.3em; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3); text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);">
-                                    ${Math.round(emp.ai_score || emp.overall_score || 0)}점
+                                    ${Math.round(emp.score || emp.ai_score || emp.overall_score || 0)}점
                                 </div>
-                                <div style="color: #69f0ae; font-weight: 600; margin-top: 8px; font-size: 1.1em; text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);">${emp.grade || emp.final_grade || 'N/A'}등급</div>
+                                <div style="color: #69f0ae; font-weight: 600; margin-top: 8px; font-size: 1.1em; text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);">${emp.grade || 'N/A'}등급</div>
                             </div>
                         </div>
                     </div>
@@ -5625,12 +5622,25 @@
                 let promotionCards = promotions.map(emp => `
                     <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 20px rgba(76, 175, 80, 0.15); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
+                            <div style="flex: 1;">
                                 <h4 style="margin: 0 0 8px 0; color: #ffffff; font-size: 1.2em; font-weight: 600;">${emp.name || emp.uid || '직원'}</h4>
-                                <p style="margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 0.95em;">${emp.department || '부서 미상'} / ${emp.position || '직책 미상'}</p>
+                                <p style="margin: 0 0 10px 0; color: rgba(255, 255, 255, 0.7); font-size: 0.95em;">${emp.department || '부서 미상'} / ${emp.position || '직책 미상'}</p>
+                                ${emp.reasons && emp.reasons.length > 0 ? `
+                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                                        <p style="color: rgba(255, 255, 255, 0.9); font-size: 0.9em; margin: 0 0 5px 0; font-weight: 500;">승진 추천 사유:</p>
+                                        <ul style="margin: 0; padding-left: 20px; color: rgba(255, 255, 255, 0.8); font-size: 0.85em;">
+                                            ${emp.reasons.map(reason => `<li style="margin: 3px 0;">${reason}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
                             </div>
-                            <div style="background: linear-gradient(135deg, #69f0ae, #4caf50); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);">
-                                ${emp.grade || emp.final_grade || 'N/A'}등급
+                            <div style="text-align: right; min-width: 120px;">
+                                <div style="background: linear-gradient(135deg, #69f0ae, #4caf50); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 1.1em; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);">
+                                    ${emp.score ? `${emp.score}점` : ''}
+                                </div>
+                                <div style="color: #69f0ae; font-weight: 600; margin-top: 8px; font-size: 1em;">
+                                    ${emp.grade || '평가 대기'}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -5652,12 +5662,12 @@
                             ${promotionCards || '<p style="color: rgba(255, 255, 255, 0.5);">현재 해당하는 인재가 없습니다.</p>'}
                         </div>
                         
-                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                            <h3 style="color: #856404; margin-bottom: 15px;">💡 인재 관리 제언</h3>
-                            <ul style="margin: 0; padding-left: 20px;">
-                                <li style="margin-bottom: 10px;">핵심 인재 retention 프로그램 강화 필요</li>
-                                <li style="margin-bottom: 10px;">승진 후보자 대상 리더십 교육 실시 권장</li>
-                                <li style="margin-bottom: 10px;">장기 인재 육성 로드맵 수립 필요</li>
+                        <div style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 152, 0, 0.1) 100%); padding: 25px; border-radius: 15px; margin: 25px 0; border: 1px solid rgba(255, 193, 7, 0.3); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(255, 193, 7, 0.15);">
+                            <h3 style="background: linear-gradient(135deg, #ffc107, #ff9800); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-size: 1.6em; font-weight: 700; text-shadow: 0 0 20px rgba(255, 193, 7, 0.3);">💡 인재 관리 제언</h3>
+                            <ul style="margin: 0; padding-left: 25px; color: rgba(255, 255, 255, 0.9); font-size: 1.05em; line-height: 1.8;">
+                                <li style="margin-bottom: 12px;">핵심 인재 retention 프로그램 강화 필요</li>
+                                <li style="margin-bottom: 12px;">승진 후보자 대상 리더십 교육 실시 권장</li>
+                                <li style="margin-bottom: 12px;">장기 인재 육성 로드맵 수립 필요</li>
                             </ul>
                         </div>
                     </div>

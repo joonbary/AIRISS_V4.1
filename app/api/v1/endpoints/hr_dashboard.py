@@ -104,7 +104,8 @@ def calculate_promotion_candidates(employees):
                 'score': promotion_score,
                 'reasons': reasons,
                 'department': emp.get('department'),
-                'position': emp.get('position')
+                'position': emp.get('position'),
+                'grade': emp.get('grade', 'C')
             })
     
     return sorted(candidates, key=lambda x: x['score'], reverse=True)
@@ -112,50 +113,89 @@ def calculate_promotion_candidates(employees):
 def identify_top_talent(employees):
     """Top Talent 식별 로직"""
     top_talents = []
+    logger.info(f"identify_top_talent: Processing {len(employees)} employees")
     
-    for emp in employees:
+    for idx, emp in enumerate(employees):
         talent_score = 0
         reasons = []
         
-        # 종합 성과 점수
+        # 종합 성과 점수 (S, A 등급이면 자동 포함)
         performance = emp.get('performance_score', 0)
-        if performance >= 90:
-            talent_score += 35
-            reasons.append(f"탁월한 성과 ({performance}점)")
-        elif performance >= 80:
-            talent_score += 25
-            reasons.append(f"우수한 성과 ({performance}점)")
+        grade = emp.get('grade', 'C')
+        
+        # 처음 3명의 데이터 로그
+        if idx < 3:
+            logger.info(f"Employee {idx}: grade={grade}, performance={performance}, name={emp.get('name', 'N/A')}")
+        
+        # S 또는 A 등급이면 자동으로 핵심인재
+        if grade in ['S', 'A']:
+            talent_score = 100  # 높은 점수 부여
+            reasons.append(f"최우수 등급 ({grade}등급)")
+            if performance >= 90:
+                reasons.append(f"탁월한 성과 ({performance:.1f}점)")
+            elif performance >= 80:
+                reasons.append(f"우수한 성과 ({performance:.1f}점)")
+        else:
+            # 기존 로직
+            if performance >= 90:
+                talent_score += 35
+                reasons.append(f"탁월한 성과 ({performance:.1f}점)")
+            elif performance >= 80:
+                talent_score += 25
+                reasons.append(f"우수한 성과 ({performance:.1f}점)")
         
         # 잠재력 평가
         potential = emp.get('potential_score', 0)
         if potential >= 85:
             talent_score += 30
-            reasons.append(f"높은 잠재력 ({potential}점)")
+            reasons.append(f"높은 잠재력 ({potential:.1f}점)")
+        elif potential >= 75:
+            talent_score += 15
+            reasons.append(f"성장 가능성 ({potential:.1f}점)")
         
         # 핵심 역량
         competency = emp.get('competency_score', 0)
         if competency >= 88:
             talent_score += 25
-            reasons.append(f"핵심역량 우수 ({competency}점)")
+            reasons.append(f"핵심역량 우수 ({competency:.1f}점)")
+        elif competency >= 80:
+            talent_score += 15
+            reasons.append(f"역량 우수 ({competency:.1f}점)")
         
         # 혁신성
         innovation = emp.get('innovation_score', 0)
         if innovation >= 85:
             talent_score += 10
-            reasons.append(f"혁신성 우수 ({innovation}점)")
+            reasons.append(f"혁신성 우수 ({innovation:.1f}점)")
         
-        if talent_score >= 65:
+        # 리더십
+        leadership = emp.get('leadership_score', 0)
+        if leadership >= 80:
+            talent_score += 10
+            reasons.append(f"리더십 우수 ({leadership:.1f}점)")
+        
+        # 사유가 없으면 기본 사유 추가
+        if not reasons and talent_score > 0:
+            reasons.append(f"종합 평가 우수")
+        
+        # S/A 등급 또는 점수가 높은 경우 포함
+        if grade in ['S', 'A'] or talent_score >= 50:
             top_talents.append({
                 'uid': emp.get('uid'),
                 'name': emp.get('name'),
-                'score': talent_score,
-                'reasons': reasons,
+                'score': performance,  # 실제 성과 점수 사용
+                'talent_score': talent_score,  # 계산된 인재 점수
+                'reasons': reasons if reasons else ["우수 성과자"],
                 'department': emp.get('department'),
                 'position': emp.get('position'),
-                'grade': emp.get('grade')
+                'grade': emp.get('grade', 'C'),
+                'ai_score': emp.get('ai_score', performance)
             })
     
-    return sorted(top_talents, key=lambda x: x['score'], reverse=True)[:10]
+    # talent_score로 정렬하여 모든 S/A 등급 직원 반환
+    result = sorted(top_talents, key=lambda x: x['talent_score'], reverse=True)
+    logger.info(f"identify_top_talent: Found {len(top_talents)} talents, returning all")
+    return result
 
 def identify_risk_employees(employees):
     """관리 필요 인력 식별 로직"""
@@ -246,8 +286,9 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
         # 승진 후보자 계산
         promotion_candidates = calculate_promotion_candidates(employees)
         
-        # Top Talent 식별 (상세 정보용 - 상위 10명만)
+        # Top Talent 식별 (상세 정보 포함)
         top_talents_detail = identify_top_talent(employees)
+        logger.info(f"Top talents detail count: {len(top_talents_detail)}")
         
         # 관리 필요 인력 식별
         risk_employees = identify_risk_employees(employees)
@@ -302,7 +343,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
             },
             'top_talents': {
                 'count': top_talents_count,  # S+A 등급 전체 수
-                'employees': top_talents_detail,  # 상위 10명의 상세 정보
+                'employees': top_talents_detail[:100],  # 최대 100명의 상세 정보 (성능 고려)
                 'has_talents': top_talents_count > 0,
                 's_grade_count': s_grade_count,
                 'a_grade_count': a_grade_count
