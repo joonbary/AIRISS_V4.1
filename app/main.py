@@ -405,15 +405,24 @@ async def api_root():
     """API root endpoint"""
     return {"message": "AIRISS v5.0 API", "version": "5.0.0"}
 
-# HR Dashboard Stats API
-@app.get("/api/v1/hr-dashboard/stats")
-async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
-    """Get HR Dashboard statistics from database"""
-    try:
-        from sqlalchemy import text
-        
-        # employee_results 테이블에서 최신 데이터만 조회 (중복 제거)
-        result = db.execute(text("""
+# HR Dashboard Stats API - hr_dashboard.py로 이동됨
+# 이 API는 hr_dashboard.py에서 처리되므로 비활성화됨
+# 원본 코드는 411-662번째 줄에 있었으나, hr_dashboard.py의 구현을 사용하기 위해 제거됨
+
+# 아래는 이전 구현의 시작 부분입니다 (참조용):
+# @app.get("/api/v1/hr-dashboard/stats")
+# async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
+#     """Get HR Dashboard statistics from database"""
+#     ... (hr_dashboard.py 참조)
+
+if False:  # 아래 코드는 파싱 오류 방지를 위해 유지
+    async def old_implementation():
+        # Get HR Dashboard statistics from database
+        try:
+            from sqlalchemy import text
+            
+            # employee_results 테이블에서 최신 데이터만 조회 (중복 제거)
+            result = db.execute(text("""
             WITH latest_records AS (
                 SELECT uid, MAX(id::text) as max_id
                 FROM employee_results
@@ -425,234 +434,16 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
                    COUNT(CASE WHEN er.overall_score < 60 THEN 1 END) as risk_employees
             FROM employee_results er
             INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
-        """)).first()
-        
-        total = result.total_employees if result else 0
-        high_performers = result.high_performers if result else 0
-        risk_count = result.risk_employees if result else 0
-        
-        # 위험 직원 목록 조회 (최신 데이터만, 역량 데이터 포함)
-        risk_employees = []
-        if risk_count > 0:
-            risk_results = db.execute(text("""
-                WITH latest_records AS (
-                    SELECT uid, MAX(id::text) as max_id
-                    FROM employee_results
-                    WHERE uid IS NOT NULL
-                    GROUP BY uid
-                )
-                SELECT er.uid, 
-                       er.employee_metadata->>'name' as name, 
-                       er.employee_metadata->>'department' as department, 
-                       er.employee_metadata->>'position' as position,
-                       er.overall_score,
-                       er.dimension_scores,
-                       er.grade,
-                       CASE 
-                           WHEN er.overall_score < 40 THEN 'high'
-                           WHEN er.overall_score < 60 THEN 'medium'
-                           ELSE 'low'
-                       END as risk_level
-                FROM employee_results er
-                INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
-                WHERE er.overall_score < 60
-                ORDER BY er.overall_score ASC
-                LIMIT 10
-            """)).fetchall()
+            """)).first()
             
-            # 개인별 맞춤 사유 생성
-            risk_employees = []
-            for r in risk_results:
-                # 역량 데이터 파싱
-                dimension_scores = r.dimension_scores or {}
-                if isinstance(dimension_scores, str):
-                    import json
-                    try:
-                        dimension_scores = json.loads(dimension_scores)
-                    except:
-                        dimension_scores = {}
-                
-                # 개인별 사유 생성
-                reason = generate_risk_reason(r.overall_score, dimension_scores, r.position, r.department)
-                
-                risk_employees.append({
-                    "uid": r.uid,
-                    "name": r.name or "익명",
-                    "department": r.department or "-",
-                    "ai_score": r.overall_score,
-                    "risk_score": r.overall_score,
-                    "overall_score": r.overall_score,
-                    "risk_level": r.risk_level,
-                    "reason": reason
-                })
+            total = result.total_employees if result else 0
+            high_performers = result.high_performers if result else 0
+            risk_count = result.risk_employees if result else 0
+        except:
+            pass
         
-        # 승진 후보자 목록 조회 (최신 데이터만, 역량 데이터 포함)
-        promotion_candidates = []
-        if high_performers > 0:
-            promotion_results = db.execute(text("""
-                WITH latest_records AS (
-                    SELECT uid, MAX(id::text) as max_id
-                    FROM employee_results
-                    WHERE uid IS NOT NULL
-                    GROUP BY uid
-                )
-                SELECT er.uid, 
-                       er.employee_metadata->>'name' as name, 
-                       er.employee_metadata->>'department' as department,
-                       er.employee_metadata->>'position' as position,
-                       er.overall_score,
-                       er.dimension_scores,
-                       er.grade
-                FROM employee_results er
-                INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
-                WHERE er.overall_score >= 80 AND er.grade IN ('S', 'A+', 'A', 'B+')
-                ORDER BY er.overall_score DESC
-                LIMIT 10
-            """)).fetchall()
-            
-            # 개인별 맞춤 사유 생성
-            promotion_candidates = []
-            for r in promotion_results:
-                # 역량 데이터 파싱
-                dimension_scores = r.dimension_scores or {}
-                if isinstance(dimension_scores, str):
-                    import json
-                    try:
-                        dimension_scores = json.loads(dimension_scores)
-                    except:
-                        dimension_scores = {}
-                
-                # 개인별 승진 사유 생성
-                reason = generate_promotion_reason(r.overall_score, dimension_scores, r.position, r.department, r.grade)
-                
-                promotion_candidates.append({
-                    "uid": r.uid,
-                    "name": r.name or "익명",
-                    "department": r.department or "-",
-                    "position": r.position or "-",
-                    "ai_score": r.overall_score,
-                    "overall_score": r.overall_score,
-                    "grade": r.grade,
-                    "reason": reason
-                })
-        
-        # 핵심 인재 목록 조회 (최신 데이터만, 역량 데이터 포함)
-        top_talents = []
-        if high_performers > 0:
-            talent_results = db.execute(text("""
-                WITH latest_records AS (
-                    SELECT uid, MAX(id::text) as max_id
-                    FROM employee_results
-                    WHERE uid IS NOT NULL
-                    GROUP BY uid
-                )
-                SELECT er.uid, 
-                       er.employee_metadata->>'name' as name, 
-                       er.employee_metadata->>'department' as department,
-                       er.employee_metadata->>'position' as position,
-                       er.overall_score,
-                       er.dimension_scores,
-                       er.grade
-                FROM employee_results er
-                INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
-                WHERE er.overall_score >= 85
-                ORDER BY er.overall_score DESC
-                LIMIT 10
-            """)).fetchall()
-            
-            # 개인별 맞춤 사유 생성
-            top_talents = []
-            for r in talent_results:
-                # 역량 데이터 파싱
-                dimension_scores = r.dimension_scores or {}
-                if isinstance(dimension_scores, str):
-                    import json
-                    try:
-                        dimension_scores = json.loads(dimension_scores)
-                    except:
-                        dimension_scores = {}
-                
-                # 개인별 핵심인재 사유 생성
-                reason = generate_talent_reason(r.overall_score, dimension_scores, r.position, r.department, r.grade)
-                
-                top_talents.append({
-                    "uid": r.uid,
-                    "name": r.name or "익명",
-                    "department": r.department or "-",
-                    "position": r.position or "-",
-                    "ai_score": r.overall_score,
-                    "overall_score": r.overall_score,
-                    "score": r.overall_score,  # 기존 score도 유지
-                    "grade": r.grade,
-                    "reason": reason
-                })
-        
-        # 전체 직원 목록도 조회 (최신 데이터만)
-        all_employees = []
-        try:
-            employees_query = text("""
-                WITH latest_records AS (
-                    SELECT uid, MAX(id::text) as max_id
-                    FROM employee_results
-                    WHERE uid IS NOT NULL
-                    GROUP BY uid
-                )
-                SELECT 
-                    er.uid as employee_id,
-                    er.employee_metadata->>'name' as employee_name,
-                    er.employee_metadata->>'department' as department,
-                    er.employee_metadata->>'position' as position,
-                    er.overall_score as ai_score,
-                    er.grade
-                FROM employee_results er
-                INNER JOIN latest_records lr ON er.uid = lr.uid AND er.id::text = lr.max_id
-                ORDER BY er.uid
-                LIMIT 2000
-            """)
-            
-            emp_results = db.execute(employees_query).fetchall()
-            all_employees = [
-                {
-                    "employee_id": r.employee_id,
-                    "uid": r.employee_id,
-                    "name": r.employee_name or "익명",
-                    "employee_name": r.employee_name or "익명",
-                    "department": r.department or "-",
-                    "position": r.position or "-",
-                    "ai_score": r.ai_score,
-                    "overall_score": r.ai_score,
-                    "grade": r.grade
-                }
-                for r in emp_results
-            ]
-        except Exception as e:
-            logger.warning(f"Failed to get all employees: {e}")
-            all_employees = []
-        
-        return {
-            "total_employees": total,
-            "promotion_candidates": {
-                "count": len(promotion_candidates),
-                "employees": promotion_candidates
-            },
-            "top_talents": {
-                "count": len(top_talents),
-                "employees": top_talents
-            },
-            "risk_employees": {
-                "count": risk_count,
-                "employees": risk_employees
-            },
-            "employees": all_employees  # 전체 직원 목록 추가
-        }
-    except Exception as e:
-        logger.error(f"Failed to get dashboard stats: {e}")
-        return {
-            "total_employees": 0,
-            "promotion_candidates": {"count": 0, "employees": []},
-            "top_talents": {"count": 0, "employees": []},
-            "risk_employees": {"count": 0, "employees": []}
-        }
+        # 아래 코드는 생략됨...
+        return None
 
 # Get Employees List API - 모든 분석 결과 테이블 통합 조회
 # DB 연결 테스트 엔드포인트

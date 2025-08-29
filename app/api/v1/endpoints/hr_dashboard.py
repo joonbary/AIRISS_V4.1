@@ -246,7 +246,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
         # 승진 후보자 계산
         promotion_candidates = calculate_promotion_candidates(employees)
         
-        # Top Talent 식별 (상세 정보용)
+        # Top Talent 식별 (상세 정보용 - 상위 10명만)
         top_talents_detail = identify_top_talent(employees)
         
         # 관리 필요 인력 식별
@@ -267,6 +267,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
         
         # 실제 최우수 인재 수 (S+A 등급 전체)
         top_talents_count = s_grade_count + a_grade_count
+        logger.info(f"Grade distribution - S: {s_grade_count}, A: {a_grade_count}, Total top talents: {top_talents_count}")
         
         # 등급 순서대로 정렬 (S > A > B > C > D)
         grade_order = ['S', 'A', 'B', 'C', 'D']
