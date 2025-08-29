@@ -1890,6 +1890,10 @@
             buildTime: new Date().toISOString(),
             cacheBreaker: Math.random().toString(36).substring(7),
             
+            // 페이지네이션 상태 변수
+            promotionDashboardPage: 1,
+            riskDashboardPage: 1,
+            
             // API 설정
             api: {
                 baseURL: '/api/v1',
@@ -2046,6 +2050,93 @@
                 }
             },
             
+            // 증감 표기 업데이트 함수
+            updateChangeIndicators(data) {
+                // 이전 데이터 가져오기 (로컬 스토리지에서)
+                const previousData = JSON.parse(localStorage.getItem('previousDashboardData') || '{}');
+                
+                // 전체 직원 수 변화
+                const totalChange = data.total_employees - (previousData.total_employees || data.total_employees);
+                const totalPercent = previousData.total_employees ? 
+                    Math.round((totalChange / previousData.total_employees) * 100) : 0;
+                
+                const totalChangeEl = document.querySelector('.stat-card:nth-child(1) .stat-change');
+                if (totalChangeEl) {
+                    if (totalChange > 0) {
+                        totalChangeEl.className = 'stat-change positive';
+                        totalChangeEl.innerHTML = `<span>↑</span><span>+${totalChange}명 (${totalPercent}%)</span>`;
+                    } else if (totalChange < 0) {
+                        totalChangeEl.className = 'stat-change negative';
+                        totalChangeEl.innerHTML = `<span>↓</span><span>${totalChange}명 (${totalPercent}%)</span>`;
+                    } else {
+                        totalChangeEl.className = 'stat-change';
+                        totalChangeEl.innerHTML = `<span>―</span><span>변화없음</span>`;
+                    }
+                }
+                
+                // 승진 후보자 변화
+                const promotionChange = (data.promotion_candidates?.count || 0) - (previousData.promotion_candidates?.count || 0);
+                const promotionChangeEl = document.querySelector('.stat-card:nth-child(2) .stat-change');
+                if (promotionChangeEl) {
+                    if (promotionChange > 0) {
+                        promotionChangeEl.className = 'stat-change positive';
+                        promotionChangeEl.innerHTML = `<span>↑</span><span>+${promotionChange}명 증가</span>`;
+                    } else if (promotionChange < 0) {
+                        promotionChangeEl.className = 'stat-change negative';
+                        promotionChangeEl.innerHTML = `<span>↓</span><span>${Math.abs(promotionChange)}명 감소</span>`;
+                    } else {
+                        promotionChangeEl.className = 'stat-change';
+                        promotionChangeEl.innerHTML = `<span>―</span><span>변화없음</span>`;
+                    }
+                }
+                
+                // 핵심 인재 변화
+                const talentChange = (data.top_talents?.count || 0) - (previousData.top_talents?.count || 0);
+                const talentChangeEl = document.querySelector('.stat-card:nth-child(3) .stat-change');
+                if (talentChangeEl) {
+                    if (talentChange > 0) {
+                        talentChangeEl.className = 'stat-change positive';
+                        talentChangeEl.innerHTML = `<span>↑</span><span>+${talentChange}명 증가</span>`;
+                    } else if (talentChange < 0) {
+                        talentChangeEl.className = 'stat-change negative';
+                        talentChangeEl.innerHTML = `<span>↓</span><span>${Math.abs(talentChange)}명 감소</span>`;
+                    } else {
+                        talentChangeEl.className = 'stat-change';
+                        talentChangeEl.innerHTML = `<span>―</span><span>변화없음</span>`;
+                    }
+                }
+                
+                // 관리 필요 인력 변화 (감소가 긍정적)
+                const riskChange = (data.risk_employees?.count || 0) - (previousData.risk_employees?.count || 0);
+                const riskPercent = previousData.risk_employees?.count ? 
+                    Math.round((riskChange / previousData.risk_employees?.count) * 100) : 0;
+                
+                const riskChangeEl = document.querySelector('.stat-card:nth-child(4) .stat-change');
+                if (riskChangeEl) {
+                    if (riskChange < 0) {
+                        // 관리 필요 인력이 감소한 경우 (긍정적)
+                        riskChangeEl.className = 'stat-change positive';
+                        riskChangeEl.innerHTML = `<span>↓</span><span>${Math.abs(riskChange)}명 감소 (${Math.abs(riskPercent)}%)</span>`;
+                    } else if (riskChange > 0) {
+                        // 관리 필요 인력이 증가한 경우 (부정적)
+                        riskChangeEl.className = 'stat-change negative';
+                        riskChangeEl.innerHTML = `<span>↑</span><span>+${riskChange}명 증가 (${riskPercent}%)</span>`;
+                    } else {
+                        riskChangeEl.className = 'stat-change';
+                        riskChangeEl.innerHTML = `<span>―</span><span>변화없음</span>`;
+                    }
+                }
+                
+                // 현재 데이터를 이전 데이터로 저장
+                localStorage.setItem('previousDashboardData', JSON.stringify({
+                    total_employees: data.total_employees || 0,
+                    promotion_candidates: { count: data.promotion_candidates?.count || 0 },
+                    top_talents: { count: data.top_talents?.count || 0 },
+                    risk_employees: { count: data.risk_employees?.count || 0 },
+                    timestamp: new Date().toISOString()
+                }));
+            },
+            
             // 대시보드 데이터 로드
             async loadDashboardData() {
                 try {
@@ -2057,6 +2148,9 @@
                     document.getElementById('stat-promotion').textContent = data.promotion_candidates?.count || 0;
                     document.getElementById('stat-talent').textContent = data.top_talents?.count || 0;
                     document.getElementById('stat-risk').textContent = data.risk_employees?.count || 0;
+                    
+                    // 증감 표기 업데이트 (실제 데이터 기반)
+                    this.updateChangeIndicators(data);
                     
                     // 승진 후보자 리스트 렌더링
                     this.renderPromotionList(data.promotion_candidates?.employees || []);
@@ -2130,7 +2224,7 @@
                 
                 const paginationHTML = `
                     <div id="risk-pagination" style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 10px;">
-                        <button onclick="app.changeRiskDashboardPage(${currentPage - 1})" 
+                        <button onclick="AIRISS.changeRiskDashboardPage(${currentPage - 1})" 
                             ${currentPage <= 1 ? 'disabled' : ''}
                             style="padding: 8px 16px; background: ${currentPage <= 1 ? '#6c757d' : '#007bff'}; color: white; border: none; border-radius: 6px; cursor: ${currentPage <= 1 ? 'not-allowed' : 'pointer'};">
                             ← 이전
@@ -2138,7 +2232,7 @@
                         <span style="margin: 0 15px; font-weight: 500;">
                             ${currentPage} / ${totalPages} 페이지 (${totalCount}명)
                         </span>
-                        <button onclick="app.changeRiskDashboardPage(${currentPage + 1})" 
+                        <button onclick="AIRISS.changeRiskDashboardPage(${currentPage + 1})" 
                             ${currentPage >= totalPages ? 'disabled' : ''}
                             style="padding: 8px 16px; background: ${currentPage >= totalPages ? '#6c757d' : '#007bff'}; color: white; border: none; border-radius: 6px; cursor: ${currentPage >= totalPages ? 'not-allowed' : 'pointer'};">
                             다음 →
@@ -2164,9 +2258,9 @@
                 
                 tbody.innerHTML = '';
                 
-                // 전체 카운트 업데이트 (전체 수)
+                // 전체 카운트 업데이트 (API에서 받은 전체 수 사용)
                 const counter = document.getElementById('stat-promotion-table');
-                if (counter) counter.textContent = this.state.dashboardStats?.promotion_candidates?.count || employees.length;
+                if (counter) counter.textContent = this.state.dashboardStats?.promotion_candidates?.count || 0;
                 
                 // 페이지네이션 설정
                 const promotionPerPage = 10;
@@ -2213,7 +2307,7 @@
                 
                 const paginationHTML = `
                     <div id="promotion-pagination" style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 10px;">
-                        <button onclick="app.changePromotionDashboardPage(${currentPage - 1})" 
+                        <button onclick="AIRISS.changePromotionDashboardPage(${currentPage - 1})" 
                             ${currentPage <= 1 ? 'disabled' : ''}
                             style="padding: 8px 16px; background: ${currentPage <= 1 ? '#6c757d' : '#007bff'}; color: white; border: none; border-radius: 6px; cursor: ${currentPage <= 1 ? 'not-allowed' : 'pointer'};">
                             ← 이전
@@ -2221,7 +2315,7 @@
                         <span style="margin: 0 15px; font-weight: 500;">
                             ${currentPage} / ${totalPages} 페이지 (${totalCount}명)
                         </span>
-                        <button onclick="app.changePromotionDashboardPage(${currentPage + 1})" 
+                        <button onclick="AIRISS.changePromotionDashboardPage(${currentPage + 1})" 
                             ${currentPage >= totalPages ? 'disabled' : ''}
                             style="padding: 8px 16px; background: ${currentPage >= totalPages ? '#6c757d' : '#007bff'}; color: white; border: none; border-radius: 6px; cursor: ${currentPage >= totalPages ? 'not-allowed' : 'pointer'};">
                             다음 →
