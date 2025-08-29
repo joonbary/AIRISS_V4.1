@@ -1118,13 +1118,75 @@
             border-right: 1px solid rgba(0, 212, 255, 0.2);
             padding: 20px 0;
             z-index: 1000;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+        }
+        
+        /* 사이드바 축소 상태 */
+        .sidebar.collapsed {
+            width: 60px;
+            overflow: hidden;
+        }
+        
+        /* 사이드바 hover 시 임시 확장 */
+        .sidebar.collapsed.hover-open {
+            width: 250px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 사이드바 hover 트리거 영역 */
+        .sidebar-hover-trigger {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 10px;
+            height: 100vh;
+            z-index: 999;
+            background: transparent;
+        }
+        
+        /* 축소 시 메뉴 텍스트 숨김 */
+        .sidebar.collapsed .menu-text {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .sidebar.collapsed.hover-open .menu-text {
+            opacity: 1;
+        }
+        
+        .sidebar.collapsed .sidebar-header h3 {
+            font-size: 0.9em;
+            text-align: center;
+        }
+        
+        /* 토글 버튼 스타일 */
+        .sidebar-toggle {
+            position: absolute;
+            right: 10px;
+            top: 20px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: #00d4ff;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-toggle:hover {
+            background: rgba(0, 212, 255, 0.2);
+            transform: scale(1.1);
         }
         
         .sidebar-header {
             padding: 0 20px 20px;
             border-bottom: 1px solid rgba(0, 212, 255, 0.1);
             margin-bottom: 20px;
+            position: relative;
         }
         
         .sidebar-header h3 {
@@ -1172,6 +1234,12 @@
             margin-left: 250px;
             min-height: 100vh;
             background: linear-gradient(145deg, #0a0e27 0%, #050714 100%);
+            transition: margin-left 0.3s ease;
+        }
+        
+        /* 사이드바 축소 시 메인 콘텐츠 확장 */
+        .main-content.expanded {
+            margin-left: 60px;
         }
         
         @media (max-width: 768px) {
@@ -1202,6 +1270,9 @@
     <div class="sidebar" id="revolutionary-sidebar">
         <div class="sidebar-header">
             <h3>AIRISS v5.0</h3>
+            <button class="sidebar-toggle" onclick="toggleSidebar()" title="사이드바 토글">
+                <span style="font-size: 16px;">☰</span>
+            </button>
         </div>
         <nav class="sidebar-menu">
             <a href="#" class="menu-item active" onclick="AIRISS.switchTab('dashboard')" data-tab="dashboard">
@@ -1970,6 +2041,58 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        // 사이드바 토글 함수
+        function toggleSidebar() {
+            const sidebar = document.getElementById('revolutionary-sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            // 로컬 스토리지에 상태 저장
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        }
+        
+        // 페이지 로드 시 사이드바 상태 복원
+        document.addEventListener('DOMContentLoaded', function() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const sidebar = document.getElementById('revolutionary-sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+            }
+            
+            // Hover 트리거 설정
+            const hoverTrigger = document.querySelector('.sidebar-hover-trigger');
+            if (hoverTrigger) {
+                hoverTrigger.addEventListener('mouseenter', function() {
+                    if (sidebar.classList.contains('collapsed')) {
+                        sidebar.classList.add('hover-open');
+                    }
+                });
+                
+                hoverTrigger.addEventListener('mouseleave', function() {
+                    sidebar.classList.remove('hover-open');
+                });
+                
+                // 사이드바 자체에도 hover 이벤트 추가
+                sidebar.addEventListener('mouseenter', function() {
+                    if (this.classList.contains('collapsed')) {
+                        this.classList.add('hover-open');
+                    }
+                });
+                
+                sidebar.addEventListener('mouseleave', function() {
+                    this.classList.remove('hover-open');
+                });
+            }
+        });
+    </script>
     
     <script>
         // AIRISS v5.0 Main Application - Debug Version
