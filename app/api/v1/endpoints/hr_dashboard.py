@@ -416,7 +416,7 @@ async def get_hr_dashboard_stats(db: Session = Depends(get_db)):
             'total_employees': len(employees),
             'promotion_candidates': {
                 'count': len(promotion_candidates),
-                'candidates': promotion_candidates[:5],  # 상위 5명만 표시
+                'employees': promotion_candidates,  # 일관성을 위해 employees로 변경
                 'has_candidates': len(promotion_candidates) > 0
             },
             'top_talents': {
@@ -591,11 +591,11 @@ async def export_dashboard_pdf(db: Session = Depends(get_db)):
         story.append(PageBreak())
         
         # 승진 후보자 섹션
-        if stats_response['promotion_candidates']['candidates']:
+        if stats_response['promotion_candidates']['employees']:
             story.append(Paragraph("승진 후보자 상세", subtitle_style))
             
             promotion_data = [['이름', '부서', '직급', '점수', '판단 사유']]
-            for candidate in stats_response['promotion_candidates']['candidates'][:5]:
+            for candidate in stats_response['promotion_candidates']['employees'][:5]:
                 promotion_data.append([
                     candidate['name'],
                     candidate['department'],

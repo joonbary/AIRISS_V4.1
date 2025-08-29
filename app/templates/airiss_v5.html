@@ -2081,11 +2081,19 @@
                 const tbody = document.getElementById('risk-employees-table');
                 tbody.innerHTML = '';
                 
-                // 카운터 업데이트
+                // 전체 카운트 업데이트 (전체 수)
                 const counter = document.getElementById('stat-risk-table');
-                if (counter) counter.textContent = employees.length;
+                if (counter) counter.textContent = this.state.dashboardStats?.risk_employees?.count || employees.length;
                 
-                employees.slice(0, 10).forEach(emp => {
+                // 페이지네이션 설정
+                const riskPerPage = 10;
+                const currentPage = this.riskDashboardPage || 1;
+                const startIndex = (currentPage - 1) * riskPerPage;
+                const endIndex = startIndex + riskPerPage;
+                const paginatedEmployees = employees.slice(startIndex, endIndex);
+                const totalPages = Math.ceil(employees.length / riskPerPage);
+                
+                paginatedEmployees.forEach(emp => {
                     const row = tbody.insertRow();
                     const riskColor = emp.risk_level === 'high' ? 'danger' : 'warning';
                     // ai_score 또는 risk_score 사용
@@ -2104,6 +2112,49 @@
                         </td>
                     `;
                 });
+                
+                // 페이지네이션 컨트롤 추가
+                this.renderRiskPagination(currentPage, totalPages, employees.length);
+            },
+            
+            // 관리필요인력 페이지네이션 렌더링
+            renderRiskPagination(currentPage, totalPages, totalCount) {
+                // 기존 페이지네이션 제거
+                const existingPagination = document.getElementById('risk-pagination');
+                if (existingPagination) existingPagination.remove();
+                
+                if (totalPages <= 1) return;
+                
+                const tableContainer = document.querySelector('.card .table-responsive');
+                if (!tableContainer) return;
+                
+                const paginationHTML = `
+                    <div id="risk-pagination" style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 10px;">
+                        <button onclick="app.changeRiskDashboardPage(${currentPage - 1})" 
+                            ${currentPage <= 1 ? 'disabled' : ''}
+                            style="padding: 8px 16px; background: ${currentPage <= 1 ? '#6c757d' : '#007bff'}; color: white; border: none; border-radius: 6px; cursor: ${currentPage <= 1 ? 'not-allowed' : 'pointer'};">
+                            ← 이전
+                        </button>
+                        <span style="margin: 0 15px; font-weight: 500;">
+                            ${currentPage} / ${totalPages} 페이지 (${totalCount}명)
+                        </span>
+                        <button onclick="app.changeRiskDashboardPage(${currentPage + 1})" 
+                            ${currentPage >= totalPages ? 'disabled' : ''}
+                            style="padding: 8px 16px; background: ${currentPage >= totalPages ? '#6c757d' : '#007bff'}; color: white; border: none; border-radius: 6px; cursor: ${currentPage >= totalPages ? 'not-allowed' : 'pointer'};">
+                            다음 →
+                        </button>
+                    </div>
+                `;
+                tableContainer.insertAdjacentHTML('afterend', paginationHTML);
+            },
+            
+            // 대시보드 관리필요인력 페이지 변경
+            changeRiskDashboardPage(page) {
+                const totalPages = Math.ceil((this.state.dashboardStats?.risk_employees?.employees || []).length / 10);
+                if (page < 1 || page > totalPages) return;
+                
+                this.riskDashboardPage = page;
+                this.renderRiskEmployees(this.state.dashboardStats?.risk_employees?.employees || []);
             },
             
             // 승진 후보자 테이블 렌더링
@@ -2113,11 +2164,19 @@
                 
                 tbody.innerHTML = '';
                 
-                // 카운터 업데이트
+                // 전체 카운트 업데이트 (전체 수)
                 const counter = document.getElementById('stat-promotion-table');
-                if (counter) counter.textContent = employees.length;
+                if (counter) counter.textContent = this.state.dashboardStats?.promotion_candidates?.count || employees.length;
                 
-                employees.slice(0, 10).forEach(emp => {
+                // 페이지네이션 설정
+                const promotionPerPage = 10;
+                const currentPage = this.promotionDashboardPage || 1;
+                const startIndex = (currentPage - 1) * promotionPerPage;
+                const endIndex = startIndex + promotionPerPage;
+                const paginatedEmployees = employees.slice(startIndex, endIndex);
+                const totalPages = Math.ceil(employees.length / promotionPerPage);
+                
+                paginatedEmployees.forEach(emp => {
                     const row = tbody.insertRow();
                     const score = emp.ai_score || emp.overall_score || 0;
                     const grade = emp.grade || 'B';
@@ -2129,13 +2188,56 @@
                         <td>${emp.position || '-'}</td>
                         <td style="font-weight: 600; color: var(--primary-color);">${Math.round(score)}</td>
                         <td><span class="btn btn-success" style="padding: 8px 16px; font-size: 14px; border-radius: 8px; color: white !important;">${grade}</span></td>
-                        <td>${emp.reason || '우수한 성과 및 리더십'}</td>
+                        <td>${emp.reasons && emp.reasons.length > 0 ? emp.reasons.slice(0, 2).join(', ') : '우수한 성과 및 리더십'}</td>
                         <td>
                             <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px; border-radius: 8px;" 
                                     onclick="AIRISS.viewEmployeeDetail('${emp.uid || emp.employee_id}')">상세</button>
                         </td>
                     `;
                 });
+                
+                // 페이지네이션 컨트롤 추가
+                this.renderPromotionPagination(currentPage, totalPages, employees.length);
+            },
+            
+            // 승진후보자 페이지네이션 렌더링
+            renderPromotionPagination(currentPage, totalPages, totalCount) {
+                // 기존 페이지네이션 제거
+                const existingPagination = document.getElementById('promotion-pagination');
+                if (existingPagination) existingPagination.remove();
+                
+                if (totalPages <= 1) return;
+                
+                const tableContainer = document.querySelectorAll('.table-responsive')[1]; // 두번째 테이블 (승진후보자)
+                if (!tableContainer) return;
+                
+                const paginationHTML = `
+                    <div id="promotion-pagination" style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 10px;">
+                        <button onclick="app.changePromotionDashboardPage(${currentPage - 1})" 
+                            ${currentPage <= 1 ? 'disabled' : ''}
+                            style="padding: 8px 16px; background: ${currentPage <= 1 ? '#6c757d' : '#007bff'}; color: white; border: none; border-radius: 6px; cursor: ${currentPage <= 1 ? 'not-allowed' : 'pointer'};">
+                            ← 이전
+                        </button>
+                        <span style="margin: 0 15px; font-weight: 500;">
+                            ${currentPage} / ${totalPages} 페이지 (${totalCount}명)
+                        </span>
+                        <button onclick="app.changePromotionDashboardPage(${currentPage + 1})" 
+                            ${currentPage >= totalPages ? 'disabled' : ''}
+                            style="padding: 8px 16px; background: ${currentPage >= totalPages ? '#6c757d' : '#007bff'}; color: white; border: none; border-radius: 6px; cursor: ${currentPage >= totalPages ? 'not-allowed' : 'pointer'};">
+                            다음 →
+                        </button>
+                    </div>
+                `;
+                tableContainer.insertAdjacentHTML('afterend', paginationHTML);
+            },
+            
+            // 대시보드 승진후보자 페이지 변경
+            changePromotionDashboardPage(page) {
+                const totalPages = Math.ceil((this.state.dashboardStats?.promotion_candidates?.employees || []).length / 10);
+                if (page < 1 || page > totalPages) return;
+                
+                this.promotionDashboardPage = page;
+                this.renderPromotionList(this.state.dashboardStats?.promotion_candidates?.employees || []);
             },
             
             // 핵심 인재 테이블 렌더링
@@ -5592,7 +5694,7 @@
             generateTalentReport(dashboardData, employees) {
                 // API에서 받은 데이터 우선 사용
                 const talents = dashboardData.top_talents?.employees || [];
-                const promotions = dashboardData.promotion_candidates?.candidates || [];
+                const promotions = dashboardData.promotion_candidates?.employees || [];
                 
                 console.log('🎆 핵심 인재 리포트 데이터:', { 
                     talentsCount: talents.length, 
@@ -5847,12 +5949,12 @@
                             ` : ''}
                         </div>
                         
-                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                            <h3 style="color: #856404; margin-bottom: 15px;">📊 리스크 분석</h3>
-                            <ul style="margin: 0; padding-left: 20px;">
-                        <li>고위험군: ${highRiskCount}명</li>
-                        <li>중위험군: ${mediumRiskCount}명</li>
-                        <li>전체 리스크 인력: ${totalRiskCount}명</li>
+                        <div style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 152, 0, 0.1) 100%); padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid rgba(255, 193, 7, 0.3); backdrop-filter: blur(10px);">
+                            <h3 style="color: #ffffff; margin-bottom: 15px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">📊 리스크 분석</h3>
+                            <ul style="margin: 0; padding-left: 20px; color: rgba(255, 255, 255, 0.95); font-size: 1.05em; line-height: 1.8;">
+                        <li style="margin-bottom: 8px;"><strong>고위험군:</strong> ${highRiskCount}명</li>
+                        <li style="margin-bottom: 8px;"><strong>중위험군:</strong> ${mediumRiskCount}명</li>
+                        <li style="margin-bottom: 8px;"><strong>전체 리스크 인력:</strong> ${totalRiskCount}명</li>
                     </ul>
                     
                     <h3>3. 대응 방안</h3>
@@ -5984,12 +6086,12 @@
                         </div>
 
                         <h2 style="color: #00d9ff; border-bottom: 2px solid #00d9ff; padding-bottom: 10px;">💡 개선 제안</h2>
-                        <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">
-                            <ul style="margin: 0; padding-left: 20px;">
-                                <li><strong>우수 인재 관리:</strong> S/A+ 등급 ${excellentPerf}명에 대한 리텐션 전략 수립</li>
-                                <li><strong>성과 개선:</strong> ${needsImprovement}명의 개선 필요 인력에 대한 맞춤형 교육 프로그램 실시</li>
-                                <li><strong>부서별 격차 해소:</strong> ${bottomDept?.dept} 부서의 성과 개선을 위한 지원책 마련</li>
-                                <li><strong>벤치마킹:</strong> ${topDept?.dept} 부서의 우수 사례를 전사 공유</li>
+                        <div style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 152, 0, 0.1) 100%); padding: 25px; border-radius: 12px; border: 1px solid rgba(255, 193, 7, 0.3); backdrop-filter: blur(10px);">
+                            <ul style="margin: 0; padding-left: 25px; color: rgba(255, 255, 255, 0.95); font-size: 1.05em; line-height: 1.8;">
+                                <li style="margin-bottom: 15px;"><strong style="color: #ffd54f;">우수 인재 관리:</strong> S/A+ 등급 ${excellentPerf}명에 대한 리텐션 전략 수립</li>
+                                <li style="margin-bottom: 15px;"><strong style="color: #ffd54f;">성과 개선:</strong> ${needsImprovement}명의 개선 필요 인력에 대한 맞춤형 교육 프로그램 실시</li>
+                                <li style="margin-bottom: 15px;"><strong style="color: #ffd54f;">부서별 격차 해소:</strong> ${bottomDept?.dept} 부서의 성과 개선을 위한 지원책 마련</li>
+                                <li style="margin-bottom: 15px;"><strong style="color: #ffd54f;">벤치마킹:</strong> ${topDept?.dept} 부서의 우수 사례를 전사 공유</li>
                             </ul>
                         </div>
                     </div>
@@ -6135,9 +6237,9 @@
                         </div>
 
                         <h2 style="color: #00d9ff; border-bottom: 2px solid #00d9ff; padding-bottom: 10px;">⚠️ 경영 이슈 및 권고사항</h2>
-                        <div style="background: ${riskLevel === 'HIGH' ? '#ffe6e6' : riskLevel === 'MEDIUM' ? '#fff3cd' : '#e8f5e8'}; padding: 20px; border-radius: 8px; border-left: 4px solid ${riskLevel === 'HIGH' ? '#dc3545' : riskLevel === 'MEDIUM' ? '#ffc107' : '#28a745'};">
-                            <h3 style="margin: 0 0 15px 0;">즉시 조치 필요 사항</h3>
-                            <ul style="margin: 0; padding-left: 20px;">
+                        <div style="background: linear-gradient(135deg, ${riskLevel === 'HIGH' ? 'rgba(244, 67, 54, 0.15)' : riskLevel === 'MEDIUM' ? 'rgba(255, 193, 7, 0.15)' : 'rgba(76, 175, 80, 0.15)'} 0%, ${riskLevel === 'HIGH' ? 'rgba(244, 67, 54, 0.08)' : riskLevel === 'MEDIUM' ? 'rgba(255, 152, 0, 0.1)' : 'rgba(76, 175, 80, 0.1)'} 100%); padding: 25px; border-radius: 12px; border: 1px solid ${riskLevel === 'HIGH' ? 'rgba(244, 67, 54, 0.3)' : riskLevel === 'MEDIUM' ? 'rgba(255, 193, 7, 0.3)' : 'rgba(76, 175, 80, 0.3)'}; backdrop-filter: blur(10px);">
+                            <h3 style="margin: 0 0 15px 0; color: #ffffff; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">즉시 조치 필요 사항</h3>
+                            <ul style="margin: 0; padding-left: 25px; color: rgba(255, 255, 255, 0.95); font-size: 1.05em; line-height: 1.8;">
                                 ${riskEmployees > employees.length * 0.2 ? 
                                     '<li><strong>🚨 고위험:</strong> 성과 미달 인력 ' + riskEmployees + '명 (전체 ' + Math.round((riskEmployees/employees.length)*100) + '%) - 즉시 개선 계획 수립 필요</li>' : ''}
                                 ${talentDensity < 15 ? 
