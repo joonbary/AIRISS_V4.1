@@ -1155,7 +1155,7 @@
                     </div>
                 </div>
                 
-                <div class="stat-card" style="cursor: pointer;" onclick="AIRISS.togglePromotionList()">
+                <div class="stat-card" style="cursor: pointer;" onclick="AIRISS.togglePromotionList()"
                     <div class="stat-icon">🎯</div>
                     <div class="stat-value" id="stat-promotion">0</div>
                     <div class="stat-label">승진 후보자</div>
@@ -1883,7 +1883,8 @@
         
         console.log('🚀 AIRISS v5.0 초기화 시작...');
         
-        window.AIRISS = {
+        // 전역 AIRISS 객체 즉시 생성 (HTML onClick에서 바로 접근 가능)
+        const AIRISS = window.AIRISS = {
             // 버전 정보 - 캐시 방지용 타임스탬프 추가
             version: '5.0.2-' + Date.now(),
             buildDate: '2025-08-08',
@@ -6882,12 +6883,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 console.log('🔍 AIRISS 객체 확인:', typeof window.AIRISS);
-                if (window.AIRISS) {
+                if (window.AIRISS && typeof window.AIRISS.init === 'function') {
                     console.log('✅ AIRISS 객체가 정상적으로 로드되었습니다');
                     console.log('📋 사용 가능한 메서드:', Object.keys(window.AIRISS).filter(k => typeof window.AIRISS[k] === 'function'));
-                    AIRISS.init();
+                    
+                    // 초기화 실행
+                    window.AIRISS.init();
                 } else {
-                    console.error('❌ AIRISS 객체를 찾을 수 없습니다');
+                    console.error('❌ AIRISS 객체 또는 init 메서드를 찾을 수 없습니다');
                 }
             } catch (error) {
                 console.error('❌ 초기화 오류:', error);
