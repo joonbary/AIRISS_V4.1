@@ -2236,7 +2236,10 @@
                 
                 if (totalPages <= 1) return;
                 
-                const tableContainer = document.querySelector('.card .table-responsive');
+                // 관리필요인력 테이블 찾기 (risk-employees-table의 부모 요소)
+                const riskTable = document.getElementById('risk-employees-table');
+                if (!riskTable) return;
+                const tableContainer = riskTable.closest('.table-responsive');
                 if (!tableContainer) return;
                 
                 const paginationHTML = `
@@ -2335,7 +2338,10 @@
                 
                 if (totalPages <= 1) return;
                 
-                const tableContainer = document.querySelectorAll('.table-responsive')[1]; // 두번째 테이블 (승진후보자)
+                // 승진후보자 테이블 찾기
+                const promotionTable = document.getElementById('promotion-candidates-table');
+                if (!promotionTable) return;
+                const tableContainer = promotionTable.closest('.table-responsive');
                 if (!tableContainer) return;
                 
                 const paginationHTML = `
@@ -2431,9 +2437,10 @@
                 
                 if (totalPages <= 1) return;
                 
-                // 핵심인재 테이블은 세번째 테이블
-                const tableContainers = document.querySelectorAll('.table-responsive');
-                const tableContainer = tableContainers[2];
+                // 핵심인재 테이블 찾기
+                const talentTable = document.getElementById('talent-pool-table');
+                if (!talentTable) return;
+                const tableContainer = talentTable.closest('.table-responsive');
                 if (!tableContainer) return;
                 
                 const paginationHTML = `

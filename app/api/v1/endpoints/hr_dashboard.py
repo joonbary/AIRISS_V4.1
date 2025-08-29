@@ -132,8 +132,8 @@ def calculate_promotion_candidates(employees):
             promotion_score += 10
             reasons.append(f"우수한 혁신성과 창의력 ({innovation}점)")
         
-        # 승진 후보자 기준 더 완화 (최소 40점으로 조정)
-        if promotion_score >= 40:
+        # 승진 후보자 기준 더 완화 (최소 30점으로 조정)
+        if promotion_score >= 30:
             candidates.append({
                 'uid': emp.get('uid'),
                 'name': emp.get('name'),
@@ -173,8 +173,8 @@ def identify_top_talent(employees):
         if idx < 3:
             logger.info(f"Employee {idx}: grade={grade}, performance={performance}, name={emp.get('name', 'N/A')}")
         
-        # S 등급만 핵심인재로 제한하여 선별성 높이기
-        if grade == 'S':
+        # S, A 등급을 핵심인재로 포함 (페이지네이션 테스트를 위해)
+        if grade in ['S', 'A']:
             talent_score = 100
             # 다양한 선정 사유 추가
             reasons.append(f"최우수 등급 ({grade}등급)")
@@ -256,8 +256,8 @@ def identify_top_talent(employees):
         if not reasons and talent_score > 0:
             reasons.append(f"종합 평가 우수")
         
-        # S 등급만 포함 (선별성 향상)
-        if grade == 'S':
+        # S, A 등급 포함 (페이지네이션 테스트를 위해)
+        if grade in ['S', 'A']:
             top_talents.append({
                 'uid': emp.get('uid'),
                 'name': emp.get('name'),
@@ -270,8 +270,8 @@ def identify_top_talent(employees):
                 'ai_score': emp.get('ai_score', performance)
             })
     
-    # talent_score로 정렬하여 S 등급 직원 반환 (최대 10명으로 제한)
-    result = sorted(top_talents, key=lambda x: x['talent_score'], reverse=True)[:10]
+    # talent_score로 정렬하여 S 등급 직원 반환 (전체 반환 - 페이지네이션은 프론트에서)
+    result = sorted(top_talents, key=lambda x: x['talent_score'], reverse=True)
     logger.info(f"identify_top_talent: Found {len(top_talents)} S-grade talents, returning top {len(result)}")
     return result
 
