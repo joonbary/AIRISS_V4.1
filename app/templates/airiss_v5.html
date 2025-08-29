@@ -6063,28 +6063,28 @@
             changeTalentReportPage(page) {
                 if (page < 1) return;
                 this.talentReportPage = page;
-                this.generateReportPreview('talent');
+                this.generateReport('talent');
             },
             
             // 리포트 승진 후보자 페이지 변경
             changePromotionReportPage(page) {
                 if (page < 1) return;
                 this.promotionReportPage = page;
-                this.generateReportPreview('talent');
+                this.generateReport('talent');
             },
             
             // 리포트 리스크 페이지 변경
             changeRiskReportPage(page) {
                 if (page < 1) return;
                 this.riskReportPage = page;
-                this.generateReportPreview('risk');
+                this.generateReport('risk');
             },
             
             // 관리필요인력 페이지 변경
             changeRiskPage(page) {
                 if (page < 1) return;
                 this.riskCurrentPage = page;
-                this.generateReportPreview('risk');
+                this.generateReport('risk');
             },
             
             // 리스크 리폼트 생성
