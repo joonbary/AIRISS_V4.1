@@ -1901,6 +1901,10 @@
             promotionDashboardPage: 1,
             talentDashboardPage: 1,
             riskDashboardPage: 1,
+            // 리포트 페이지네이션 상태 변수
+            talentReportPage: 1,
+            promotionReportPage: 1,
+            riskReportPage: 1,
             
             // API 설정
             api: {
@@ -5913,7 +5917,7 @@
                 
                 // 페이지네이션 추가: 최대 5명씩 표시
                 const talentPerPage = 5;
-                const currentTalentPage = this.talentCurrentPage || 1;
+                const currentTalentPage = this.talentReportPage || 1;
                 const startIndex = (currentTalentPage - 1) * talentPerPage;
                 const endIndex = startIndex + talentPerPage;
                 const paginatedTalents = talents.slice(startIndex, endIndex);
@@ -5957,7 +5961,7 @@
                 if (totalTalentPages > 1) {
                     talentPagination = `
                         <div style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 10px;">
-                            <button onclick="app.changeTalentPage(${currentTalentPage - 1})" 
+                            <button onclick="AIRISS.changeTalentReportPage(${currentTalentPage - 1})" 
                                 ${currentTalentPage <= 1 ? 'disabled' : ''}
                                 style="padding: 8px 16px; background: ${currentTalentPage <= 1 ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #00d4ff, #0099ff)'}; color: white; border: none; border-radius: 8px; cursor: ${currentTalentPage <= 1 ? 'not-allowed' : 'pointer'}; font-size: 14px;">
                                 ← 이전
@@ -5965,7 +5969,7 @@
                             <span style="color: rgba(255, 255, 255, 0.9); font-weight: 500; margin: 0 15px;">
                                 ${currentTalentPage} / ${totalTalentPages} 페이지 (${talents.length}명 중 ${startIndex + 1}-${Math.min(endIndex, talents.length)}명)
                             </span>
-                            <button onclick="app.changeTalentPage(${currentTalentPage + 1})" 
+                            <button onclick="AIRISS.changeTalentReportPage(${currentTalentPage + 1})" 
                                 ${currentTalentPage >= totalTalentPages ? 'disabled' : ''}
                                 style="padding: 8px 16px; background: ${currentTalentPage >= totalTalentPages ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #00d4ff, #0099ff)'}; color: white; border: none; border-radius: 8px; cursor: ${currentTalentPage >= totalTalentPages ? 'not-allowed' : 'pointer'}; font-size: 14px;">
                                 다음 →
@@ -5976,7 +5980,7 @@
                 
                 // 승진 후보자 페이지네이션
                 const promotionPerPage = 3;
-                const currentPromotionPage = this.promotionCurrentPage || 1;
+                const currentPromotionPage = this.promotionReportPage || 1;
                 const promotionStartIndex = (currentPromotionPage - 1) * promotionPerPage;
                 const promotionEndIndex = promotionStartIndex + promotionPerPage;
                 const paginatedPromotions = promotions.slice(promotionStartIndex, promotionEndIndex);
@@ -6026,7 +6030,7 @@
                             ${promotionCards || '<p style="color: rgba(255, 255, 255, 0.5);">현재 해당하는 인재가 없습니다.</p>'}
                             ${promotions.length > promotionPerPage ? `
                                 <div style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 10px;">
-                                    <button onclick="app.changePromotionPage(${currentPromotionPage - 1})" 
+                                    <button onclick="AIRISS.changePromotionReportPage(${currentPromotionPage - 1})" 
                                         ${currentPromotionPage <= 1 ? 'disabled' : ''}
                                         style="padding: 8px 16px; background: ${currentPromotionPage <= 1 ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #69f0ae, #4caf50)'}; color: white; border: none; border-radius: 8px; cursor: ${currentPromotionPage <= 1 ? 'not-allowed' : 'pointer'}; font-size: 14px;">
                                         ← 이전
@@ -6034,7 +6038,7 @@
                                     <span style="color: rgba(255, 255, 255, 0.9); font-weight: 500; margin: 0 15px;">
                                         ${currentPromotionPage} / ${totalPromotionPages} 페이지 (${promotions.length}명 중 ${promotionStartIndex + 1}-${Math.min(promotionEndIndex, promotions.length)}명)
                                     </span>
-                                    <button onclick="app.changePromotionPage(${currentPromotionPage + 1})" 
+                                    <button onclick="AIRISS.changePromotionReportPage(${currentPromotionPage + 1})" 
                                         ${currentPromotionPage >= totalPromotionPages ? 'disabled' : ''}
                                         style="padding: 8px 16px; background: ${currentPromotionPage >= totalPromotionPages ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #69f0ae, #4caf50)'}; color: white; border: none; border-radius: 8px; cursor: ${currentPromotionPage >= totalPromotionPages ? 'not-allowed' : 'pointer'}; font-size: 14px;">
                                         다음 →
@@ -6056,17 +6060,24 @@
             },
             
             // 핵심 인재 페이지 변경
-            changeTalentPage(page) {
+            changeTalentReportPage(page) {
                 if (page < 1) return;
-                this.talentCurrentPage = page;
+                this.talentReportPage = page;
                 this.generateReportPreview('talent');
             },
             
-            // 승진 후보자 페이지 변경
-            changePromotionPage(page) {
+            // 리포트 승진 후보자 페이지 변경
+            changePromotionReportPage(page) {
                 if (page < 1) return;
-                this.promotionCurrentPage = page;
+                this.promotionReportPage = page;
                 this.generateReportPreview('talent');
+            },
+            
+            // 리포트 리스크 페이지 변경
+            changeRiskReportPage(page) {
+                if (page < 1) return;
+                this.riskReportPage = page;
+                this.generateReportPreview('risk');
             },
             
             // 관리필요인력 페이지 변경
@@ -6093,7 +6104,7 @@
                 
                 // 페이지네이션 추가: 최대 10명씩 표시
                 const riskPerPage = 10;
-                const currentRiskPage = this.riskCurrentPage || 1;
+                const currentRiskPage = this.riskReportPage || 1;
                 const riskStartIndex = (currentRiskPage - 1) * riskPerPage;
                 const riskEndIndex = riskStartIndex + riskPerPage;
                 const paginatedRiskEmployees = riskEmployees.slice(riskStartIndex, riskEndIndex);
@@ -6141,7 +6152,7 @@
                             ${riskCards || '<p style="color: rgba(255, 255, 255, 0.5);">현재 리스크 인력이 없습니다.</p>'}
                             ${totalRiskPages > 1 ? `
                                 <div style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 10px;">
-                                    <button onclick="app.changeRiskPage(${currentRiskPage - 1})" 
+                                    <button onclick="AIRISS.changeRiskReportPage(${currentRiskPage - 1})" 
                                         ${currentRiskPage <= 1 ? 'disabled' : ''}
                                         style="padding: 8px 16px; background: ${currentRiskPage <= 1 ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #ff5252, #f44336)'}; color: white; border: none; border-radius: 8px; cursor: ${currentRiskPage <= 1 ? 'not-allowed' : 'pointer'}; font-size: 14px;">
                                         ← 이전
@@ -6149,7 +6160,7 @@
                                     <span style="color: rgba(255, 255, 255, 0.9); font-weight: 500; margin: 0 15px;">
                                         ${currentRiskPage} / ${totalRiskPages} 페이지 (${totalRiskCount}명 중 ${riskStartIndex + 1}-${Math.min(riskEndIndex, riskEmployees.length)}명)
                                     </span>
-                                    <button onclick="app.changeRiskPage(${currentRiskPage + 1})" 
+                                    <button onclick="AIRISS.changeRiskReportPage(${currentRiskPage + 1})" 
                                         ${currentRiskPage >= totalRiskPages ? 'disabled' : ''}
                                         style="padding: 8px 16px; background: ${currentRiskPage >= totalRiskPages ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #ff5252, #f44336)'}; color: white; border: none; border-radius: 8px; cursor: ${currentRiskPage >= totalRiskPages ? 'not-allowed' : 'pointer'}; font-size: 14px;">
                                         다음 →
