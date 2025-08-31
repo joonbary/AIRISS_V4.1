@@ -1121,16 +1121,15 @@
             transition: all 0.3s ease;
         }
         
-        /* 사이드바 축소 상태 */
+        /* 사이드바 축소 상태 - 완전히 숨김 */
         .sidebar.collapsed {
-            width: 60px;
-            overflow: hidden;
+            transform: translateX(-250px);
         }
         
-        /* 사이드바 hover 시 임시 확장 */
+        /* 사이드바 hover 시 임시 표시 */
         .sidebar.collapsed.hover-open {
-            width: 250px;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            transform: translateX(0);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
         }
         
         /* 사이드바 hover 트리거 영역 */
@@ -1138,10 +1137,28 @@
             position: fixed;
             left: 0;
             top: 0;
-            width: 10px;
+            width: 20px;
             height: 100vh;
             z-index: 999;
-            background: transparent;
+            background: linear-gradient(to right, rgba(0, 212, 255, 0.05), transparent);
+            cursor: pointer;
+        }
+        
+        /* hover 트리거 표시 */
+        .sidebar-hover-trigger::after {
+            content: '▶';
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(0, 212, 255, 0.3);
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-hover-trigger:hover::after {
+            color: rgba(0, 212, 255, 0.8);
+            left: 8px;
         }
         
         /* 축소 시 메뉴 텍스트 숨김 */
@@ -1154,32 +1171,45 @@
             opacity: 1;
         }
         
-        .sidebar.collapsed .sidebar-header h3 {
-            font-size: 0.9em;
-            text-align: center;
+        /* 축소 시 헤더 숨김 */
+        .sidebar.collapsed .sidebar-header {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .sidebar.collapsed.hover-open .sidebar-header {
+            opacity: 1;
         }
         
         /* 토글 버튼 스타일 */
         .sidebar-toggle {
-            position: absolute;
-            right: 10px;
+            position: fixed;
+            left: 30px;
             top: 20px;
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid rgba(0, 212, 255, 0.3);
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 153, 255, 0.2));
+            border: 1px solid rgba(0, 212, 255, 0.4);
             color: #00d4ff;
-            width: 30px;
-            height: 30px;
-            border-radius: 6px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
+            z-index: 1001;
+            box-shadow: 0 2px 8px rgba(0, 212, 255, 0.2);
         }
         
         .sidebar-toggle:hover {
-            background: rgba(0, 212, 255, 0.2);
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(0, 153, 255, 0.3));
             transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
+        }
+        
+        /* 사이드바 열려 있을 때 토글 버튼 위치 조정 */
+        .sidebar:not(.collapsed) ~ .main-content .sidebar-toggle {
+            left: 260px;
         }
         
         .sidebar-header {
@@ -1239,7 +1269,7 @@
         
         /* 사이드바 축소 시 메인 콘텐츠 확장 */
         .main-content.expanded {
-            margin-left: 60px;
+            margin-left: 20px;
         }
         
         @media (max-width: 768px) {
@@ -1266,13 +1296,10 @@
     <!-- Sidebar Hover Trigger Area -->
     <div class="sidebar-hover-trigger"></div>
     
-    <!-- Revolutionary Sidebar Navigation -->
-    <div class="sidebar" id="revolutionary-sidebar">
+    <!-- Revolutionary Sidebar Navigation (초기 상태: 축소) -->
+    <div class="sidebar collapsed" id="revolutionary-sidebar">
         <div class="sidebar-header">
             <h3>AIRISS v5.0</h3>
-            <button class="sidebar-toggle" onclick="toggleSidebar()" title="사이드바 토글">
-                <span style="font-size: 16px;">☰</span>
-            </button>
         </div>
         <nav class="sidebar-menu">
             <a href="#" class="menu-item active" onclick="AIRISS.switchTab('dashboard')" data-tab="dashboard">
@@ -1298,8 +1325,13 @@
         </nav>
     </div>
     
-    <!-- Main Content Area -->
-    <div class="main-content">
+    <!-- Main Content Area (초기 상태: 확장) -->
+    <div class="main-content expanded">
+        <!-- 사이드바 토글 버튼 -->
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="사이드바 토글">
+            <span style="font-size: 18px;">☰</span>
+        </button>
+        
         <div class="app-container">
         <!-- 헤더 -->
         <header class="app-header">
@@ -2058,13 +2090,19 @@
         
         // 페이지 로드 시 사이드바 상태 복원
         document.addEventListener('DOMContentLoaded', function() {
-            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
             const sidebar = document.getElementById('revolutionary-sidebar');
             const mainContent = document.querySelector('.main-content');
+            
+            // localStorage에 저장된 상태가 없으면 기본값은 축소
+            const savedState = localStorage.getItem('sidebarCollapsed');
+            const isCollapsed = savedState === null ? true : savedState === 'true';
             
             if (isCollapsed) {
                 sidebar.classList.add('collapsed');
                 mainContent.classList.add('expanded');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
             }
             
             // Hover 트리거 설정
