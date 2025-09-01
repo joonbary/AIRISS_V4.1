@@ -6430,12 +6430,16 @@
                                         ${reasonsHtml}
                                     </div>
                                 </div>
-                                <div style="text-align: center; min-width: 80px;">
-                                    <div style="background: ${scoreColor}; color: white; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 1.1em; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);">
-                                        ${Math.round(emp.risk_score || 0)}점
+                                <div style="text-align: center; min-width: 90px;">
+                                    <div style="background: ${scoreColor}; color: white; padding: 8px 12px; border-radius: 20px; font-weight: 600; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);">
+                                        <div style="font-size: 0.8em; opacity: 0.9; margin-bottom: 2px;">리스크 지수</div>
+                                        <div style="font-size: 1.2em;">${Math.round(emp.risk_score || 0)}점</div>
                                     </div>
-                                    <div style="color: rgba(255, 255, 255, 0.5); font-size: 0.75em; margin-top: 6px;">
-                                        성과: ${emp.performance_score || 0}점
+                                    <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.8em; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                        <span style="opacity: 0.8;">평가점수:</span>
+                                        <span style="color: ${emp.performance_score < 50 ? '#ff6b6b' : emp.performance_score < 70 ? '#ffa726' : '#66bb6a'}; font-weight: 600;">
+                                            ${emp.performance_score || 0}점
+                                        </span>
                                     </div>
                                 </div>
                             </div>
