@@ -6438,7 +6438,7 @@
                                     <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.8em; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 5px;">
                                         <span style="opacity: 0.8;">평가점수:</span>
                                         <span style="color: ${emp.performance_score < 50 ? '#ff6b6b' : emp.performance_score < 70 ? '#ffa726' : '#66bb6a'}; font-weight: 600;">
-                                            ${emp.performance_score || 0}점
+                                            ${Math.round(emp.performance_score || 0)}점
                                         </span>
                                     </div>
                                 </div>
