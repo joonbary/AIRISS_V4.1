@@ -5311,28 +5311,28 @@
                 
                 // 잠시 후 리포트 생성
                 setTimeout(async () => {
-                    // HR 대시보드 API에서 실제 데이터 가져오기
-                    let dashboardData = {};
-                    let employees = [];
+                    // 먼저 최신 데이터 로드
+                    await this.loadEmployeesData();
+                    await this.loadDashboardData();
+                    
+                    // state에서 실제 데이터 가져오기
+                    let dashboardData = this.state.dashboardStats || {};
+                    let employees = this.state.employees || [];
                     
                     try {
-                        console.log('📊 HR 대시보드 데이터 로드 중...');
-                        // API 엔드포인트 수정: Django URL 패턴에 맞게
-                        const response = await this.api.request('GET', '/hr-dashboard/stats');
-                        if (response && response.total_employees) {
-                            dashboardData = response;
-                            console.log('✅ HR 대시보드 데이터 로드 성공:', dashboardData);
-                            
-                            // HR Dashboard API가 이미 완전한 직원 데이터(부서 정보 포함)를 제공하므로 fallback 로직 제거
-                            if (dashboardData.employees && dashboardData.employees.length > 0) {
-                                console.log('✅ HR Dashboard API에서 완전한 직원 데이터 제공:', dashboardData.employees.length);
-                                console.log('  - 첫 번째 직원 샘플:', dashboardData.employees[0]);
-                                console.log('  - 부서 정보 확인:', dashboardData.employees.filter(emp => emp.department && emp.department !== '부서 미상').length, '명이 실제 부서 배정됨');
-                            } else {
-                                console.log('⚠️ HR Dashboard API에서 직원 데이터가 제공되지 않음');
+                        console.log('📊 리포트 생성을 위한 데이터 준비...');
+                        console.log('  - 대시보드 통계:', dashboardData);
+                        console.log('  - 직원 수:', employees.length);
+                        
+                        // 데이터가 없으면 다시 시도
+                        if (!dashboardData.total_employees && (!employees || employees.length === 0)) {
+                            console.log('📊 HR 대시보드 데이터 재로드 중...');
+                            const response = await this.api.request('GET', '/hr-dashboard/stats');
+                            if (response && response.total_employees) {
+                                dashboardData = response;
+                                this.state.dashboardStats = response;
+                                console.log('✅ HR 대시보드 데이터 로드 성공:', dashboardData);
                             }
-                        } else {
-                            throw new Error('Invalid or empty response');
                         }
                     } catch (error) {
                         console.error('❌ HR 대시보드 데이터 로드 실패:', error);
@@ -6731,18 +6731,25 @@
             },
             
             generateExecutiveReport(dashboardData, employees) {
-                // 실제 직원 데이터 사용
-                const actualEmployees = employees && employees.length > 0 ? employees : this.state.employees || [];
+                // 실제 직원 데이터 사용 - API에서 가져온 데이터 우선 사용
+                const actualEmployees = this.state.employees && this.state.employees.length > 0 ? this.state.employees : (employees || []);
+                
+                // 대시보드 통계 데이터 사용 (API에서 가져온 데이터)
+                const stats = this.state.dashboardStats || dashboardData || {};
+                const totalEmployeesFromAPI = stats.total_employees || actualEmployees.length || 0;
+                const topTalentsFromAPI = stats.top_talents?.count || 0;
+                const riskEmployeesFromAPI = stats.risk_employees?.count || 0;
                 
                 const avgScore = this.calculateAverageScore(actualEmployees);
                 const gradeDistribution = this.calculateGradeDistribution(actualEmployees);
                 const deptAnalysis = this.analyzeDepartments(actualEmployees);
                 
-                // 핵심 지표 계산
-                const topTalents = ((gradeDistribution['S'] || 0) + (gradeDistribution['A+'] || 0));
-                const riskEmployees = ((gradeDistribution['C'] || 0) + (gradeDistribution['D'] || 0));
-                const retentionRate = actualEmployees.length > 0 ? Math.round(((actualEmployees.length - riskEmployees) / actualEmployees.length) * 100) : 0;
-                const talentDensity = actualEmployees.length > 0 ? Math.round((topTalents / actualEmployees.length) * 100) : 0;
+                // 핵심 지표 계산 - API 데이터 우선 사용
+                const topTalents = topTalentsFromAPI > 0 ? topTalentsFromAPI : ((gradeDistribution['S'] || 0) + (gradeDistribution['A'] || 0));
+                const riskEmployees = riskEmployeesFromAPI > 0 ? riskEmployeesFromAPI : ((gradeDistribution['C'] || 0) + (gradeDistribution['D'] || 0));
+                const totalCount = totalEmployeesFromAPI > 0 ? totalEmployeesFromAPI : actualEmployees.length;
+                const retentionRate = totalCount > 0 ? Math.round(((totalCount - riskEmployees) / totalCount) * 100) : 0;
+                const talentDensity = totalCount > 0 ? Math.round((topTalents / totalCount) * 100) : 0;
                 
                 // 부서별 성과
                 const deptScores = Object.entries(deptAnalysis).map(([dept, data]) => ({
@@ -6753,8 +6760,8 @@
                 })).sort((a, b) => b.score - a.score);
                 
                 // 위험도 평가
-                const riskLevel = actualEmployees.length > 0 && riskEmployees > actualEmployees.length * 0.2 ? 'HIGH' : 
-                                actualEmployees.length > 0 && riskEmployees > actualEmployees.length * 0.1 ? 'MEDIUM' : 'LOW';
+                const riskLevel = totalCount > 0 && riskEmployees > totalCount * 0.2 ? 'HIGH' : 
+                                totalCount > 0 && riskEmployees > totalCount * 0.1 ? 'MEDIUM' : 'LOW';
                 
                 return `
                     <div style="font-family: 'Pretendard', sans-serif; line-height: 1.8; color: #333;">
@@ -6768,11 +6775,11 @@
                             <h2 style="margin: 0 0 15px 0; color: #1976d2;">📊 경영 핵심 지표 (Executive Summary)</h2>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                                 <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: bold; color: #1976d2;">${employees.length}명</div>
+                                    <div style="font-size: 24px; font-weight: bold; color: #1976d2;">${totalCount}명</div>
                                     <div style="color: #666;">전체 인력</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: bold; color: ${avgScore >= 700 ? '#28a745' : avgScore >= 600 ? '#ffc107' : '#dc3545'};">${avgScore}점</div>
+                                    <div style="font-size: 24px; font-weight: bold; color: ${avgScore >= 70 ? '#28a745' : avgScore >= 60 ? '#ffc107' : '#dc3545'};">${Math.round(avgScore)}점</div>
                                     <div style="color: #666;">평균 성과 점수</div>
                                 </div>
                                 <div style="text-align: center;">
