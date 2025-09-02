@@ -5656,11 +5656,13 @@
                         topTalents = (data.grades['S'] || 0) + (data.grades['A+'] || 0) + (data.grades['A'] || 0);
                     }
                     
-                    // 성과 등급 계산
-                    const performance = avgScore >= 800 ? { grade: '우수', color: '#69f0ae' } :
-                                      avgScore >= 700 ? { grade: '양호', color: '#ffd54f' } :
-                                      avgScore >= 600 ? { grade: '보통', color: '#ff9800' } :
-                                      { grade: '개선필요', color: '#ff5252' };
+                    // 성과 등급 계산 (1000점 스케일 기준)
+                    const performance = avgScore >= 800 ? { grade: 'S (최우수)', color: '#69f0ae' } :
+                                      avgScore >= 750 ? { grade: 'A (우수)', color: '#4caf50' } :
+                                      avgScore >= 700 ? { grade: 'B+ (양호)', color: '#ffd54f' } :
+                                      avgScore >= 650 ? { grade: 'B (평균)', color: '#ff9800' } :
+                                      avgScore >= 600 ? { grade: 'C (미흡)', color: '#ff7043' } :
+                                      { grade: 'D (개선필요)', color: '#ff5252' };
                     
                     // 순위 표시
                     const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
@@ -6128,8 +6130,8 @@
                             <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #495057; font-weight: 600; font-size: 1.1em;">${data.count}명</td>
                             <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #00d4ff; font-weight: 600; font-size: 1.1em; text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);">${avg}점</td>
                             <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: #69f0ae; font-weight: 600; text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);">${topTalents}명</td>
-                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: ${avg >= 750 ? '#69f0ae' : avg >= 650 ? '#ffd54f' : '#ff5252'}; font-weight: 600; text-shadow: 0 0 10px ${avg >= 750 ? 'rgba(76, 175, 80, 0.4)' : avg >= 650 ? 'rgba(255, 193, 7, 0.4)' : 'rgba(244, 67, 54, 0.4)'};">
-                                ${avg >= 750 ? '우수' : avg >= 650 ? '보통' : '개선필요'}
+                            <td style="padding: 15px; text-align: center; border-bottom: 1px solid rgba(0, 212, 255, 0.1); color: ${avg >= 800 ? '#69f0ae' : avg >= 750 ? '#4caf50' : avg >= 700 ? '#ffd54f' : avg >= 650 ? '#ff9800' : avg >= 600 ? '#ff7043' : '#ff5252'}; font-weight: 600; text-shadow: 0 0 10px ${avg >= 800 ? 'rgba(76, 175, 80, 0.4)' : avg >= 750 ? 'rgba(76, 175, 80, 0.3)' : avg >= 700 ? 'rgba(255, 193, 7, 0.4)' : avg >= 650 ? 'rgba(255, 152, 0, 0.4)' : avg >= 600 ? 'rgba(255, 112, 67, 0.4)' : 'rgba(244, 67, 54, 0.4)'};">
+                                ${avg >= 800 ? 'S (최우수)' : avg >= 750 ? 'A (우수)' : avg >= 700 ? 'B+ (양호)' : avg >= 650 ? 'B (평균)' : avg >= 600 ? 'C (미흡)' : 'D (개선필요)'}
                             </td>
                         </tr>
                     `;
