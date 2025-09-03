@@ -6842,8 +6842,17 @@
                                 </thead>
                                 <tbody>
                                     ${deptScores.slice(0, 5).map((dept, index) => {
-                                        const grade = dept.score >= 750 ? 'A' : dept.score >= 650 ? 'B' : 'C';
-                                        const gradeColor = grade === 'A' ? '#28a745' : grade === 'B' ? '#ffc107' : '#dc3545';
+                                        // 100점과 1000점 스케일 모두 지원
+                                        const grade = dept.score >= 90 || dept.score >= 900 ? 'S' : 
+                                                     dept.score >= 85 || dept.score >= 850 ? 'A' : 
+                                                     dept.score >= 80 || dept.score >= 800 ? 'B+' : 
+                                                     dept.score >= 75 || dept.score >= 750 ? 'B' : 
+                                                     dept.score >= 70 || dept.score >= 700 ? 'C' : 'D';
+                                        const gradeColor = grade === 'S' ? '#69f0ae' : 
+                                                          grade === 'A' ? '#4caf50' : 
+                                                          grade === 'B+' ? '#ffd54f' : 
+                                                          grade === 'B' ? '#ff9800' : 
+                                                          grade === 'C' ? '#ff7043' : '#ff5252';
                                         return `
                                         <tr>
                                             <td style="padding: 12px; border: 1px solid #dee2e6;">
